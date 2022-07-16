@@ -2,11 +2,11 @@ from asyncio import transports
 import numpy as np
 from enum import auto, Enum
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from pyvista import Plotter, Sphere, Tube
 
-from error_handling import error_handler
+from .error_handling import error_handler
 
 
 # =============================================================================
@@ -44,6 +44,12 @@ class Color:
     r: float
     g: float 
     b: float
+
+    def as_array(self) -> np.array:
+        """
+        Returns color as [r, g, b] array.
+        """
+        return np.array([self.r, self.g, self.b])
 
 
 # =============================================================================
@@ -344,34 +350,42 @@ def default_atom_color(symbol: Symbol) -> Color:
     return color
 
 
-@dataclass
 class Atom:
-    """
-    An atom describes a node in a molecular graph.
+    def __init__(
+        self,
+        symbol: Symbol,
+        position: Point,
+        radius: Optional[Radius] = None,
+        color: Optional[Color] = None,
+        theta_resolution: int = 90,
+        phi_resolution: int = 90
+    ) -> None:
+        """
+        An atom describes a node in a molecular graph.
 
-    Arguments
-    ---------
-    symbol : Symbol
-        The symbol of the atom.
-    position : Point
-        The position of the atom.
-    radius : float
-        The radius of the atom.
-    color : Color
-        The color of the atom.
-    theta_resolution : int
-        The number of points used to draw the atom.
-    phi_resolution : int
-        The number of points used to draw the atom.
-    """
-    symbol: Symbol
-    position: Point
+        Arguments
+        ---------
+        symbol : Symbol
+            The symbol of the atom.
+        position : Point
+            The position of the atom.
+        radius : float
+            The radius of the atom.
+        color : Color
+            The color of the atom.
+        theta_resolution : int
+            The number of points used to draw the atom.
+        phi_resolution : int
+            The number of points used to draw the atom.
+        """
+        self.symbol = symbol
+        self.position = position
+        
+        self.radius = default_atom_radius(self.symbol)
+        self.color = default_atom_color(self.symbol)
 
-    radius: Radius = default_atom_radius(Symbol)
-    color: Color = default_atom_color(Symbol)
-
-    theta_resolution: int = 90
-    phi_resolution: int = 90
+        self.theta_resolution = theta_resolution
+        self.phi_resolution = phi_resolution
 
 
 # =============================================================================
@@ -554,8 +568,8 @@ def create_atom_mesh(atom: Atom) -> Sphere:
         The mesh for the atom.
     """
     return Sphere(
-        center=atom.position.as_array,
-        direction=atom.position.as_array,
+        center=atom.position.as_array(),
+        direction=atom.position.as_array(),
         radius=atom.radius,
         theta_resolution=atom.theta_resolution,
         phi_resolution=atom.phi_resolution,
@@ -576,17 +590,17 @@ def create_bond_mesh(bond: Bond) -> Tuple[Tube, Tube]:
     Tuple[Tube, Tube]
         The meshes for both bond segments.
     """
-    bond_center = centroid([bond.segment_a.as_array, bond.segment_b.as_array])
+    bond_center = centroid([bond.segment_a.as_array(), bond.segment_b.as_array()])
 
     segment_a = Tube(
-        pointa=bond.segment_a.as_array,
+        pointa=bond.segment_a.as_array(),
         pointb=bond_center,
         resolution=bond.resolution,
         n_sides=bond.n_sides,
         radius=bond.radius,
     )
     segment_b = Tube(
-        pointa=bond.segment_b.as_array,
+        pointa=bond.segment_b.as_array(),
         pointb=bond_center,
         resolution=bond.resolution,
         n_sides=bond.n_sides,
@@ -612,7 +626,7 @@ class Drawer:
     off_screen: bool = True 
 
     plotter = Plotter(off_screen=off_screen)
-    plotter.background_color = background_color
+    plotter.background_color = background_color.as_array()
 
     def add_molecule(self, molecule: Molecule) -> None:
         """
@@ -626,13 +640,19 @@ class Drawer:
         # Draw atoms in scene.
         for atom in molecule.atoms: 
             atom_mesh = create_atom_mesh(atom)
-            self.plotter.add_mesh(atom_mesh, color=atom.color)
+            self.plotter.add_mesh(atom_mesh, color=atom.color.as_array())
         
         # Draw bonds in scene.
         for bond in molecule.bonds:
             bond_mesh_segment_a, bond_mesh_segment_b = create_bond_mesh(bond)
-            self.plotter.add_mesh(bond_mesh_segment_a, color=bond.color_segment_a)
-            self.plotter.add_mesh(bond_mesh_segment_b, color=bond.color_segment_b)
+            self.plotter.add_mesh(
+                bond_mesh_segment_a, 
+                color=bond.color_segment_a.as_array()
+            )
+            self.plotter.add_mesh(
+                bond_mesh_segment_b, 
+                color=bond.color_segment_b.as_array()
+            )
 
     def show(self) -> None:
         """
