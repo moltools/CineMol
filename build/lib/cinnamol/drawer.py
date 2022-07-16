@@ -1,9 +1,11 @@
+from asyncio import transports
+from turtle import back
 import numpy as np
 from enum import auto, Enum
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-from pyvista import Plotter, PolyData, Sphere, Tube
+from pyvista import Plotter, Sphere, Tube
 
 from .error_handling import error_handler
 
@@ -555,7 +557,7 @@ def rotation_matrix_z(r: float) -> np.array:
 # =============================================================================
 # Main functionality for drawing.
 # =============================================================================
-def create_atom_mesh(atom: Atom) -> PolyData:
+def create_atom_mesh(atom: Atom) -> Sphere:
     """
     Creates a mesh for an atom.
 
@@ -578,7 +580,7 @@ def create_atom_mesh(atom: Atom) -> PolyData:
     )
 
 
-def create_bond_mesh(bond: Bond) -> Tuple[PolyData, PolyData]:
+def create_bond_mesh(bond: Bond) -> Tuple[Tube, Tube]:
     """
     Creates a mesh for a bond.
 
@@ -666,12 +668,13 @@ class Drawer:
         """
         self.plotter.show()
 
+    @error_handler
     def save_fig(
         self,
         filename: str,
         transparent_background: bool = False,
         window_size: Tuple[int, int] = (800, 800)
-    ) -> np.array:
+    ) -> None:
         """
         Draws the scene and saves it to output file.
 
@@ -682,18 +685,11 @@ class Drawer:
         transparent_background : bool
             If True, the background is transparent.
         window_size : Tuple[int, int]
-            Size of the window as (M, N).
-
-        Returns 
-        -------
-        np.array
-            Pixel map of the scene with dimensionality (M, N, 3).
-        """ 
-        return self.plotter.screenshot(
+            Size of the window.
+        """
+        self.plotter.screenshot(
             filename, 
             transparent_background=transparent_background,
-            window_size=window_size,
-            return_img=True
+            window_size=window_size
         )
-
         
