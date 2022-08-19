@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20">
+<defs>
+<style>
+.atom-1{fill:#FFFF00;}
+.atom-2{fill:#FF0000;}
+.atom-3{fill:#FF0000;}
+.atom-4{fill:#FF0000;}
+.atom-5{fill:#FF0000;}
+.atom-6{fill:#0000FF;}
+.atom-7{fill:#0000FF;}
+.atom-8{fill:#808080;}
+.atom-9{fill:#808080;}
+.atom-10{fill:#808080;}
+.atom-11{fill:#808080;}
+.atom-12{fill:#808080;}
+.atom-13{fill:#808080;}
+.atom-14{fill:#808080;}
+.atom-15{fill:#808080;}
+.atom-16{fill:#808080;}
+.atom-17{fill:#808080;}
+.atom-18{fill:#808080;}
+.atom-19{fill:#808080;}
+.atom-20{fill:#808080;}
+.atom-21{fill:#808080;}
+.atom-22{fill:#808080;}
+.atom-23{fill:#808080;}
+</style>
+</defs>
+<circle class="atom-1" cx="-0.8019" cy="1.2308" r="1.2"/>
+<circle class="atom-2" cx="-2.2842" cy="-2.5451" r="1.2"/>
+<circle class="atom-3" cx="-5.3517" cy="1.076" r="1.2"/>
+<circle class="atom-4" cx="-5.1157" cy="-0.697" r="1.2"/>
+<circle class="atom-5" cx="2.1598" cy="-2.0405" r="1.2"/>
+<circle class="atom-6" cx="-2.4781" cy="-0.7369" r="1.2"/>
+<circle class="atom-7" cx="0.5677" cy="-1.3807" r="1.2"/>
+<circle class="atom-8" cx="-1.31" cy="-0.4177" r="1.2"/>
+<circle class="atom-9" cx="-2.567" cy="1.6679" r="1.2"/>
+<circle class="atom-10" cx="-3.1671" cy="0.336" r="1.2"/>
+<circle class="atom-11" cx="-0.6142" cy="-1.6325" r="1.2"/>
+<circle class="atom-12" cx="-1.9181" cy="-1.8261" r="1.2"/>
+<circle class="atom-13" cx="-3.2193" cy="2.2224" r="1.2"/>
+<circle class="atom-14" cx="-2.5771" cy="2.7313" r="1.2"/>
+<circle class="atom-15" cx="-4.6296" cy="0.1576" r="1.2"/>
+<circle class="atom-16" cx="1.873" cy="-1.6107" r="1.2"/>
+<circle class="atom-17" cx="2.902" cy="-1.2655" r="1.2"/>
+<circle class="atom-18" cx="3.8679" cy="-0.1949" r="1.2"/>
+<circle class="atom-19" cx="3.567" cy="1.1373" r="1.2"/>
+<circle class="atom-20" cx="5.0457" cy="-0.5556" r="1.2"/>
+<circle class="atom-21" cx="4.4619" cy="2.129" r="1.2"/>
+<circle class="atom-22" cx="5.9405" cy="0.4362" r="1.2"/>
+<circle class="atom-23" cx="5.6486" cy="1.7786" r="1.2"/>
+</svg>
