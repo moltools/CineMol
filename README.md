@@ -2,5 +2,5 @@
 [![Maintainer](https://img.shields.io/badge/Maintainer-davidmeijer-blue)](https://github.com/davidmeijer)
 [![Generic badge](https://img.shields.io/badge/Version-alpha-green.svg)](https://shields.io/)
 
-![](./logo.png)
+<imgs src="./logo.png" width="100>
 
