@@ -113,7 +113,7 @@ let parse_sdf (sdf_path : string) : AtomInfo array =
         |> Array.length
 
     match moleculeCount with
-    | x when x <> 1 -> raise <| InputError("multiple molecules in input file")
+    | x when x > 1 -> raise <| InputError("multiple molecules in input file")
     | _ -> ()
 
     let mutable atomCount = 0
@@ -243,7 +243,18 @@ let writeSVG
 let main =
     // Settings.
     let filterHydrogens : bool = false
-    let unitSize = 10.0
+
+    let filterAtoms (atomType : Atom) (atoms : AtomInfo array) : AtomInfo array =
+        Array.filter (fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
+
+    let atoms =
+        parse_sdf input_path
+        |> (if filterHydrogens then filterAtoms H else (fun arr -> arr))
+
+    let maxX = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.X) atoms |> Array.max
+    let maxY = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.Y) atoms |> Array.max
+    let maxZ = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.Z) atoms |> Array.max
+    let unitSize = (List.max [ maxX; maxY; maxZ ]) * 2.0
     let pov = { X = 0.0; Y = 0.0; Z = unitSize }
     let viewBox = (-unitSize, -unitSize, 2.0 * unitSize, 2.0 * unitSize)
 
@@ -252,16 +263,13 @@ let main =
         let rad : float option = Some ((step / numSteps) * 2.0 * Math.PI)
 
         // Parse and prep atom data.
-        let filterAtoms (atomType : Atom) (atoms : AtomInfo array) : AtomInfo array =
-            Array.filter (fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
-        let atoms = 
-            parse_sdf input_path
-            |> (if filterHydrogens then filterAtoms H else (fun arr -> arr))
+        let rotatedAtoms = 
+            atoms
             |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisY c rad))
             |> Array.sortBy (fun ((_, _, c) : AtomInfo) -> - (abs (pov.Z - c.Z)))
         
         // Write out atoms to SVG.
-        writeSVG $"out/mol_{step}.svg" viewBox pov unitSize atoms |> ignore
+        writeSVG $"out/mol_{step}.svg" viewBox pov unitSize rotatedAtoms |> ignore
 
     // Exit code.
     0
