@@ -137,12 +137,28 @@ let abs (v : float) : float =
 let dist (a : Coords) (b : Coords) : float =
     (Coords.Sum(Coords.Pow (a - b) 2.0)) ** 0.5
 
+let rotateAxisX (c : Coords) (rad : float option) : Coords =
+    match rad with 
+    | Some r ->
+        { X = c.X
+          Y = c.Y * Math.Cos(r) - c.Z * Math.Sin(r)
+          Z = c.Y * Math.Sin(r) + c.Z * Math.Cos(r) }
+    | None -> c 
+
 let rotateAxisY (c : Coords) (rad : float option) : Coords = 
     match rad with 
     | Some r ->
         { X = c.X * Math.Cos(r) + c.Z * Math.Sin(r)
           Y = c.Y
           Z = c.Z * Math.Cos(r) - c.X * Math.Sin(r) }   
+    | None -> c 
+
+let rotateAxisZ (c : Coords) (rad : float option) : Coords =
+    match rad with 
+    | Some r ->
+        { X = c.X * Math.Cos(r) - c.Y * Math.Sin(r)
+          Y = c.X * Math.Sin(r) + c.Y * Math.Cos(r)
+          Z = c.Z }
     | None -> c 
 
 // ============================================================================
