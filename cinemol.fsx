@@ -243,14 +243,17 @@ let writeSVG
 let main =
     // Settings.
     let filterHydrogens : bool = false
+    let numSteps : float = 20.0
+    let rotation : (Coords -> float option -> Coords) = rotateAxisY
 
+    // Parse atoms from SDF/Mol V2000 file; filter out hydrogen atoms.
     let filterAtoms (atomType : Atom) (atoms : AtomInfo array) : AtomInfo array =
         Array.filter (fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
-
     let atoms =
         parse_sdf input_path
         |> (if filterHydrogens then filterAtoms H else (fun arr -> arr))
 
+    // Determine dimensions view box.
     let maxX = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.X) atoms |> Array.max
     let maxY = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.Y) atoms |> Array.max
     let maxZ = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.Z) atoms |> Array.max
@@ -258,14 +261,15 @@ let main =
     let pov = { X = 0.0; Y = 0.0; Z = unitSize }
     let viewBox = (-unitSize, -unitSize, 2.0 * unitSize, 2.0 * unitSize)
 
-    let numSteps = 20.0
+    // Generate SVGs.
     for step in [ 1.0 .. 1.0 .. numSteps ] do
+        // Calculate rotation angle.
         let rad : float option = Some ((step / numSteps) * 2.0 * Math.PI)
 
         // Parse and prep atom data.
         let rotatedAtoms = 
             atoms
-            |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisY c rad))
+            |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotation c rad))
             |> Array.sortBy (fun ((_, _, c) : AtomInfo) -> - (abs (pov.Z - c.Z)))
         
         // Write out atoms to SVG.
