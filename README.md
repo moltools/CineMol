@@ -10,7 +10,7 @@
 
 Cinemol is a web application for drawing SVG images of small molecules.
 
-!warning! This project is a work in progress.
+:warning: This project is a work in progress.
 
 ## Install pre-requisites
 
