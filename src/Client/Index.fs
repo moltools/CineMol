@@ -1,16 +1,37 @@
 module Index
 
+open Browser
+open Browser.Types
 open Elmish
+open Fable
+open Fable.React
+open Fable.React.Props
 open Fable.Remoting.Client
+open Fable.Core
+open Feliz
+open Feliz.Bulma
+open Fulma
 open Shared
 
-type Model = { Todos: Todo list; Input: string }
+let encodeURI (svg : string) : string =
+//    JS.encodeURIComponent svg
+    svg
+
+type Model =
+    { Todos: Todo list
+      Input: string
+      Sdf: string
+      Svg: string
+      Encoded: string }
 
 type Msg =
     | GotTodos of Todo list
     | SetInput of string
     | AddTodo
     | AddedTodo of Todo
+    | UploadSdf of name : string * content : string
+    | Render
+    | GotEncoding of string
 
 let todosApi =
     Remoting.createApi ()
@@ -18,10 +39,15 @@ let todosApi =
     |> Remoting.buildProxy<ITodosApi>
 
 let init () : Model * Cmd<Msg> =
-    let model = { Todos = []; Input = "" }
-
-    let cmd = Cmd.OfAsync.perform todosApi.getTodos () GotTodos
-
+    let model =
+        { Todos = []
+          Input = ""
+          Sdf = ""
+          Svg = ""
+          Encoded = "" }
+//    let cmd = Cmd.OfAsync.perform todosApi.getTodos () GotTodos
+//    let cmd = Cmd.OfAsync.perform todosApi.render (encodeURI model.Svg) GotEncoding
+    let cmd = Cmd.none
     model, cmd
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
@@ -30,91 +56,60 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | SetInput value -> { model with Input = value }, Cmd.none
     | AddTodo ->
         let todo = Todo.create model.Input
-
         let cmd = Cmd.OfAsync.perform todosApi.addTodo todo AddedTodo
-
         { model with Input = "" }, cmd
     | AddedTodo todo -> { model with Todos = model.Todos @ [ todo ] }, Cmd.none
+    | UploadSdf (_, content) -> { model with Sdf = content }, Cmd.ofMsg Render
+    | Render -> model, Cmd.OfAsync.perform todosApi.render (encodeURI model.Sdf) GotEncoding
+    | GotEncoding encoded -> { model with Encoded = encoded }, Cmd.none
 
-open Feliz
-open Feliz.Bulma
+let private uploadFileEvent dispatch =
+    Fulma.File.input [
+        Props [
+            OnInput (
+                fun ev ->
+                    let file = (ev.target :?> HTMLInputElement).files.[0]
+                    let name = file.name
+                    let reader = FileReader.Create()
+                    reader.onload <- fun _ ->
+                        let content = reader.result :?> string
+                        (name, content) |> UploadSdf |> dispatch
+                    reader.readAsText file
+            )
+        ]
+    ]
 
-let navBrand =
-    Bulma.navbarBrand.div [
-        Bulma.navbarItem.a [
-            prop.href "https://safe-stack.github.io/"
-            navbarItem.isActive
-            prop.children [
-                Html.img [
-                    prop.src "/favicon.png"
-                    prop.alt "Logo"
+let private uploadFileButton dispatch =
+    Html.div [
+        prop.className "action-button"
+        prop.children [
+            Bulma.button.a [
+                button.isOutlined
+                button.isFullWidth
+                prop.children [
+                    Html.span "select SDF/Mol V2000 file"
+                    uploadFileEvent dispatch
                 ]
             ]
         ]
     ]
 
-let containerBox (model: Model) (dispatch: Msg -> unit) =
-    Bulma.box [
-        Bulma.content [
-            Html.ol [
-                for todo in model.Todos do
-                    Html.li [ prop.text todo.Description ]
-            ]
-        ]
-        Bulma.field.div [
-            field.isGrouped
+let private svgViewer model dispatch =
+    match model.Encoded with
+    | e when e.Length = 0 -> Html.div [ prop.className "viewer" ]
+    | _ ->
+        Html.div [
+            prop.className "viewer"
             prop.children [
-                Bulma.control.p [
-                    control.isExpanded
-                    prop.children [
-                        Bulma.input.text [
-                            prop.value model.Input
-                            prop.placeholder "What needs to be done?"
-                            prop.onChange (fun x -> SetInput x |> dispatch)
-                        ]
-                    ]
-                ]
-                Bulma.control.p [
-                    Bulma.button.a [
-                        color.isPrimary
-                        prop.disabled (Todo.isValid model.Input |> not)
-                        prop.onClick (fun _ -> dispatch AddTodo)
-                        prop.text "Add"
-                    ]
-                ]
+                img [ Src $"data:image/svg+xml;base64,{model.Encoded}"]
             ]
         ]
-    ]
 
 let view (model: Model) (dispatch: Msg -> unit) =
-    Bulma.hero [
-        hero.isFullHeight
-        color.isPrimary
-        prop.style [
-            style.backgroundSize "cover"
-            style.backgroundImageUrl "https://unsplash.it/1200/900?random"
-            style.backgroundPosition "no-repeat center center fixed"
-        ]
+    Html.div [
+        prop.className "cinemol"
         prop.children [
-            Bulma.heroHead [
-                Bulma.navbar [
-                    Bulma.container [ navBrand ]
-                ]
-            ]
-            Bulma.heroBody [
-                Bulma.container [
-                    Bulma.column [
-                        column.is6
-                        column.isOffset3
-                        prop.children [
-                            Bulma.title [
-                                text.hasTextCentered
-                                prop.text "cinemol"
-                            ]
-                            containerBox model dispatch
-                        ]
-                    ]
-                ]
-            ]
+            uploadFileButton dispatch
+            svgViewer model dispatch
         ]
     ]

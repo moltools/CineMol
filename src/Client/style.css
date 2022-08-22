@@ -1,0 +1,14 @@
+html, body {
+    margin: 0;
+    overflow: hidden;
+}
+
+.cinemol {
+    background-color: grey;
+    height: 100vh;
+    width: 100vw;
+}
+
+.action-button {}
+
+.viewer {}
