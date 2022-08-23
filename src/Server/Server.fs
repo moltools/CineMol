@@ -4,7 +4,6 @@ open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Saturn
 open System
-open System.IO
 open System.Text.RegularExpressions
 
 open Shared
@@ -178,22 +177,41 @@ let writeAtomDefs
     let ratio = unitSize / distZ
     let radius = atom.Radius * ratio
     let d1, d2, d3, d4, d5 = atom.Color.Gradient
+
+    let opstr = Operators.string
+
+    let cx = opstr coords.X
+    let cy = opstr coords.Y
+    let r = opstr (radius + 0.4)
+
+    let dr1 = opstr dr1
+    let dr2 = opstr dr2
+    let dr3 = opstr dr3
+    let dr4 = opstr dr4
+    let dr5 = opstr dr5
+
+    let d1r, d1g, d1b = opstr d1.R, opstr d1.G, opstr d1.B
+    let d2r, d2g, d2b = opstr d2.R, opstr d2.G, opstr d2.B
+    let d3r, d3g, d3b = opstr d3.R, opstr d3.G, opstr d3.B
+    let d4r, d4g, d4b = opstr d4.R, opstr d4.G, opstr d4.B
+    let d5r, d5g, d5b = opstr d5.R, opstr d5.G, opstr d5.B
+
     let atomDefsDescr =
         $"\n<radialGradient\
         \n\tid=\"radial-gradient-{idx}\"\
-        \n\tcx=\"{coords.X}\"\
-        \n\tcy=\"{coords.Y}\"\
-        \n\tfx=\"{coords.X}\"\
-        \n\tfy=\"{coords.Y}\"\
-        \n\tr=\"{radius + 0.4}\"\
+        \n\tcx=\"{cx}\"\
+        \n\tcy=\"{cy}\"\
+        \n\tfx=\"{cx}\"\
+        \n\tfy=\"{cy}\"\
+        \n\tr=\"{r}\"\
         \n\tgradientTransform=\"matrix(1, 0, 0, 1, 0, 0)\"\
         \n\tgradientUnits=\"userSpaceOnUse\"\
         \n>\
-        \n<stop offset=\"{dr1}\" stop-color=\"rgb({d1.R},{d1.G},{d1.B})\"/>\
-        \n<stop offset=\"{dr2}\" stop-color=\"rgb({d2.R},{d2.G},{d2.B})\"/>\
-        \n<stop offset=\"{dr3}\" stop-color=\"rgb({d3.R},{d3.G},{d3.B})\"/>\
-        \n<stop offset=\"{dr4}\" stop-color=\"rgb({d4.R},{d4.G},{d4.B})\"/>\
-        \n<stop offset=\"{dr5}\" stop-color=\"rgb({d5.R},{d5.G},{d5.B})\"/>\
+        \n<stop offset=\"{dr1}\" stop-color=\"rgb({d1r},{d1g},{d1b})\"/>\
+        \n<stop offset=\"{dr2}\" stop-color=\"rgb({d2r},{d2g},{d2b})\"/>\
+        \n<stop offset=\"{dr3}\" stop-color=\"rgb({d3r},{d3g},{d3b})\"/>\
+        \n<stop offset=\"{dr4}\" stop-color=\"rgb({d4r},{d4g},{d4b})\"/>\
+        \n<stop offset=\"{dr5}\" stop-color=\"rgb({d5r},{d5g},{d5b})\"/>\
         \n</radialGradient>"
     sb.Append(atomDefsDescr) |> ignore
 
@@ -206,12 +224,18 @@ let writeAtom
     let distZ = abs (pov.Z - coords.Z)
     let ratio = unitSize / distZ
     let radius = atom.Radius * ratio
+
+    let opstr = Operators.string
+    let cx = opstr coords.X
+    let cy = opstr coords.Y
+    let r = opstr radius
+
     let atomDescr =
         $"\n<circle\
         \n\tclass=\"atom-{idx}\"\
-        \n\tcx=\"{coords.X}\"\
-        \n\tcy=\"{coords.Y}\"\
-        \n\tr=\"{radius}\"\
+        \n\tcx=\"{cx}\"\
+        \n\tcy=\"{cy}\"\
+        \n\tr=\"{r}\"\
         \n/>"
     sb.Append(atomDescr) |> ignore
 
@@ -242,7 +266,7 @@ let writeSVG
 // ============================================================================
 // Main.
 // ============================================================================
-let pipe svg =
+let draw sdf =
     // Settings.
     let filterHydrogens : bool = false
     let numSteps : float = 20.0
@@ -253,7 +277,7 @@ let pipe svg =
         Array.filter (fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
 
     let atoms =
-        parse_sdf svg
+        parse_sdf sdf
         |> (if filterHydrogens then filterAtoms H else (fun arr -> arr))
 
     // Determine dimensions view box.
@@ -316,14 +340,9 @@ let todosApi =
                     | Ok () -> todo
                     | Error e -> failwith e
             }
-      render =
-          fun sdf ->
-              async {
-//                    return "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48c3R5bGU+LmF0b20tMXtmaWxsOiNmZjAwMDA7fTwvc3R5bGU+PC9kZWZzPjxjaXJjbGUgY2xhc3M9ImF0b20tMSIgY3g9IjUwIiBjeT0iNTAiIHI9IjUwIi8+PC9zdmc+"
-                    let svg = pipe sdf
-                    printfn $"{svg}"
-                    return toBase64String svg
-              }
+      render = fun sdf -> async {
+          return sdf |> draw |> toBase64String
+      }
     }
 
 let webApp =
