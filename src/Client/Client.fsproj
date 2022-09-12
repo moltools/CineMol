@@ -14,5 +14,8 @@
     <ItemGroup>
         <ProjectReference Include="..\Shared\Shared.fsproj" />
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Feliz.Bulma.Switch" Version="2.0.0" />
+    </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

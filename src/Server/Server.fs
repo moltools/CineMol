@@ -266,19 +266,15 @@ let writeSVG
 // ============================================================================
 // Main.
 // ============================================================================
-let draw sdf =
-    // Settings.
-    let filterHydrogens : bool = false
-    let numSteps : float = 20.0
-    let rotation : (Coords -> float option -> Coords) = rotateAxisY
-
-    // Parse atoms from SDF/Mol V2000 file; filter out hydrogen atoms.
-    let filterAtoms (atomType : Atom) (atoms : AtomInfo array) : AtomInfo array =
-        Array.filter (fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
+let draw filterHydrogens sdf =
+    let filterAtoms (atomType : Atom option) (atoms : AtomInfo array) : AtomInfo array =
+        match atomType with
+        | None -> atoms
+        | Some t -> Array.filter(fun ((_, a, _) : AtomInfo) -> a <> t) atoms
 
     let atoms =
         parse_sdf sdf
-        |> (if filterHydrogens then filterAtoms H else (fun arr -> arr))
+        |> (if filterHydrogens then filterAtoms (Some H) else filterAtoms None)
 
     // Determine dimensions view box.
     let maxX = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.X) atoms |> Array.max
@@ -288,67 +284,29 @@ let draw sdf =
     let pov = { X = 0.0; Y = 0.0; Z = unitSize }
     let viewBox = (-unitSize, -unitSize, 2.0 * unitSize, 2.0 * unitSize)
 
-//    // Generate SVGs.
-//    for step in [ 1.0 .. 1.0 .. numSteps ] do
-//        // Calculate rotation angle.
-//        let rad : float option = Some ((step / numSteps) * 2.0 * Math.PI)
-//
-//        // Parse and prep atom data.
-//        let rotatedAtoms =
-//            atoms
-//            |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotation c rad))
-//            |> Array.sortBy (fun ((_, _, c) : AtomInfo) -> - (abs (pov.Z - c.Z)))
-//
-//        // Write out atoms to SVG.
-    let svg = writeSVG viewBox pov unitSize atoms
-    svg
-
+    writeSVG viewBox pov unitSize atoms
 
 
 // ============================================================================
 // Other.
 // ============================================================================
-module Storage =
-    let todos = ResizeArray()
-
-    let addTodo (todo: Todo) =
-        if Todo.isValid todo.Description then
-            todos.Add todo
-            Ok()
-        else
-            Error "Invalid todo"
-
-    do
-        addTodo (Todo.create "Create new SAFE project")
-        |> ignore
-
-        addTodo (Todo.create "Write your app") |> ignore
-        addTodo (Todo.create "Ship it !!!") |> ignore
-
-
 let toBase64String (toEncode : string) : string =
     let bytes = System.Text.UTF8Encoding.GetEncoding(28591).GetBytes(toEncode)
     Convert.ToBase64String(bytes)
 
-let todosApi =
-    { getTodos = fun () -> async { return Storage.todos |> List.ofSeq }
-      addTodo =
-        fun todo ->
-            async {
-                return
-                    match Storage.addTodo todo with
-                    | Ok () -> todo
-                    | Error e -> failwith e
-            }
-      render = fun sdf -> async {
-          return sdf |> draw |> toBase64String
-      }
-    }
+let cinemolApi =
+    { render = fun assignment -> async {
+        let result =
+            assignment.Sdf
+            |> (draw assignment.Settings.FilterHydrogens)
+            |> toBase64String
+
+        return result } }
 
 let webApp =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.fromValue todosApi
+    |> Remoting.fromValue cinemolApi
     |> Remoting.buildHttpHandler
 
 let app =
@@ -357,8 +315,7 @@ let app =
         use_router webApp
         memory_cache
         use_static "public"
-        use_gzip
-    }
+        use_gzip }
 
 [<EntryPoint>]
 let main _ =
