@@ -10,6 +10,8 @@
         "test:live": "webpack-dev-server --mode development --env test"
     },
     "dependencies": {
+        "bulma": "^0.9.4",
+        "bulma-slider": "^2.0.5",
         "bulma-switch": "^2.0.4",
         "femto": "^0.0.8",
         "react": "^17.0.2",

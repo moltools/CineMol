@@ -22,6 +22,8 @@ type Msg =
     | UploadSdf of name : string * content : string
     | Render
     | GotEncoding of string
+    | SetHydrogenSwitch of bool
+    | SetRotation of float
 
 let cinemolApi =
     Remoting.createApi ()
@@ -30,7 +32,7 @@ let cinemolApi =
 
 let init () : Model * Cmd<Msg> =
     let model =
-        { Assignment = { Sdf = ""; Settings = { FilterHydrogens = false } }
+        { Assignment = { Sdf = ""; Settings = { ShowHydrogenAtoms = false; Rotation = 0.5 } }
           Svg = ""
           Encoded = "" }
     model, Cmd.none
@@ -40,6 +42,12 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | UploadSdf (_, content) -> { model with Assignment = { model.Assignment with Sdf = content } }, Cmd.ofMsg Render
     | Render -> model, Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
     | GotEncoding encoded -> { model with Encoded = encoded }, Cmd.none
+    | SetHydrogenSwitch b ->
+        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with ShowHydrogenAtoms = b } } },
+        Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
+    | SetRotation f ->
+        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with Rotation = f } } },
+        Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
 
 let private uploadFileEvent dispatch =
     Fulma.File.input [
@@ -65,14 +73,15 @@ let private uploadFileButton dispatch =
                     Html.span "select SDF (Mol V2000) file"
                     uploadFileEvent dispatch ] ] ] ]
 
-let private filterHydrogensSwitch dispatch =
-    Bulma.field [
+let private showHydrogenSwitch dispatch =
+    Html.div [
         Switch.checkbox [
-            prop.id "mycheck"
+            prop.id "hydrogen-switch"
+            prop.onChange (fun (ev: Event) -> (SetHydrogenSwitch (not ev.Checked)) |> dispatch)
             color.isDanger ]
         Html.label [
-            prop.htmlFor "mycheck"
-            prop.text "Check me" ] ]
+            prop.htmlFor "hydrogen-switch"
+            prop.text "Show hydrogen atoms" ] ]
 
 let private svgViewer model dispatch =
     match model.Encoded with
@@ -83,10 +92,21 @@ let private svgViewer model dispatch =
             prop.children [
                 img [ Src $"data:image/svg+xml;base64,{model.Encoded}"] ] ]
 
+let private rotateMolSlider dispatch =
+    Html.div [
+        Slider.slider [
+            slider.isFullWidth
+            slider.isCircle
+            slider.isLarge
+            color.isBlack
+            prop.onChange (fun (ev: Event) -> (SetRotation (float ev.Value) |> dispatch))
+    ] ]
+
 let view (model: Model) (dispatch: Msg -> unit) =
     Html.div [
         prop.className "cinemol"
         prop.children [
             uploadFileButton dispatch
-            filterHydrogensSwitch dispatch
-            svgViewer model dispatch ] ]
+            showHydrogenSwitch dispatch
+            svgViewer model dispatch
+            rotateMolSlider dispatch ] ]

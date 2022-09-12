@@ -8,15 +8,18 @@ open System.Text.RegularExpressions
 
 open Shared
 
+
 // ============================================================================
 // Error handling.
 // ============================================================================
 exception InputError of string
 
+
 // ============================================================================
 // Globals.
 // ============================================================================
 let dr1, dr2, dr3, dr4, dr5 = 0.0, 0.11, 0.34, 0.66, 1.0  // Diffusion rates
+
 
 // ============================================================================
 // Types.
@@ -68,6 +71,7 @@ type Coords =
 type AtomInfo = Index * Atom * Coords
 
 type ViewBox = float * float * float * float
+
 
 // ============================================================================
 // Parsing input SDF/Mol V2000 file.
@@ -128,6 +132,7 @@ let parse_sdf (sdf : string) : AtomInfo array =
                 Z = castToFloat z })
         | _ -> () |]
 
+
 // ============================================================================
 // Functions for manipulating objects.
 // ============================================================================
@@ -160,6 +165,7 @@ let rotateAxisZ (c : Coords) (rad : float option) : Coords =
           Y = c.X * Math.Sin(r) + c.Y * Math.Cos(r)
           Z = c.Z }
     | None -> c
+
 
 // ============================================================================
 // Write SVG.
@@ -263,10 +269,11 @@ let writeSVG
     sb.Append("\n</svg>") |> ignore
     sb.ToString()
 
+
 // ============================================================================
 // Main.
 // ============================================================================
-let draw filterHydrogens sdf =
+let draw showHydrogenAtoms rotation sdf =
     let filterAtoms (atomType : Atom option) (atoms : AtomInfo array) : AtomInfo array =
         match atomType with
         | None -> atoms
@@ -274,7 +281,7 @@ let draw filterHydrogens sdf =
 
     let atoms =
         parse_sdf sdf
-        |> (if filterHydrogens then filterAtoms (Some H) else filterAtoms None)
+        |> (if showHydrogenAtoms then filterAtoms None else filterAtoms (Some H))
 
     // Determine dimensions view box.
     let maxX = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.X) atoms |> Array.max
@@ -284,7 +291,15 @@ let draw filterHydrogens sdf =
     let pov = { X = 0.0; Y = 0.0; Z = unitSize }
     let viewBox = (-unitSize, -unitSize, 2.0 * unitSize, 2.0 * unitSize)
 
-    writeSVG viewBox pov unitSize atoms
+    // Rotate coordinates.
+    let rotationType : (Coords -> float option -> Coords) = rotateAxisY
+    let rad : float option = Some ((rotation / 100.0) * 2.0 * Math.PI)
+    let rotatedAtoms =
+        atoms
+        |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotationType c rad))
+        |> Array.sortBy (fun ((_, _, c) : AtomInfo) -> - (abs (pov.Z - c.Z)))
+
+    writeSVG viewBox pov unitSize rotatedAtoms
 
 
 // ============================================================================
@@ -298,7 +313,7 @@ let cinemolApi =
     { render = fun assignment -> async {
         let result =
             assignment.Sdf
-            |> (draw assignment.Settings.FilterHydrogens)
+            |> (draw assignment.Settings.ShowHydrogenAtoms assignment.Settings.Rotation)
             |> toBase64String
 
         return result } }

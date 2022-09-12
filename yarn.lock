@@ -521,10 +521,20 @@
   "resolved" "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz"
   "version" "1.1.2"
 
+"bulma-slider@^2.0.5":
+  "integrity" "sha512-6woD/1E7q1o5bfEaQjNqpWZaCItC1oHe9bN15WYB2ELqz2gDaJYZkf+rlozGpAYOXQGDQGCCv3y+QuKjx6sQuw=="
+  "resolved" "https://registry.npmjs.org/bulma-slider/-/bulma-slider-2.0.5.tgz"
+  "version" "2.0.5"
+
 "bulma-switch@^2.0.4":
   "integrity" "sha512-kMu4H0Pr0VjvfsnT6viRDCgptUq0Rvy7y7PX6q+IHg1xUynsjszPjhAdal5ysAlCG5HNO+5YXxeiu92qYGQolw=="
   "resolved" "https://registry.npmjs.org/bulma-switch/-/bulma-switch-2.0.4.tgz"
   "version" "2.0.4"
+
+"bulma@^0.9.4":
+  "integrity" "sha512-86FlT5+1GrsgKbPLRRY7cGDg8fsJiP/jzTqXXVqiUZZ2aZT8uemEOHlU1CDU+TxklPEZ11HZNNWclRBBecP4CQ=="
+  "resolved" "https://registry.npmjs.org/bulma/-/bulma-0.9.4.tgz"
+  "version" "0.9.4"
 
 "bytes@3.0.0":
   "integrity" "sha1-0ygVQE1olpn4Wk6k+odV3ROpYEg="

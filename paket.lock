@@ -138,6 +138,8 @@ NUGET
     Feliz.Bulma (2.18)
       Feliz (>= 1.32)
       FSharp.Core (>= 4.7.2)
+    Feliz.Bulma.Switch (2.00)
+    Feliz.Bulma.Slider (2.00)
     Feliz.CompilerPlugins (1.8)
       Fable.AST (>= 3.0)
       FSharp.Core (>= 4.7.2)
