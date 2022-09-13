@@ -9,13 +9,15 @@ html, body {
 }
 
 .cinemol {
-    background-color: grey;
+    background-color: white;
     height: 100vh;
     width: 100vw;
 }
 
-.action-button {}
-
 .viewer {
-    width: 50vw;
+    overflow: visible;
+}
+
+.svg {
+    overflow: visible;
 }

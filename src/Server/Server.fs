@@ -252,12 +252,13 @@ let writeSVG
     (atoms : AtomInfo array)
     : string =
     let sb = System.Text.StringBuilder()
+    // TODO: dynamically determine viewbox
     let header =
         $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
         \n<svg\
         \n\tid=\"Layer_1\"\
         \n\txmlns=\"http://www.w3.org/2000/svg\"\
-        \n\tviewBox=\"{xMin} {yMin} {width} {height}\"\
+        \n\tviewBox=\"{-20.0} {-20.0} {40.0} {40.0}\"\
         \n>"
     sb.Append(header) |> ignore
     sb.Append("\n<defs>\n<style>") |> ignore
@@ -274,14 +275,13 @@ let writeSVG
 // Main.
 // ============================================================================
 let draw showHydrogenAtoms rotation sdf =
-    let filterAtoms (atomType : Atom option) (atoms : AtomInfo array) : AtomInfo array =
-        match atomType with
-        | None -> atoms
-        | Some t -> Array.filter(fun ((_, a, _) : AtomInfo) -> a <> t) atoms
+    let filterAtoms (atomType : Atom) (atoms : AtomInfo array) : AtomInfo array =
+        Array.filter(fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
 
     let atoms =
-        parse_sdf sdf
-        |> (if showHydrogenAtoms then filterAtoms None else filterAtoms (Some H))
+        match showHydrogenAtoms with
+        | true -> parse_sdf sdf
+        | false -> sdf |> parse_sdf |> filterAtoms H
 
     // Determine dimensions view box.
     let maxX = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.X) atoms |> Array.max
