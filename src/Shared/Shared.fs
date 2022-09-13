@@ -8,4 +8,4 @@ type Settings = { ShowHydrogenAtoms: bool; Rotation: float }
 
 type Assignment = { Settings: Settings; Sdf: string }
 
-type ICinemolApi = { render: Assignment -> Async<string> }
+type ICinemolApi = { render: Assignment -> Async<string * string> }

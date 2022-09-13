@@ -1,5 +1,7 @@
 module App
 
+open Client
+open Index
 open Elmish
 open Elmish.React
 
@@ -8,7 +10,7 @@ open Elmish.Debug
 open Elmish.HMR
 #endif
 
-Program.mkProgram Index.init Index.update Index.view
+Program.mkProgram init update view
 #if DEBUG
 |> Program.withConsoleTrace
 #endif

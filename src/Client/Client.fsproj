@@ -7,6 +7,9 @@
     <ItemGroup>
         <None Include="index.html" />
         <None Include="paket.references" />
+        <Compile Include="Widgets\General.fs" />
+        <Compile Include="Widgets\Settings.fs" />
+        <Compile Include="Sidebar.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="App.fs" />
         <Content Include="style.scss" />

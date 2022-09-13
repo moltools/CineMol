@@ -311,12 +311,13 @@ let toBase64String (toEncode : string) : string =
 
 let cinemolApi =
     { render = fun assignment -> async {
-        let result =
+        let svg : string =
             assignment.Sdf
             |> (draw assignment.Settings.ShowHydrogenAtoms assignment.Settings.Rotation)
-            |> toBase64String
 
-        return result } }
+        let encodedSvg : string = svg |> toBase64String
+
+        return (svg, encodedSvg) } }
 
 let webApp =
     Remoting.createApi ()
