@@ -274,7 +274,7 @@ let writeSVG
 // ============================================================================
 // Main.
 // ============================================================================
-let draw showHydrogenAtoms rotation sdf =
+let draw showHydrogenAtoms rotX rotY rotZ sdf =
     let filterAtoms (atomType : Atom) (atoms : AtomInfo array) : AtomInfo array =
         Array.filter(fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
 
@@ -292,11 +292,14 @@ let draw showHydrogenAtoms rotation sdf =
     let viewBox = (-unitSize, -unitSize, 2.0 * unitSize, 2.0 * unitSize)
 
     // Rotate coordinates.
-    let rotationType : (Coords -> float option -> Coords) = rotateAxisY
-    let rad : float option = Some ((rotation / 100.0) * 2.0 * Math.PI)
+    let radX : float option = Some ((rotX / 100.0) * 2.0 * Math.PI)
+    let radY : float option = Some ((rotY / 100.0) * 2.0 * Math.PI)
+    let radZ : float option = Some ((rotZ / 100.0) * 2.0 * Math.PI)
     let rotatedAtoms =
         atoms
-        |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotationType c rad))
+        |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisY c radX))
+        |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisZ c radY))
+        |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisX c radZ))
         |> Array.sortBy (fun ((_, _, c) : AtomInfo) -> - (abs (pov.Z - c.Z)))
 
     writeSVG viewBox pov unitSize rotatedAtoms
@@ -313,7 +316,10 @@ let cinemolApi =
     { render = fun assignment -> async {
         let svg : string =
             assignment.Sdf
-            |> (draw assignment.Settings.ShowHydrogenAtoms assignment.Settings.Rotation)
+            |> (draw assignment.Settings.ShowHydrogenAtoms
+                    assignment.Settings.XRotation
+                    assignment.Settings.YRotation
+                    assignment.Settings.ZRotation)
 
         let encodedSvg : string = svg |> toBase64String
 

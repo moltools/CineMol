@@ -46,7 +46,9 @@ type Msg =
     | Render
     | GotEncoding of svg : string * encodedSvg : string
     | SidebarMsg of Sidebar.Msg
-    | SetRotation of float
+    | SetXRotation of float
+    | SetYRotation of float
+    | SetZRotation of float
     | MouseUp
 //    | MouseMove of Position
 //    | MouseDrag of Position
@@ -66,7 +68,10 @@ let init () : Model * Cmd<Msg> =
 //        Cmd.move MouseMove
     ]
     let model =
-        { Assignment = { Sdf = ""; Settings = { ShowHydrogenAtoms = false; Rotation = 0.5 } }
+        { Assignment = { Sdf = ""; Settings = { ShowHydrogenAtoms = false
+                                                XRotation = 0.5
+                                                YRotation = 0.5
+                                                ZRotation = 0.5 } }
           Svg = ""
           Encoded = ""
           Sidebar = sidebarModel }
@@ -90,8 +95,14 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | UploadSdf (_, content) -> { model with Assignment = { model.Assignment with Sdf = content } }, Cmd.ofMsg Render
     | Render -> model, Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
     | GotEncoding (svg, encodedSvg) -> { model with Encoded = encodedSvg; Svg = svg }, Cmd.none
-    | SetRotation f ->
-        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with Rotation = f } } },
+    | SetXRotation f ->
+        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with XRotation = f } } },
+        Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
+    | SetYRotation f ->
+        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with YRotation = f } } },
+        Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
+    | SetZRotation f ->
+        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with ZRotation = f } } },
         Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
 //    | MouseUp ->
 //          model, Cmd.ofMsg MouseDragEnded
@@ -124,8 +135,12 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ShowHydrogenAtoms = switch } }
                 { model with Assignment = assignment },
                 Cmd.OfAsync.perform cinemolApi.render assignment GotEncoding
-            | Sidebar.GotRotation rotation ->
-                model, Cmd.ofMsg (SetRotation rotation)
+            | Sidebar.GotXRotation rotation ->
+                model, Cmd.ofMsg (SetXRotation rotation)
+            | Sidebar.GotYRotation rotation ->
+                model, Cmd.ofMsg (SetYRotation rotation)
+            | Sidebar.GotZRotation rotation ->
+                model, Cmd.ofMsg (SetZRotation rotation)
         { newModel with Sidebar = subModel }, Cmd.batch [ Cmd.map SidebarMsg cmd; extraCmd ]
 
 
@@ -172,17 +187,6 @@ let private svgViewer model =
                 Class "svg"
                 Src svg
             ]
-        ]
-    ]
-
-let private rotateMolSlider dispatch =
-    Html.div [
-        Slider.slider [
-            slider.isFullWidth
-            slider.isCircle
-            slider.isLarge
-            color.isBlack
-            prop.onChange (fun (ev: Event) -> (SetRotation (float ev.Value) |> dispatch))
         ]
     ]
 

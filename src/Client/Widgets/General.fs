@@ -197,7 +197,7 @@ let viewExpanded (model : Model) dispatch =
                                 color.isSuccess
                                 prop.children [
                                     Bulma.icon [
-                                        Html.i [ prop.className "fas fa-star" ]
+                                        Html.i [ prop.className "fas fa-check" ]
                                     ]
                                     Html.span "Confirm"
                                 ]
@@ -210,7 +210,7 @@ let viewExpanded (model : Model) dispatch =
                                 color.isDanger
                                 prop.children [
                                     Bulma.icon [
-                                        Html.i [ prop.className "fas fa-star" ]
+                                        Html.i [ prop.className "fas fa-times" ]
                                     ]
                                     Html.span "Cancel"
                                 ]
