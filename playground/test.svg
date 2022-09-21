@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="-400 -400 800 800" version="1.1"
+xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<circle cx="0" cy="0" r="90" style="fill: #ff0000;"/>
+<path d="M -89.00000000000003 -14.86344801571299 A 57 57 0 0 0 -31.999999999999993 83.863448015713 Q 95 10 -89.00000000000003 -14.86344801571299" style="fill: #ccc; stroke: #446688; stroke-width: 0;"/><path d="M 32.000000000000014 83.863448015713 A 57 57 0 0 0 89.0 -14.863448015712997 Q 95 10 32.000000000000014 83.863448015713" style="fill: #ccc; stroke: #446688; stroke-width: 0;"/></svg>
