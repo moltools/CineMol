@@ -4,41 +4,53 @@ module Drawing =
 
     open System
 
+    open Cinemol.Helpers
     open Cinemol.Types
     open Cinemol.Parsing
-    open Cinemol.Geometry
     open Cinemol.Svg
 
-    let draw (viewBox: ViewBox option) depiction showHydrogenAtoms rotX rotY rotZ sdf =
-        let filterAtoms (atomType : Atom) (atoms : AtomInfo array) : AtomInfo array =
-            Array.filter(fun ((_, a, _) : AtomInfo) -> a <> atomType) atoms
-
+    let draw
+        (viewBox: ViewBox option)   // Needs to be set if None based on distances points in point cloud
+        (depiction: Depiction)      // Filled or ball-and-stick
+        (showHydrogenAtoms: bool)   // Filter out hydrogen atoms or not
+        (rotX: float)               // Rotation around x-axis
+        (rotY: float)               // Rotation around y-axis
+        (rotZ: float)               // Rotation around z-axis
+        (sdf: string)               // Input SDF (V2000) mol file in string format
+        : string * ViewBox =        // Returns SVG string and (set) view box
         let atoms =
-            match showHydrogenAtoms with
-            | true -> parse_sdf sdf
-            | false -> sdf |> parse_sdf |> filterAtoms H
+            parseSdf sdf
+            |> (fun atoms -> if showHydrogenAtoms = false then filterAtoms H atoms else atoms)
+            |> Array.map (fun atom -> atom.Rotate Y ((rotX / 100.0) * 2.0 * Math.PI))
+            |> Array.map (fun atom -> atom.Rotate Z ((rotY / 100.0) * 2.0 * Math.PI))
+            |> Array.map (fun atom -> atom.Rotate X ((rotZ / 100.0) * 2.0 * Math.PI))
 
-        let maxX = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.X) atoms |> Array.max
-        let maxY = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.Y) atoms |> Array.max
-        let maxZ = Array.map (fun ((_, _, c) : AtomInfo) -> abs c.Z) atoms |> Array.max
-        let unitSize = (List.max [ maxX; maxY; maxZ ]) * 2.0
-        let pov = { X = 0.0; Y = 0.0; Z = unitSize }
+        let offsetViewBox =
+            let minimumOffset = 10.0
+            match atoms |> Array.map (fun a -> a.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
+            | x when x < minimumOffset -> minimumOffset | x -> x
 
         let viewBox =
             match viewBox with
-            | None ->
-                let offset = unitSize |> int |> float
-                - offset, - offset, offset * 2.0, offset * 2.0
-            | Some vb -> vb
+            | None -> -offsetViewBox, -offsetViewBox, offsetViewBox * 2.0, offsetViewBox * 2.0
+            | Some x -> x
 
-        let radX : float option = Some ((rotX / 100.0) * 2.0 * Math.PI)
-        let radY : float option = Some ((rotY / 100.0) * 2.0 * Math.PI)
-        let radZ : float option = Some ((rotZ / 100.0) * 2.0 * Math.PI)
-        let rotatedAtoms =
+        let pov: Point = { X = 0.0; Y = 0.0; Z = offsetViewBox * 2.0 }
+        let cameraForward: Vector = { X = -pov.X; Y = -pov.Y; Z = -pov.Z }
+        let cameraPerpendicular: Vector = { X = cameraForward.Y; Y = -cameraForward.X; Z = 0.0 }
+        let cameraHorizon: Vector = cameraForward.Cross cameraPerpendicular
+        let focalLength = 1000.0
+
+        let warpAtom (atom: AtomInfo) : AtomInfo =
+            { atom with Center = warp cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength atom.Center }
+
+        let atoms =
             atoms
-            |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisY c radX))
-            |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisZ c radY))
-            |> Array.map (fun ((i, a, c) : AtomInfo) -> (i, a, rotateAxisX c radZ))
-            |> Array.sortBy (fun ((_, _, c) : AtomInfo) -> - (abs (pov.Z - c.Z)))
+            |> Array.map (fun atom -> warpAtom atom)
+            |> Array.sortBy (fun atom -> atom.Center.Z)
 
-        writeSVG viewBox depiction pov unitSize rotatedAtoms, viewBox
+        // TODO: fix bug -- all dot products in project vector are 0.0 and result in NaN when dividing by magnitude
+        // TODO: apply perspective to atom coordinates and atom radius based on camera position
+        // TODO: clipping
+
+        writeSVG viewBox depiction atoms, viewBox

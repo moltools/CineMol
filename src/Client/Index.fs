@@ -131,7 +131,9 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             | Sidebar.NoOp ->
                 model, Cmd.none
             | Sidebar.Reset ->
-                { model with Encoded = "" }, Cmd.none
+                let assignment = { model.Assignment with Sdf = ""; Settings = { model.Assignment.Settings with ViewBox = None } }
+                { model with Encoded = ""; Svg = ""; Assignment = assignment },
+                Cmd.OfAsync.perform cinemolApi.render assignment GotEncoding
             | Sidebar.UploadSdf (_, src) ->
                 let assignment = { model.Assignment with Sdf = src }
                 { model with Assignment = assignment }, Cmd.ofMsg Render

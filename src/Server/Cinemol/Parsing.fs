@@ -22,44 +22,33 @@ module Parsing =
 
     let (|AtomLine|_|) input =
         let m = Regex.Match(input, atomLine)
-        if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ])
-        else None
+        if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ]) else None
 
-    let identifyAtom (atom : string) : Atom =
+    let identifyAtom (atom: string) : Atom =
         match atom with
         | "C" -> C | "N" -> N | "O" -> O | "S" -> S | "H" -> H
         | _ -> raise <| InputError($"unknown atom {atom}")
 
-    let tryParseFloat (s : string) : float option =
+    let tryParseFloat (s: string) : float option =
         try s |> float |> Some
         with :? FormatException -> None
 
-    let castToFloat (s : string) : float =
-        match tryParseFloat s with
-        | Some f -> f
-        | None -> raise <| InputError("coordinate is not a float")
+    let castToFloat (s: string) : float =
+        match tryParseFloat s with | Some f -> f | None -> raise <| InputError("coordinate is not a float")
 
-    let parse_sdf (sdf : string) : AtomInfo array =
+    let parseSdf (sdf: string) : AtomInfo array =
         let lines = sdf.Split [|'\n'|]
-
-        let moleculeCount =
-            lines
-            |> Array.map (fun l -> l.Contains("$$$$") = true)
-            |> Array.filter id
-            |> Array.length
-
-        match moleculeCount with
-        | x when x > 1 -> raise <| InputError("multiple molecules in input file")
-        | _ -> ()
+        let moleculeCount = lines |> Array.map (fun l -> l.Contains("$$$$") = true) |> Array.filter id |> Array.length
+        match moleculeCount with | x when x > 1 -> raise <| InputError("multiple molecules in input file") | _ -> ()
 
         let mutable atomCount = 0
         [| for l in lines do
             match l with
             | AtomLine [ x; y; z; symbol] ->
                 atomCount <- atomCount + 1
-                ( atomCount,
-                  identifyAtom symbol,
-                  { X = castToFloat x
-                    Y = castToFloat y
-                    Z = castToFloat z })
+                let atomType = identifyAtom symbol
+                { Index = atomCount
+                  Type = atomType
+                  Center = { X = castToFloat x; Y = castToFloat y; Z = castToFloat z }
+                  Radius = atomType.Ratio }
             | _ -> () |]

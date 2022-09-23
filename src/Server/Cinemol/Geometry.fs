@@ -6,37 +6,7 @@ module Geometry =
 
     open Cinemol.Types
 
-    let abs (v : float) : float =
-        (v ** 2.0) ** 0.5
-
-    let dist (a : Coords) (b : Coords) : float =
-        (Coords.Sum(Coords.Pow (a - b) 2.0)) ** 0.5
-
-    let rotateAxisX (c : Coords) (rad : float option) : Coords =
-        match rad with
-        | Some r ->
-            { X = c.X
-              Y = c.Y * Math.Cos(r) - c.Z * Math.Sin(r)
-              Z = c.Y * Math.Sin(r) + c.Z * Math.Cos(r) }
-        | None -> c
-
-    let rotateAxisY (c : Coords) (rad : float option) : Coords =
-        match rad with
-        | Some r ->
-            { X = c.X * Math.Cos(r) + c.Z * Math.Sin(r)
-              Y = c.Y
-              Z = c.Z * Math.Cos(r) - c.X * Math.Sin(r) }
-        | None -> c
-
-    let rotateAxisZ (c : Coords) (rad : float option) : Coords =
-        match rad with
-        | Some r ->
-            { X = c.X * Math.Cos(r) - c.Y * Math.Sin(r)
-              Y = c.X * Math.Sin(r) + c.Y * Math.Cos(r)
-              Z = c.Z }
-        | None -> c
-
-    let intersection_circles (c_p1: Coords) (r_p1: float) (c_p2: Coords) (r_p2: float) : (Coords * Coords) option =
+    let intersectionCircles (c_p1: Point) (r_p1: float) (c_p2: Point) (r_p2: float) : (Point * Point) option =
         let d = Math.Sqrt((c_p2.X - c_p1.X) ** 2.0 + (c_p2.Y - c_p1.Y) ** 2.0)
         if d > (r_p1 + r_p2) then None  // non-intersecting
         elif d < abs (r_p1 - r_p1) then None  // one circle within other circle
