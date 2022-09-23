@@ -16,6 +16,9 @@ import math
 #   https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/pointer-events
 #   https://developer.mozilla.org/en-US/docs/Web/SVG/Element/clipPath
 
+
+# NOTE: camera is always aligned with z-axis at height 0. 
+
 Radius = float 
 Color = str
 

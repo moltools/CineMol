@@ -10,6 +10,7 @@ type Model = float option
 
 type Msg =
     | SetShowHydrogenAtoms
+    | SetDepiction
     | SetXRotation of float
     | SetYRotation of float
     | SetZRotation of float
@@ -18,6 +19,7 @@ type Msg =
 type ExternalMessage =
     | NoOp
     | GotShowHydrogenAtoms
+    | GotDepiction
     | GotXRotation of float
     | GotYRotation of float
     | GotZRotation of float
@@ -30,6 +32,8 @@ let update (msg : Msg) (model : Model) : Model * ExternalMessage =
     match msg with
     | SetShowHydrogenAtoms ->
         model, ExternalMessage.GotShowHydrogenAtoms
+    | SetDepiction ->
+        model, ExternalMessage.GotDepiction
     | SetXRotation rotation ->
         model, (ExternalMessage.GotXRotation rotation)
     | SetYRotation rotation ->
@@ -49,6 +53,17 @@ let view (model : Model) (dispatch : Msg -> unit) =
             Html.label [
                 prop.htmlFor "hydrogen-switch"
                 prop.text "Show hydrogen atoms"
+            ]
+        ]
+        Html.div [
+            Switch.checkbox [
+                prop.id "depiction-switch"
+                prop.onChange (fun (_ : Browser.Types.Event) -> SetDepiction |> dispatch)
+                color.isSuccess
+            ]
+            Html.label [
+                prop.htmlFor "depiction-switch"
+                prop.text "Change depiction"
             ]
         ]
         Html.div [

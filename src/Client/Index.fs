@@ -14,7 +14,6 @@ open Fulma
 open Shared
 open System
 
-
 //type Position = { X: float; Y: float }
 
 //type DragTarget =
@@ -42,18 +41,18 @@ type Model =
 //      DragTarget: DragTarget }
 
 type Msg =
-    | UploadSdf of name : string * content : string
+    | UploadSdf of name: string * content: string
     | Render
-    | GotEncoding of svg : string * encodedSvg : string
+    | GotEncoding of svg: string * encodedSvg: string * viewBox: ViewBox
     | SidebarMsg of Sidebar.Msg
     | SetXRotation of float
     | SetYRotation of float
     | SetZRotation of float
-    | MouseUp
+//    | MouseUp
 //    | MouseMove of Position
 //    | MouseDrag of Position
 //    | MouseDragStarted of Guid * Position
-    | MouseDragEnded
+//    | MouseDragEnded
 
 let cinemolApi =
     Remoting.createApi ()
@@ -68,7 +67,9 @@ let init () : Model * Cmd<Msg> =
 //        Cmd.move MouseMove
     ]
     let model =
-        { Assignment = { Sdf = ""; Settings = { ShowHydrogenAtoms = false
+        { Assignment = { Sdf = ""; Settings = { ViewBox = None
+                                                Depiction = Filled
+                                                ShowHydrogenAtoms = false
                                                 XRotation = 0.5
                                                 YRotation = 0.5
                                                 ZRotation = 0.5 } }
@@ -92,9 +93,16 @@ let downloadSvg (svg : string) =
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
-    | UploadSdf (_, content) -> { model with Assignment = { model.Assignment with Sdf = content } }, Cmd.ofMsg Render
-    | Render -> model, Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
-    | GotEncoding (svg, encodedSvg) -> { model with Encoded = encodedSvg; Svg = svg }, Cmd.none
+    | UploadSdf (_, content) ->
+        { model with Assignment = { model.Assignment with Sdf = content } },
+        Cmd.ofMsg Render
+    | Render ->
+        model,
+        Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
+    | GotEncoding (svg, encodedSvg, viewBox) ->
+        let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ViewBox = Some viewBox } }
+        { model with Encoded = encodedSvg; Svg = svg; Assignment = assignment },
+        Cmd.none
     | SetXRotation f ->
         { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with XRotation = f } } },
         Cmd.OfAsync.perform cinemolApi.render model.Assignment GotEncoding
@@ -125,7 +133,8 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             | Sidebar.Reset ->
                 { model with Encoded = "" }, Cmd.none
             | Sidebar.UploadSdf (_, src) ->
-                { model with Assignment = { model.Assignment with Sdf = src } }, Cmd.ofMsg Render
+                let assignment = { model.Assignment with Sdf = src }
+                { model with Assignment = assignment }, Cmd.ofMsg Render
             | Sidebar.DownloadSvg ->
                 printf $"svg: {model.Svg}"
                 downloadSvg model.Svg
@@ -133,6 +142,11 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             | Sidebar.GotShowHydrogenAtoms ->
                 let switch = not model.Assignment.Settings.ShowHydrogenAtoms
                 let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ShowHydrogenAtoms = switch } }
+                { model with Assignment = assignment },
+                Cmd.OfAsync.perform cinemolApi.render assignment GotEncoding
+            | Sidebar.GotDepiction ->
+                let switch = if model.Assignment.Settings.Depiction = BallAndStick then Filled else BallAndStick
+                let assignment = { model.Assignment with Settings = { model.Assignment.Settings with Depiction = switch } }
                 { model with Assignment = assignment },
                 Cmd.OfAsync.perform cinemolApi.render assignment GotEncoding
             | Sidebar.GotXRotation rotation ->

@@ -30,6 +30,7 @@ type ExternalMsg =
     | UploadSdf of name : string * src : string
     | DownloadSvg
     | GotShowHydrogenAtoms
+    | GotDepiction
     | GotXRotation of float
     | GotYRotation of float
     | GotZRotation of float
@@ -62,6 +63,7 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> * ExternalMsg =
             match externalMsg with
             | Widgets.Settings.NoOp -> ExternalMsg.NoOp
             | Widgets.Settings.GotShowHydrogenAtoms -> ExternalMsg.GotShowHydrogenAtoms
+            | Widgets.Settings.GotDepiction -> ExternalMsg.GotDepiction
             | Widgets.Settings.GotXRotation rotation -> ExternalMsg.GotXRotation rotation
             | Widgets.Settings.GotYRotation rotation -> ExternalMsg.GotYRotation rotation
             | Widgets.Settings.GotZRotation rotation -> ExternalMsg.GotZRotation rotation
