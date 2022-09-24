@@ -8,13 +8,13 @@
 
 <img src="https://github.com/davidmeijer/cinemol/blob/main/logo.png" alt="logo" width="100">
 
-Cinemol is a web application for drawing SVG images of small molecules.
+A web application for drawing SVG images of small molecules.
 
 :warning: This project is a work in progress.
 
 ## Install pre-requisites
 
-You'll need to install the following pre-requisites in order to build Cinemol:
+You'll need to install the following pre-requisites in order to build cinemol:
 
 * [.NET Core SDK](https://www.microsoft.com/net/download) 6.0 or higher
 * [Node 16](https://nodejs.org/en/download/)
@@ -44,10 +44,3 @@ dotnet run -- RunTests
 ```
 
 Client tests are available under `http://localhost:8081` in your browser and server tests are running in watch mode in console.
-
-Finally, there are `Bundle` and `Azure` targets that you can use to package your app and deploy to Azure, respectively:
-
-```bash
-dotnet run -- Bundle
-dotnet run -- Azure
-```
