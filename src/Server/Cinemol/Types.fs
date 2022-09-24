@@ -77,9 +77,9 @@ module Types =
         member u.Magnitude : float = Math.Sqrt(u.SumOfSquares)
         member u.Dot (v: Vector) : float = u.X * v.X + u.Y * v.Y + u.Z * v.Z
         member u.Cross (v: Vector) : Vector =
-            { X = +(u.Y * v.Z - u.Z * v.Y)
-              Y = -(u.Z * v.X - u.X * v.Z)
-              Z = +(u.X * v.Y - u.Y * v.X) }
+            { X = u.Y * v.Z - u.Z * v.Y
+              Y = u.Z * v.X - u.X * v.Z
+              Z = u.X * v.Y - u.Y * v.X }
         member x.ProjectVector (v: Vector) : float = (v.Dot x) / v.Magnitude
 
 
@@ -122,5 +122,5 @@ module Types =
           Y = p.Y * scaleFactor
           Z = p.Z * scaleFactor }
 
-    let warp cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength (p: Point) : Point =
+    let project cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength (p: Point) : Point =
         p |> physicalProjection cameraPerpendicular cameraHorizon cameraForward pov |> perspectiveProjection focalLength

@@ -17,6 +17,7 @@ nuget Fable.Remoting.Client
 nuget Feliz
 nuget Feliz.Bulma
 nuget Feliz.Bulma.Switch
+nuget Feliz.Bulma.Slider
 nuget Fulma
 
 nuget Fake.Core.Target
