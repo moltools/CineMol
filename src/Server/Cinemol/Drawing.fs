@@ -59,6 +59,4 @@ module Drawing =
         // Apply perspective projection on 3D point cloud on 2D view box
         let atoms = atoms |> Array.map (fun atom -> setPerspective atom)
 
-        // TODO: clipping
-
         writeSVG viewBox depiction atoms, viewBox

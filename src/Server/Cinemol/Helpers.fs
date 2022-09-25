@@ -5,6 +5,7 @@ module Helpers =
     open System
 
     let round (digits: int) (f: float) = Math.Round(f, digits)
+
     let abs f = (f ** 2.0) ** 0.5
 
     let toBase64String (toEncode : string) : string =
