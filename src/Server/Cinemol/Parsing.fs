@@ -47,8 +47,7 @@ module Parsing =
             | AtomLine [ x; y; z; symbol] ->
                 atomCount <- atomCount + 1
                 let atomType = identifyAtom symbol
-                { Index = atomCount
-                  Type = atomType
-                  Center = { X = castToFloat x; Y = castToFloat y; Z = castToFloat z }
-                  Radius = atomType.Ratio }
+                let center: Point = { X = castToFloat x; Y = castToFloat y; Z = castToFloat z }
+                let radius: Radius = atomType.Radius
+                createAtom atomCount atomType center radius
             | _ -> () |]

@@ -4,7 +4,11 @@ module Types =
 
     open System
 
+    open Cinemol.Helpers
+
     type Index = int
+
+    type Radius = float
 
     type DiffusionRate = float
 
@@ -22,6 +26,7 @@ module Types =
             { R = int ((float x.R) * factor)
               G = int ((float x.G) * factor)
               B = int ((float x.B) * factor) }
+
         member x.Gradient : Gradient =
             ( x.Diffuse (1.0 - diffusionRate1),
               x.Diffuse (1.0 - diffusionRate2),
@@ -65,29 +70,46 @@ module Types =
     and Point = { X: float; Y: float; Z: float }
         with
         static member (-) (p1: Point, c2: Point) : Point = { X = p1.X - c2.X; Y = p1.Y - c2.Y; Z = p1.Z - c2.Z }
+
         static member Pow (p: Point) (d: float) : Point = { X = p.X ** d; Y = p.Y ** d; Z = p.Z ** d }
+
         static member Sum (p: Point) : float = p.X + p.Y + p.Z
+
         member p1.Distance (p2: Point) : float = Math.Sqrt(Point.Sum(Point.Pow (p1 - p2) 2.0))
+
         member p.Rotate (axis: Axis) (rad: float) : Point = axis.RotationMatrix(p, rad)
+
         member p1.FindVector (p2: Point) : Vector = { X = p2.X - p1.X; Y = p2.Y - p1.Y; Z = p2.Z - p1.Z }
 
     and Vector = { X: float; Y: float; Z: float }
         with
         member u.SumOfSquares : float = u.X ** 2.0 + u.Y ** 2.0 + u.Z ** 2.0
+
         member u.Magnitude : float = Math.Sqrt(u.SumOfSquares)
+
         member u.Dot (v: Vector) : float = u.X * v.X + u.Y * v.Y + u.Z * v.Z
+
         member u.Cross (v: Vector) : Vector =
             { X = u.Y * v.Z - u.Z * v.Y
               Y = u.Z * v.X - u.X * v.Z
               Z = u.X * v.Y - u.Y * v.X }
+
         member x.ProjectVector (v: Vector) : float = (v.Dot x) / v.Magnitude
 
-
-    let origin: Point = { X = 0.0; Y = 0.0; Z = 0.0 }
+    type SphereSphereIntersection =
+        | Eclipsed
+        | NoIntersection
+        | IntersectionPoint of Point
+        | IntersectionCircle of Point * Radius * Vector
 
     type Atom = | C | N | O | S | H
         with
-        member x.Ratio : float = match x with | H -> 0.6 | _ -> 1.0
+        member x.Radius : float =
+            match x with
+            | S -> 1.2
+            | H -> 0.6
+            | _ -> 1.0
+
         member x.Color : Color =
             match x with
             | C -> grey
@@ -96,16 +118,62 @@ module Types =
             | S -> amber
             | H -> lightGrey
 
-    type AtomInfo = { Index: Index; Type: Atom; Center: Point; Radius: float }
+    type AtomInfo =
+        { Index: Index
+          Type: Atom
+          OriginalCenter: Point
+          ProjectedCenter: Point
+          OriginalRadius: Radius
+          ProjectedRadius: Radius }
         with
-        member x.Distance (p: Point) : float = x.Center.Distance p
-        member x.Rotate (axis: Axis) (rad: float) : AtomInfo = { x with Center = x.Center.Rotate axis rad }
+        member x.Rotate (axis: Axis) (rad: float) : AtomInfo = { x with OriginalCenter = x.OriginalCenter.Rotate axis rad }
+
+        member this.Intersect (other: AtomInfo) : SphereSphereIntersection =
+            let dist = this.OriginalCenter.Distance other.OriginalCenter
+
+            match dist with
+            | d when d > (this.OriginalRadius + other.OriginalRadius) ||
+                     (d = 0.0 && this.OriginalRadius = other.OriginalRadius)
+                      -> NoIntersection
+            | d when (d + this.OriginalRadius) < other.OriginalRadius  -> Eclipsed
+            | _ ->
+                // Intersection plane
+                let A = 2.0 * (other.OriginalCenter.X - this.OriginalCenter.X)
+                let B = 2.0 * (other.OriginalCenter.Y - this.OriginalCenter.Y)
+                let C = 2.0 * (other.OriginalCenter.Z - this.OriginalCenter.Z)
+                let D = this.OriginalCenter.X ** 2.0 - other.OriginalCenter.X ** 2.0 +
+                        this.OriginalCenter.Y ** 2.0 - other.OriginalCenter.Y ** 2.0 +
+                        this.OriginalCenter.Z ** 2.0 - other.OriginalCenter.Z ** 2.0 -
+                        this.OriginalRadius ** 2.0 + other. OriginalRadius ** 2.0
+
+                // Intersection center
+                let t = (this.OriginalCenter.X * A + this.OriginalCenter.Y * B + this.OriginalCenter.Z * C + D) /
+                        (A * (this.OriginalCenter.X - other.OriginalCenter.X) +
+                         B * (this.OriginalCenter.Y - other.OriginalCenter.Y) +
+                         C * (this.OriginalCenter.Z - other.OriginalCenter.Z))
+                let x = this.OriginalCenter.X + t * (other.OriginalCenter.X - this.OriginalCenter.X)
+                let y = this.OriginalCenter.Y + t * (other.OriginalCenter.Y - this.OriginalCenter.Y)
+                let z = this.OriginalCenter.Z + t * (other.OriginalCenter.Z - this.OriginalCenter.Z)
+                let intersectionCenter: Point = { X = x; Y = y; Z = z }
+
+                // Intersection
+                let alpha = Math.Acos((this.OriginalRadius ** 2.0 + dist ** 2.0 - other.OriginalRadius ** 2.0) /
+                                      (2.0 * this.OriginalRadius * dist))
+                let R = this.OriginalRadius * Math.Sin alpha
+
+                match R with
+                | 0.0 -> IntersectionPoint intersectionCenter
+                | _ ->
+                    let v = this.OriginalCenter.FindVector other.OriginalCenter
+                    IntersectionCircle (intersectionCenter, R, v)
 
     type ViewBox = float * float * float * float
 
     type Depiction =
         | Filled
         | BallAndStick
+
+    let origin: Point = { X = 0.0; Y = 0.0; Z = 0.0 }
 
     let filterAtoms (atomType: Atom) (atoms: AtomInfo array) : AtomInfo array =
         Array.filter(fun (atom: AtomInfo) -> atom.Type <> atomType) atoms
@@ -124,3 +192,11 @@ module Types =
 
     let project cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength (p: Point) : Point =
         p |> physicalProjection cameraPerpendicular cameraHorizon cameraForward pov |> perspectiveProjection focalLength
+
+    let createAtom (index: int) (atomType: Atom) (center: Point) (radius: Radius) : AtomInfo =
+        { Index = index
+          Type = atomType
+          OriginalCenter = center
+          OriginalRadius = radius
+          ProjectedCenter = center
+          ProjectedRadius = radius }

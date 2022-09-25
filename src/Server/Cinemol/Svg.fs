@@ -18,11 +18,11 @@ module Svg =
         let d1, d2, d3, d4, d5 = atom.Type.Color.Gradient
         $"\n<radialGradient\
         \n\tid=\"radial-gradient-{atom.Index}\"\
-        \n\tcx=\"{Operators.string atom.Center.X}\"\
-        \n\tcy=\"{Operators.string atom.Center.Y}\"\
-        \n\tfx=\"{Operators.string atom.Center.X}\"\
-        \n\tfy=\"{Operators.string atom.Center.Y}\"\
-        \n\tr=\"{Operators.string (atom.Radius + 0.4)}\"\
+        \n\tcx=\"{Operators.string atom.ProjectedCenter.X}\"\
+        \n\tcy=\"{Operators.string atom.ProjectedCenter.Y}\"\
+        \n\tfx=\"{Operators.string atom.ProjectedCenter.X}\"\
+        \n\tfy=\"{Operators.string atom.ProjectedCenter.Y}\"\
+        \n\tr=\"{Operators.string (atom.ProjectedRadius + 0.4)}\"\
         \n\tgradientTransform=\"matrix(1, 0, 0, 1, 0, 0)\"\
         \n\tgradientUnits=\"userSpaceOnUse\"\
         \n>\
@@ -38,23 +38,43 @@ module Svg =
         stop-color=\"rgb({Operators.string d5.R},{Operators.string d5.G},{Operators.string d5.B})\"/>\
         \n</radialGradient>"
 
-    let writeAtom atom =
-        $"\n<circle\
-        \n\tclass=\"atom-{atom.Index}\"\
-        \n\tcx=\"{Operators.string atom.Center.X}\"\
-        \n\tcy=\"{Operators.string atom.Center.Y}\"\
-        \n\tr=\"{Operators.string atom.Radius}\"\
-        \n/>"
+    let writeAtom (atom: AtomInfo) (otherAtoms: AtomInfo[]) =
+        let clipping =
+            otherAtoms
+            |> Array.map (fun a -> atom.Intersect a)
+            |> Array.filter (fun c -> match c with | NoIntersection | IntersectionPoint _ -> false | _ -> true)
+
+        match clipping with
+        // No clipping
+        | xs when Array.length xs = 0 ->
+            $"\n<circle\
+            \n\tclass=\"atom-{atom.Index}\"\
+            \n\tcx=\"{Operators.string atom.ProjectedCenter.X}\"\
+            \n\tcy=\"{Operators.string atom.ProjectedCenter.Y}\"\
+            \n\tr=\"{Operators.string atom.ProjectedRadius}\"\
+            \n/>"
+
+        // Clipping
+        | xs when Array.forall (fun x -> match x with | Eclipsed -> false | _ -> true) xs ->
+            ""  // TODO
+
+        // Atom is eclipsed, will not be drawn
+        | _ -> ""
 
     let writeAtomArc atom (start: Point) (final: Point) : string =
         $"<path\
         \n\tclass=\"atom-{atom.Index}\"
-        \n\td=\"M {start.X} {start.Y} A {atom.Radius} {atom.Radius} 0 1 {0} {final.X} {final.Y} L {start.X} {start.Y}\"
+        \n\td=\"M {start.X} {start.Y} A {atom.ProjectedRadius} {atom.ProjectedRadius} 0 1 {0} {final.X} {final.Y} L {start.X} {start.Y}\"
         \n/>"
 
     let writeAtomsStyle (atoms: AtomInfo[]) : string =  atoms |> Array.map writeAtomStyle |> String.concat ""
     let writeAtomsDefs (atoms: AtomInfo[]) : string = atoms |> Array.map writeAtomDefs |> String.concat ""
-    let writeAtoms (atoms: AtomInfo[]) : string = atoms |> Array.map writeAtom |> String.concat ""
+    let writeAtoms (atoms: AtomInfo[]) : string =
+        atoms
+        |> Array.map (fun atom ->
+            let otherAtoms = atoms |> Array.filter (fun a -> a.Index <> atom.Index)
+            writeAtom atom otherAtoms)
+        |> String.concat ""
 
     let add (s: string) (sb: System.Text.StringBuilder) : System.Text.StringBuilder = sb.Append(s)
     let stringify (sb: System.Text.StringBuilder) : string = sb.ToString()
