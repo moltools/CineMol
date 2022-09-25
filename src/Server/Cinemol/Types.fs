@@ -163,6 +163,8 @@ module Types =
 
                 // Intersection
                 let x = (this.ProjectedRadius ** 2.0 + dist ** 2.0 - other.ProjectedRadius ** 2.0) / (2.0 * this.ProjectedRadius * dist)
+                // TODO: Quick fix to make sure to prevent NaNs -- real solution would be making sure program does not
+                // TODO: try to clip objects that move in front of each other
                 if x < 1.0 then
                     let alpha = Math.Acos(x)
                     let R = this.ProjectedRadius * Math.Sin alpha
