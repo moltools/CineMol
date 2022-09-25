@@ -8,10 +8,11 @@ module Geometry =
 
     let intersectionCircles (c_p1: Point) (r_p1: float) (c_p2: Point) (r_p2: float) : (Point * Point) option =
         let d = Math.Sqrt((c_p2.X - c_p1.X) ** 2.0 + (c_p2.Y - c_p1.Y) ** 2.0)
-        if d > (r_p1 + r_p2) then None  // non-intersecting
-        elif d < abs (r_p1 - r_p1) then None  // one circle within other circle
-        elif d = 0.0 && r_p1 = r_p2 then None  // coincident circles
+        if d > (r_p1 + r_p2) then None  // Non-intersecting
+        elif d < abs (r_p1 - r_p1) then None  // One circle within other circle
+        elif d = 0.0 && r_p1 = r_p2 then None  // Coincident circles
         else
+            let d = d + 1E-05  // Make sure d is non-zero
             let a = (r_p1 ** 2.0 - r_p2 ** 2.0 + d ** 2.0) / (2.0 * d)
             let h = Math.Sqrt(r_p1 ** 2.0 - a ** 2.0)
             let x2 = c_p1.X + a * (c_p2.X - c_p1.X) / d

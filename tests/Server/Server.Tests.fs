@@ -6,6 +6,7 @@ open Shared
 open Server
 open Cinemol.Helpers
 open Cinemol.Types
+open Cinemol.Geometry
 
 let server = testList "Server" [
     testCase "Calculate dot product of two vectors" <| fun _ ->
@@ -49,6 +50,19 @@ let server = testList "Server" [
             Expect.equal rExpected (round 3 r) "failed"
             Expect.equal vExpected v "failed"
         | _ -> Expect.isTrue false "failed"
+
+    testCase "Calculate intersection points of two circles" <| fun _ ->
+        let c1, r1: Point * Radius = { X = 0.0; Y = 0.0; Z = 0.0 }, 2.0
+        let c2, r2: Point * Radius = { X = 2.0; Y = 0.0; Z = 0.0 }, 2.0
+        match intersectionCircles c1 r1 c2 r2 with
+        | None -> Expect.isTrue false "failed"
+        | Some (p1, p2) ->
+            Expect.equal 1.0 p1.X "failed"
+            Expect.equal -1.732 (round 3 p1.Y) "failed"
+            Expect.equal 0.0 p1.Z "failed"
+            Expect.equal 1.0 p2.X "failed"
+            Expect.equal 1.732 (round 3 p2.Y) "failed"
+            Expect.equal 0.0 p2.Z "failed"
 ]
 
 let all = testList "All" [ Shared.Tests.shared; server ]

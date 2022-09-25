@@ -77,6 +77,11 @@ module Types =
 
         member p1.Distance (p2: Point) : float = Math.Sqrt(Point.Sum(Point.Pow (p1 - p2) 2.0))
 
+        member p1.Centroid (p2: Point) : Point =
+            { X = (p1.X + p2.X) / 2.0
+              Y = (p1.Y + p2.X) / 2.0
+              Z = (p1.Z + p2.Z) / 2.0 }
+
         member p.Rotate (axis: Axis) (rad: float) : Point = axis.RotationMatrix(p, rad)
 
         member p1.FindVector (p2: Point) : Vector = { X = p2.X - p1.X; Y = p2.Y - p1.Y; Z = p2.Z - p1.Z }
@@ -129,43 +134,48 @@ module Types =
         member x.Rotate (axis: Axis) (rad: float) : AtomInfo = { x with OriginalCenter = x.OriginalCenter.Rotate axis rad }
 
         member this.Intersect (other: AtomInfo) : SphereSphereIntersection =
-            let dist = this.OriginalCenter.Distance other.OriginalCenter
+            let dist = this.ProjectedCenter.Distance other.ProjectedCenter
 
             match dist with
-            | d when d > (this.OriginalRadius + other.OriginalRadius) ||
-                     (d = 0.0 && this.OriginalRadius = other.OriginalRadius)
+            | d when d > (this.ProjectedRadius + other.ProjectedRadius) ||
+                     (d = 0.0 && this.ProjectedRadius = other.ProjectedRadius)
                       -> NoIntersection
-            | d when (d + this.OriginalRadius) < other.OriginalRadius  -> Eclipsed
+            | d when (d + this.ProjectedRadius) < other.ProjectedRadius -> Eclipsed
             | _ ->
                 // Intersection plane
-                let A = 2.0 * (other.OriginalCenter.X - this.OriginalCenter.X)
-                let B = 2.0 * (other.OriginalCenter.Y - this.OriginalCenter.Y)
-                let C = 2.0 * (other.OriginalCenter.Z - this.OriginalCenter.Z)
-                let D = this.OriginalCenter.X ** 2.0 - other.OriginalCenter.X ** 2.0 +
-                        this.OriginalCenter.Y ** 2.0 - other.OriginalCenter.Y ** 2.0 +
-                        this.OriginalCenter.Z ** 2.0 - other.OriginalCenter.Z ** 2.0 -
-                        this.OriginalRadius ** 2.0 + other. OriginalRadius ** 2.0
+                let A = 2.0 * (other.ProjectedCenter.X - this.ProjectedCenter.X)
+                let B = 2.0 * (other.ProjectedCenter.Y - this.ProjectedCenter.Y)
+                let C = 2.0 * (other.ProjectedCenter.Z - this.ProjectedCenter.Z)
+                let D = this.ProjectedCenter.X ** 2.0 - other.ProjectedCenter.X ** 2.0 +
+                        this.ProjectedCenter.Y ** 2.0 - other.ProjectedCenter.Y ** 2.0 +
+                        this.ProjectedCenter.Z ** 2.0 - other.ProjectedCenter.Z ** 2.0 -
+                        this.ProjectedRadius ** 2.0 + other. ProjectedRadius ** 2.0
 
                 // Intersection center
-                let t = (this.OriginalCenter.X * A + this.OriginalCenter.Y * B + this.OriginalCenter.Z * C + D) /
-                        (A * (this.OriginalCenter.X - other.OriginalCenter.X) +
-                         B * (this.OriginalCenter.Y - other.OriginalCenter.Y) +
-                         C * (this.OriginalCenter.Z - other.OriginalCenter.Z))
-                let x = this.OriginalCenter.X + t * (other.OriginalCenter.X - this.OriginalCenter.X)
-                let y = this.OriginalCenter.Y + t * (other.OriginalCenter.Y - this.OriginalCenter.Y)
-                let z = this.OriginalCenter.Z + t * (other.OriginalCenter.Z - this.OriginalCenter.Z)
+                let t = (this.ProjectedCenter.X * A + this.ProjectedCenter.Y * B + this.ProjectedCenter.Z * C + D) /
+                        (A * (this.ProjectedCenter.X - other.ProjectedCenter.X) +
+                         B * (this.ProjectedCenter.Y - other.ProjectedCenter.Y) +
+                         C * (this.ProjectedCenter.Z - other.ProjectedCenter.Z))
+                let x = this.ProjectedCenter.X + t * (other.ProjectedCenter.X - this.ProjectedCenter.X)
+                let y = this.ProjectedCenter.Y + t * (other.ProjectedCenter.Y - this.ProjectedCenter.Y)
+                let z = this.ProjectedCenter.Z + t * (other.ProjectedCenter.Z - this.ProjectedCenter.Z)
                 let intersectionCenter: Point = { X = x; Y = y; Z = z }
 
                 // Intersection
-                let alpha = Math.Acos((this.OriginalRadius ** 2.0 + dist ** 2.0 - other.OriginalRadius ** 2.0) /
-                                      (2.0 * this.OriginalRadius * dist))
-                let R = this.OriginalRadius * Math.Sin alpha
+                let x = (this.ProjectedRadius ** 2.0 + dist ** 2.0 - other.ProjectedRadius ** 2.0) / (2.0 * this.ProjectedRadius * dist)
+                if x < 1.0 then
+                    let alpha = Math.Acos(x)
+                    let R = this.ProjectedRadius * Math.Sin alpha
+                    printf $"alpha: {alpha}\n"
+                    printf $"R: {R}\n"
 
-                match R with
-                | 0.0 -> IntersectionPoint intersectionCenter
-                | _ ->
-                    let v = this.OriginalCenter.FindVector other.OriginalCenter
-                    IntersectionCircle (intersectionCenter, R, v)
+                    match R with
+                    | 0.0 -> IntersectionPoint intersectionCenter
+                    | _ ->
+                        let v = this.ProjectedCenter.FindVector other.ProjectedCenter
+                        IntersectionCircle (intersectionCenter, R, v)
+                else
+                    NoIntersection
 
     type ViewBox = float * float * float * float
 

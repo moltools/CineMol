@@ -4,6 +4,9 @@ module Helpers =
 
     open System
 
+    let floatToStr (f: float) : string = Operators.string f
+    let intToStr (d: int) : string = Operators.string d
+
     let round (digits: int) (f: float) = Math.Round(f, digits)
 
     let abs f = (f ** 2.0) ** 0.5
