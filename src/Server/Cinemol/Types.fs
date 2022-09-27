@@ -168,8 +168,6 @@ module Types =
                 if x < 1.0 then
                     let alpha = Math.Acos(x)
                     let R = this.ProjectedRadius * Math.Sin alpha
-                    printf $"alpha: {alpha}\n"
-                    printf $"R: {R}\n"
 
                     match R with
                     | 0.0 -> IntersectionPoint intersectionCenter
