@@ -4,9 +4,9 @@
 
 ---
 
-# Cinemol
+# cinemole
 
-<img src="https://github.com/davidmeijer/cinemol/blob/main/logo.png" alt="logo" width="100">
+<img src="https://github.com/davidmeijer/cinemole/blob/main/logo.png" alt="logo" width="100">
 
 A web application for drawing SVG images of small molecules.
 
@@ -14,7 +14,7 @@ A web application for drawing SVG images of small molecules.
 
 ## Install pre-requisites
 
-You'll need to install the following pre-requisites in order to build cinemol:
+You'll need to install the following pre-requisites in order to build cinemole:
 
 * [.NET Core SDK](https://www.microsoft.com/net/download) 6.0 or higher
 * [Node 16](https://nodejs.org/en/download/)
