@@ -9,7 +9,7 @@
     <Compile Include="Server.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Cinemol\Cinemol.fsproj" />
+    <ProjectReference Include="Cinemole\Cinemole.fsproj" />
     <ProjectReference Include="..\Shared\Shared.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

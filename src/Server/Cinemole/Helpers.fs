@@ -1,4 +1,4 @@
-namespace Cinemol
+namespace Cinemole
 
 module Helpers =
 

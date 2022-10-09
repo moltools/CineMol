@@ -4,9 +4,9 @@ open Expecto
 
 open Shared
 open Server
-open Cinemol.Helpers
-open Cinemol.Types
-open Cinemol.Geometry
+open Cinemole.Helpers
+open Cinemole.Types
+open Cinemole.Geometry
 
 let server = testList "Server" [
     testCase "Calculate dot product of two vectors" <| fun _ ->

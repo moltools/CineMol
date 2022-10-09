@@ -1,12 +1,12 @@
-namespace Cinemol
+namespace Cinemole
 
 module Svg =
 
     open System
 
-    open Cinemol.Helpers
-    open Cinemol.Types
-    open Cinemol.Geometry
+    open Cinemole.Helpers
+    open Cinemole.Types
+    open Cinemole.Geometry
 
     let header ((xMin, yMin, width, height): ViewBox) =
         $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\

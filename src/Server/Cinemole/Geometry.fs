@@ -1,10 +1,10 @@
-namespace Cinemol
+namespace Cinemole
 
 module Geometry =
 
     open System
 
-    open Cinemol.Types
+    open Cinemole.Types
 
     let intersectionCircles (c_p1: Point) (r_p1: float) (c_p2: Point) (r_p2: float) : (Point * Point) option =
         let d = Math.Sqrt((c_p2.X - c_p1.X) ** 2.0 + (c_p2.Y - c_p1.Y) ** 2.0)

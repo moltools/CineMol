@@ -1,10 +1,10 @@
-﻿namespace Cinemol
+﻿namespace Cinemole
 
 module Types =
 
     open System
 
-    open Cinemol.Helpers
+    open Cinemole.Helpers
 
     type Index = int
 

@@ -1,13 +1,13 @@
-namespace Cinemol
+namespace Cinemole
 
 module Drawing =
 
     open System
 
-    open Cinemol.Helpers
-    open Cinemol.Types
-    open Cinemol.Parsing
-    open Cinemol.Svg
+    open Cinemole.Helpers
+    open Cinemole.Types
+    open Cinemole.Parsing
+    open Cinemole.Svg
 
     let draw
         (viewBox: ViewBox option)   // Needs to be set if None based on distances points in point cloud

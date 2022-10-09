@@ -33,7 +33,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Build", "Build.fsproj", "{C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{08E6ED36-527D-4F4F-B981-35F07282949C}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Cinemol", "src\Server\Cinemol\Cinemol.fsproj", "{4F0BB7FF-FA31-44B0-A4CD-0C6F3E10F12F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Cinemole", "src\Server\Cinemole\Cinemole.fsproj", "{4F0BB7FF-FA31-44B0-A4CD-0C6F3E10F12F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

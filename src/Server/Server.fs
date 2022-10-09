@@ -5,11 +5,11 @@ open Fable.Remoting.Giraffe
 open Saturn
 
 open Shared
-open Cinemol.Helpers
-open Cinemol.Types
-open Cinemol.Drawing
+open Cinemole.Helpers
+open Cinemole.Types
+open Cinemole.Drawing
 
-let cinemolApi =
+let cinemoleApi =
     { render = fun assignment -> async {
         let depiction =
             match assignment.Settings.Depiction with
@@ -32,7 +32,7 @@ let cinemolApi =
 let webApp =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.fromValue cinemolApi
+    |> Remoting.fromValue cinemoleApi
     |> Remoting.buildHttpHandler
 
 let app =

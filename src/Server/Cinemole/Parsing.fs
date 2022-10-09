@@ -1,12 +1,12 @@
-namespace Cinemol
+namespace Cinemole
 
 module Parsing =
 
     open System
     open System.Text.RegularExpressions
 
-    open Cinemol.Types
-    open Cinemol.ErrorHandling
+    open Cinemole.Types
+    open Cinemole.ErrorHandling
 
     let atomLine : string =
         let s = @"\s{1,}"

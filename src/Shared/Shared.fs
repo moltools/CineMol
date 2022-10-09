@@ -19,4 +19,4 @@ type Settings =
 
 type Assignment = { Settings: Settings; Sdf: string }
 
-type ICinemolApi = { render: Assignment -> Async<string * string * ViewBox> }
+type ICinemoleApi = { render: Assignment -> Async<string * string * ViewBox> }
