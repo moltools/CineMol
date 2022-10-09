@@ -8,7 +8,7 @@
 
 <img src="https://github.com/davidmeijer/cinemole/blob/main/logo.png" alt="logo" width="100">
 
-A web application for drawing SVG images of small molecules.
+[A web application for drawing SVG images of small molecules.](https://cinemole.com/)
 
 :warning: This project is a work in progress.
 
