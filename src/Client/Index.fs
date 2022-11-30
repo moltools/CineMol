@@ -14,6 +14,8 @@ open Fulma
 open Shared
 open System
 
+open Client.Cinemole.Render
+
 //type Position = { X: float; Y: float }
 
 //type DragTarget =
@@ -54,10 +56,10 @@ type Msg =
 //    | MouseDragStarted of Guid * Position
 //    | MouseDragEnded
 
-let cinemoleApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<ICinemoleApi>
+//let cinemoleApi =
+//    Remoting.createApi ()
+//    |> Remoting.withRouteBuilder Route.builder
+//    |> Remoting.buildProxy<ICinemoleApi>
 
 let init () : Model * Cmd<Msg> =
     let sidebarModel, sidebarCmd = Sidebar.init()
@@ -98,20 +100,20 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         Cmd.ofMsg Render
     | Render ->
         model,
-        Cmd.OfAsync.perform cinemoleApi.render model.Assignment GotEncoding
+        Cmd.OfAsync.perform render model.Assignment GotEncoding
     | GotEncoding (svg, encodedSvg, viewBox) ->
         let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ViewBox = Some viewBox } }
         { model with Encoded = encodedSvg; Svg = svg; Assignment = assignment },
         Cmd.none
     | SetXRotation f ->
         { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with XRotation = f } } },
-        Cmd.OfAsync.perform cinemoleApi.render model.Assignment GotEncoding
+        Cmd.OfAsync.perform render model.Assignment GotEncoding
     | SetYRotation f ->
         { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with YRotation = f } } },
-        Cmd.OfAsync.perform cinemoleApi.render model.Assignment GotEncoding
+        Cmd.OfAsync.perform render model.Assignment GotEncoding
     | SetZRotation f ->
         { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with ZRotation = f } } },
-        Cmd.OfAsync.perform cinemoleApi.render model.Assignment GotEncoding
+        Cmd.OfAsync.perform render model.Assignment GotEncoding
 //    | MouseUp ->
 //          model, Cmd.ofMsg MouseDragEnded
 //    | MouseMove (position: Position) ->
@@ -133,7 +135,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             | Sidebar.Reset ->
                 let assignment = { model.Assignment with Sdf = ""; Settings = { model.Assignment.Settings with ViewBox = None } }
                 { model with Encoded = ""; Svg = ""; Assignment = assignment },
-                Cmd.OfAsync.perform cinemoleApi.render assignment GotEncoding
+                Cmd.OfAsync.perform render assignment GotEncoding
             | Sidebar.UploadSdf (_, src) ->
                 let assignment = { model.Assignment with Sdf = src }
                 { model with Assignment = assignment }, Cmd.ofMsg Render
@@ -145,12 +147,12 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 let switch = not model.Assignment.Settings.ShowHydrogenAtoms
                 let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ShowHydrogenAtoms = switch } }
                 { model with Assignment = assignment },
-                Cmd.OfAsync.perform cinemoleApi.render assignment GotEncoding
+                Cmd.OfAsync.perform render assignment GotEncoding
             | Sidebar.GotDepiction ->
                 let switch = if model.Assignment.Settings.Depiction = BallAndStick then Filled else BallAndStick
                 let assignment = { model.Assignment with Settings = { model.Assignment.Settings with Depiction = switch } }
                 { model with Assignment = assignment },
-                Cmd.OfAsync.perform cinemoleApi.render assignment GotEncoding
+                Cmd.OfAsync.perform render assignment GotEncoding
             | Sidebar.GotXRotation rotation ->
                 model, Cmd.ofMsg (SetXRotation rotation)
             | Sidebar.GotYRotation rotation ->

@@ -55,17 +55,17 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 prop.text "Show hydrogen atoms"
             ]
         ]
-        Html.div [
-            Switch.checkbox [
-                prop.id "depiction-switch"
-                prop.onChange (fun (_ : Browser.Types.Event) -> SetDepiction |> dispatch)
-                color.isSuccess
-            ]
-            Html.label [
-                prop.htmlFor "depiction-switch"
-                prop.text "Change depiction"
-            ]
-        ]
+//        Html.div [
+//            Switch.checkbox [
+//                prop.id "depiction-switch"
+//                prop.onChange (fun (_ : Browser.Types.Event) -> SetDepiction |> dispatch)
+//                color.isSuccess
+//            ]
+//            Html.label [
+//                prop.htmlFor "depiction-switch"
+//                prop.text "Change depiction"
+//            ]
+//        ]
         Html.div [
             Slider.slider [
                 slider.isFullWidth
