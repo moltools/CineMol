@@ -6,7 +6,7 @@
 
 <img src="https://github.com/davidmeijer/cinemol/blob/main/logo.png" alt="logo" width="100">
 
-A [web application](https://moltools.nl/cinemol/) for drawing SVG images of small molecules!
+A [web application](https://moltools.nl/cinemol) for drawing SVG images of small molecules!
 
 :warning: This project is a work in progress :warning:
 
@@ -45,8 +45,10 @@ Client tests are available under `http://localhost:8081` in your browser.
 
 ## Bundle the application
 
-Bundle the application for deployment:
+Create production bundle:
 
 ```bash
 dotnet run Bundle
 ```
+
+You can find the production bundle in the newly created ```deploy``` folder.
