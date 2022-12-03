@@ -4,9 +4,23 @@ open System
 open System.Text.RegularExpressions
 
 open Types
-open ErrorHandling
 
+/// <summary>
+///     Exception to throw when parser encounters error when parsing.
+/// </summary>
+exception ParserError of string
 
+/// <summary>
+///     Constructs regular expression for atom line in V2000 molfile.
+/// </summary>
+/// <returns>
+///     Regular expression for atom line in V2000 molfile that matches four
+///     groups (in the following order):
+///         1) X coordinate
+///         2) Y coordinate
+///         3) Z coordinate
+///         4) atom type
+/// </returns>
 let atomLine : string =
     let s = @"\s{1,}"
     let d = @"[-+]?[0-9]*\.?[0-9]+"
@@ -19,34 +33,79 @@ let atomLine : string =
     |> (@) [ "^" ]
     |> String.concat ""
 
-let (|AtomLine|_|) input =
-    let m = Regex.Match(input, atomLine)
-    if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ]) else None
+/// <summary>
+///     Active pattern for matching and parsing atom line in V2000 molfile
+/// </summary>
+/// <param name="line">
+///     Input line to apply atom line regular expression on.
+/// </param>
+/// <returns>
+///     List of matched groups, if there was a match with the regular
+///     expression.
+/// </returns>
+let (|AtomLine|_|) (line: string) : string list option =
+    let m = Regex.Match(line, atomLine)
+    if m.Success then
+        Some(List.tail [ for g in m.Groups -> g.Value ])
+    else
+        None
 
-let identifyAtom (atom: string) : Atom =
+/// <summary>
+///     Cast atom symbol to Atom.
+/// </summary>
+/// <param name="atom">
+///     Atom symbol.
+/// </param>
+/// <returns>
+///     Casted atom type.
+/// </returns>
+let tryCastToAtom (atom: string) : Atom =
     match atom with
     | "C" -> C | "N" -> N | "O" -> O | "S" -> S | "H" -> H
-    | _ -> raise <| ErrorHandling.InputError($"unknown atom {atom}")
+    | _ -> Unknown
 
-let tryParseFloat (s: string) : float option =
-    try s |> float |> Some
-    with :? FormatException -> None
+/// <summary>
+///     Try to cast float string to float.
+/// </summary>
+/// <param name="s">
+///     Float string.
+/// </param>
+/// <returns>
+///     Casted float, if successfully cast. Otherwise, float 0.0.
+/// </returns>
+let tryCastToFloat (s: string) : float =
+    try s |> float
+    with :? FormatException -> 0.0
 
-let castToFloat (s: string) : float =
-    match tryParseFloat s with | Some f -> f | None -> raise <| InputError("coordinate is not a float")
-
-let parseSdf (sdf: string) : AtomInfo array =
-    let lines = sdf.Split [|'\n'|]
-    let moleculeCount = lines |> Array.map (fun l -> l.Contains("$$$$") = true) |> Array.filter id |> Array.length
-    match moleculeCount with | x when x > 1 -> raise <| InputError("multiple molecules in input file") | _ -> ()
-
-    let mutable atomCount = 0
-    [| for l in lines do
-        match l with
-        | AtomLine [ x; y; z; symbol] ->
-            atomCount <- atomCount + 1
-            let atomType = identifyAtom symbol
-            let center: Point = { X = castToFloat x; Y = castToFloat y; Z = castToFloat z }
-            let radius: Radius = atomType.Radius
-            createAtom atomCount atomType center radius
-        | _ -> () |]
+/// <summary>
+///     Parse molecules from V2000 molfile.
+/// </summary>
+/// <param name="sdf">
+///     SDF string to parse molecules from.
+/// </param>
+/// <returns>
+///     Parsed molecules from SDF string.
+/// </returns>
+let parseSdf (sdf: string) : Molecule[] =
+    let mutable atoms: AtomInfo list = []
+    let mutable atomCount: int = 0
+    [|
+        for line in sdf.Split [|'\n'|] do
+            match line with
+            | line when line.Contains("$$$$") = true ->
+                yield { Atoms = atoms |> List.toArray }
+                atomCount <- 0
+                atoms <- []
+            | AtomLine [ x; y; z; symbol] ->
+                atomCount <- atomCount + 1
+                let atomType = tryCastToAtom symbol
+                let center: Point = {
+                    X = tryCastToFloat x
+                    Y = tryCastToFloat y
+                    Z = tryCastToFloat z
+                }
+                let radius: Radius = atomType.Radius
+                let atom = createAtom atomCount atomType center radius
+                atoms <- atoms @ [ atom ]
+            | _ -> ()
+    |]

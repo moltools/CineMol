@@ -2,10 +2,9 @@
 
 open System
 
-type Index = int
-
-type Radius = float
-
+// ============================================================================
+// Color types.
+// ============================================================================
 type DiffusionRate = float
 
 let diffusionRate1: DiffusionRate = 0.0
@@ -43,6 +42,12 @@ let amber: Color = { R = 245; G = 201; B = 0 }
 let tan: Color = { R = 205; G = 173; B = 122 }
 let celery: Color = { R = 170; G = 187; B = 93 }
 
+
+// ============================================================================
+// Geometry types.
+// ============================================================================
+type Rotation = { AxisX: float; AxisY: float; AxisZ: float }
+
 type Axis = | X | Y | Z
     with
     member x.RotationMatrix : Point * float -> Point =
@@ -65,22 +70,27 @@ type Axis = | X | Y | Z
 
 and Point = { X: float; Y: float; Z: float }
     with
-    static member (-) (p1: Point, c2: Point) : Point = { X = p1.X - c2.X; Y = p1.Y - c2.Y; Z = p1.Z - c2.Z }
+    static member (-) (p1: Point, c2: Point) : Point =
+        { X = p1.X - c2.X; Y = p1.Y - c2.Y; Z = p1.Z - c2.Z }
 
-    static member Pow (p: Point) (d: float) : Point = { X = p.X ** d; Y = p.Y ** d; Z = p.Z ** d }
+    static member Pow (p: Point) (d: float) : Point =
+        { X = p.X ** d; Y = p.Y ** d; Z = p.Z ** d }
 
     static member Sum (p: Point) : float = p.X + p.Y + p.Z
 
-    member p1.Distance (p2: Point) : float = Math.Sqrt(Point.Sum(Point.Pow (p1 - p2) 2.0))
+    member p1.Distance (p2: Point) : float =
+        Math.Sqrt(Point.Sum(Point.Pow (p1 - p2) 2.0))
 
     member p1.Centroid (p2: Point) : Point =
         { X = (p1.X + p2.X) / 2.0
           Y = (p1.Y + p2.X) / 2.0
           Z = (p1.Z + p2.Z) / 2.0 }
 
-    member p.Rotate (axis: Axis) (rad: float) : Point = axis.RotationMatrix(p, rad)
+    member p.Rotate (axis: Axis) (rad: float) : Point =
+        axis.RotationMatrix(p, rad)
 
-    member p1.FindVector (p2: Point) : Vector = { X = p2.X - p1.X; Y = p2.Y - p1.Y; Z = p2.Z - p1.Z }
+    member p1.FindVector (p2: Point) : Vector =
+        { X = p2.X - p1.X; Y = p2.Y - p1.Y; Z = p2.Z - p1.Z }
 
 and Vector = { X: float; Y: float; Z: float }
     with
@@ -97,13 +107,21 @@ and Vector = { X: float; Y: float; Z: float }
 
     member x.ProjectVector (v: Vector) : float = (v.Dot x) / v.Magnitude
 
+
+// ============================================================================
+// Atom types.
+// ============================================================================
+type Index = int
+
+type Radius = float
+
 type SphereSphereIntersection =
     | Eclipsed
     | NoIntersection
     | IntersectionPoint of Point
     | IntersectionCircle of Point * Radius * Vector
 
-type Atom = | C | N | O | S | H
+type Atom = | C | N | O | S | H | Unknown
     with
     member x.Radius : float =
         match x with
@@ -118,6 +136,7 @@ type Atom = | C | N | O | S | H
         | O -> mutedRed
         | S -> amber
         | H -> lightGrey
+        | _ -> safetyOrange
 
 type AtomInfo =
     { Index: Index
@@ -127,7 +146,8 @@ type AtomInfo =
       OriginalRadius: Radius
       ProjectedRadius: Radius }
     with
-    member x.Rotate (axis: Axis) (rad: float) : AtomInfo = { x with OriginalCenter = x.OriginalCenter.Rotate axis rad }
+    member x.Rotate (axis: Axis) (rad: float) : AtomInfo =
+        { x with OriginalCenter = x.OriginalCenter.Rotate axis rad }
 
     member this.Intersect (other: AtomInfo) : SphereSphereIntersection =
         let dist = this.ProjectedCenter.Distance other.ProjectedCenter
@@ -173,6 +193,24 @@ type AtomInfo =
             else
                 NoIntersection
 
+let createAtom (index: int) (atomType: Atom) (center: Point) (radius: Radius) : AtomInfo =
+    { Index = index
+      Type = atomType
+      OriginalCenter = center
+      OriginalRadius = radius
+      ProjectedCenter = center
+      ProjectedRadius = radius }
+
+// ============================================================================
+// Molecule types.
+// ============================================================================
+type Molecule = {
+    Atoms: AtomInfo[]
+}
+
+// ============================================================================
+// Drawing types.
+// ============================================================================
 type ViewBox = float * float * float * float
 
 type Depiction =
@@ -181,10 +219,12 @@ type Depiction =
 
 let origin: Point = { X = 0.0; Y = 0.0; Z = 0.0 }
 
-let filterAtoms (atomType: Atom) (atoms: AtomInfo array) : AtomInfo array =
-    Array.filter(fun (atom: AtomInfo) -> atom.Type <> atomType) atoms
-
-let physicalProjection cameraPerpendicular cameraHorizon cameraForward (pov: Point) (p: Point)  : Point =
+let physicalProjection
+    cameraPerpendicular
+    cameraHorizon
+    cameraForward
+    (pov: Point)
+    (p: Point) : Point =
     let pointVector = pov.FindVector(p)
     { X = pointVector.ProjectVector cameraPerpendicular
       Y = pointVector.ProjectVector cameraHorizon
@@ -196,13 +236,14 @@ let perspectiveProjection (focalLength: float) (p: Point) : Point =
       Y = p.Y * scaleFactor
       Z = p.Z * scaleFactor }
 
-let project cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength (p: Point) : Point =
-    p |> physicalProjection cameraPerpendicular cameraHorizon cameraForward pov |> perspectiveProjection focalLength
-
-let createAtom (index: int) (atomType: Atom) (center: Point) (radius: Radius) : AtomInfo =
-    { Index = index
-      Type = atomType
-      OriginalCenter = center
-      OriginalRadius = radius
-      ProjectedCenter = center
-      ProjectedRadius = radius }
+let project
+    cameraPerpendicular
+    cameraHorizon
+    cameraForward
+    (pov: Point)
+    focalLength
+    (p: Point)
+    : Point =
+    p
+    |> physicalProjection cameraPerpendicular cameraHorizon cameraForward pov
+    |> perspectiveProjection focalLength

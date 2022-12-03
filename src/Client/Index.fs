@@ -10,7 +10,33 @@ open Feliz
 open Feliz.Bulma
 open Fulma
 
-open Client.CineMol.Render
+open Client.CineMol.Types
+open Client.CineMol.Parsing
+open Client.CineMol.Encoding
+open Client.CineMol.Drawing
+
+type Settings =
+    { ViewBox: ViewBox option
+      Depiction: Depiction
+      ShowHydrogenAtoms: bool
+      XRotation: float
+      YRotation: float
+      ZRotation: float }
+
+type Assignment = { Settings: Settings; Sdf: string }
+
+let render = fun assignment -> async {
+    let svg, viewBox : string * ViewBox =
+        assignment.Sdf
+        |> parseSdf
+        |> (fun mols -> mols.[0])  // Select first molecule from SDF.
+        |> draw assignment.Settings.ViewBox
+                { Depiction = assignment.Settings.Depiction; ShowHydrogenAtoms = assignment.Settings.ShowHydrogenAtoms }
+                { AxisX = assignment.Settings.XRotation; AxisY = assignment.Settings.YRotation; AxisZ = assignment.Settings.ZRotation }
+
+    let encodedSvg : string = svg |> toBase64String
+
+    return (svg, encodedSvg, viewBox) }
 
 type Position = { X: float; Y: float }
 
