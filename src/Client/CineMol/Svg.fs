@@ -1,4 +1,4 @@
-module Client.Cinemole.Svg
+module Client.CineMol.Svg
 
 open System
 

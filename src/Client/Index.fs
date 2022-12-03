@@ -10,7 +10,7 @@ open Feliz
 open Feliz.Bulma
 open Fulma
 
-open Client.Cinemole.Render
+open Client.CineMol.Render
 
 type Position = { X: float; Y: float }
 

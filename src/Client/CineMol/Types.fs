@@ -1,4 +1,4 @@
-﻿module Client.Cinemole.Types
+﻿module Client.CineMol.Types
 
 open System
 

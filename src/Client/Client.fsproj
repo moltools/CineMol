@@ -7,15 +7,15 @@
     <ItemGroup>
         <None Include="index.html" />
         <None Include="paket.references" />
-        <Compile Include="Cinemole\Encoder.fs" />
-        <Compile Include="Cinemole\Helpers.fs" />
-        <Compile Include="Cinemole\ErrorHandling.fs" />
-        <Compile Include="Cinemole\Types.fs" />
-        <Compile Include="Cinemole\Parsing.fs" />
-        <Compile Include="Cinemole\Geometry.fs" />
-        <Compile Include="Cinemole\Svg.fs" />
-        <Compile Include="Cinemole\Drawing.fs" />
-        <Compile Include="Cinemole\Render.fs" />
+        <Compile Include="CineMol\Encoder.fs" />
+        <Compile Include="CineMol\Helpers.fs" />
+        <Compile Include="CineMol\ErrorHandling.fs" />
+        <Compile Include="CineMol\Types.fs" />
+        <Compile Include="CineMol\Parsing.fs" />
+        <Compile Include="CineMol\Geometry.fs" />
+        <Compile Include="CineMol\Svg.fs" />
+        <Compile Include="CineMol\Drawing.fs" />
+        <Compile Include="CineMol\Render.fs" />
         <Compile Include="Widgets\General.fs" />
         <Compile Include="Widgets\Settings.fs" />
         <Compile Include="Sidebar.fs" />

@@ -1,4 +1,4 @@
-module Client.Cinemole.Encoder
+module Client.CineMol.Encoder
 
 let encodeChar (c: char) : byte =
     // ISO/IEC 8859-1

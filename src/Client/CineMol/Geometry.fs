@@ -1,4 +1,4 @@
-module Client.Cinemole.Geometry
+module Client.CineMol.Geometry
 
 open System
 

@@ -1,4 +1,4 @@
-module Client.Cinemole.Drawing
+module Client.CineMol.Drawing
 
 open System
 

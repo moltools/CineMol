@@ -1,4 +1,4 @@
-module Client.Cinemole.Helpers
+module Client.CineMol.Helpers
 
 open System
 open Encoder

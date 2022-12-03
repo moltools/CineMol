@@ -1,4 +1,4 @@
-module Client.Cinemole.Render
+module Client.CineMol.Render
 
 open Helpers
 open Drawing

@@ -1,4 +1,4 @@
-module Client.Cinemole.Parsing
+module Client.CineMol.Parsing
 
 open System
 open System.Text.RegularExpressions
