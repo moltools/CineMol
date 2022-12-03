@@ -141,4 +141,4 @@ module.exports = function(env, arg) {
 
 function resolve(filePath) {
     return path.isAbsolute(filePath) ? filePath : path.join(__dirname, filePath);
-}
+};
