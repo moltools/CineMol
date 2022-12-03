@@ -31,9 +31,6 @@ type ExternalMsg =
     | DownloadSvg
     | GotShowHydrogenAtoms
     | GotDepiction
-    | GotXRotation of float
-    | GotYRotation of float
-    | GotZRotation of float
     | NoOp
 
 let init () =
@@ -64,9 +61,6 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> * ExternalMsg =
             | Widgets.Settings.NoOp -> ExternalMsg.NoOp
             | Widgets.Settings.GotShowHydrogenAtoms -> ExternalMsg.GotShowHydrogenAtoms
             | Widgets.Settings.GotDepiction -> ExternalMsg.GotDepiction
-            | Widgets.Settings.GotXRotation rotation -> ExternalMsg.GotXRotation rotation
-            | Widgets.Settings.GotYRotation rotation -> ExternalMsg.GotYRotation rotation
-            | Widgets.Settings.GotZRotation rotation -> ExternalMsg.GotZRotation rotation
         { model with Settings = settingsModel }, Cmd.map SettingsMsg Cmd.none, externalMsg
     | ToggleWidget id ->
         let newWidgetState =

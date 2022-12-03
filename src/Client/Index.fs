@@ -3,70 +3,59 @@ module Client.Index
 open Browser
 open Browser.Types
 open Elmish
-open Fable
 open Fable.Core
 open Fable.React
 open Fable.React.Props
-open Fable.Remoting.Client
 open Feliz
 open Feliz.Bulma
 open Fulma
-open Shared
-open System
 
 open Client.Cinemole.Render
 
-//type Position = { X: float; Y: float }
+type Position = { X: float; Y: float }
 
-//type DragTarget =
-//    | Dragging
-//    | NoTarget
+type DragTarget =
+    | Dragging
+    | NoTarget
 
-//[<RequireQualifiedAccess>]
-//module Cmd =
-//    let ups messageCtor =
-//        let handler dispatch = window.addEventListener("mouseup", fun _ -> dispatch messageCtor)
-//        [ handler ]
-//
-//    let move messageCtor =
-//        let handler dispatch =
-//            window.addEventListener("mousemove", fun ev ->
-//                let ev = ev :?> MouseEvent
-//                { X = ev.pageX; Y = ev.pageY } |> messageCtor |> dispatch)
-//        [ handler ]
+[<RequireQualifiedAccess>]
+module Cmd =
+    let ups messageCtor =
+        let handler dispatch = window.addEventListener("mouseup", fun _ -> dispatch messageCtor)
+        [ handler ]
+
+    let move messageCtor =
+        let handler dispatch =
+            window.addEventListener("mousemove", fun ev ->
+                let ev = ev :?> MouseEvent
+                { X = ev.pageX; Y = ev.pageY } |> messageCtor |> dispatch)
+        [ handler ]
 
 type Model =
     { Assignment: Assignment
       Svg: string
       Encoded: string
-      Sidebar: Sidebar.Model }
-//      DragTarget: DragTarget }
+      Sidebar: Sidebar.Model
+      DragTarget: DragTarget }
 
 type Msg =
     | UploadSdf of name: string * content: string
     | Render
     | GotEncoding of svg: string * encodedSvg: string * viewBox: ViewBox
     | SidebarMsg of Sidebar.Msg
-    | SetXRotation of float
-    | SetYRotation of float
-    | SetZRotation of float
-//    | MouseUp
-//    | MouseMove of Position
-//    | MouseDrag of Position
-//    | MouseDragStarted of Guid * Position
-//    | MouseDragEnded
-
-//let cinemoleApi =
-//    Remoting.createApi ()
-//    |> Remoting.withRouteBuilder Route.builder
-//    |> Remoting.buildProxy<ICinemoleApi>
+    | SetRotation of Position
+    | MouseUp
+    | MouseMove of Position
+    | MouseDrag of Position
+    | MouseDragStarted of Position
+    | MouseDragEnded
 
 let init () : Model * Cmd<Msg> =
     let sidebarModel, sidebarCmd = Sidebar.init()
     let cmd = Cmd.batch [
         Cmd.map SidebarMsg sidebarCmd
-//        Cmd.ups MouseUp
-//        Cmd.move MouseMove
+        Cmd.ups MouseUp
+        Cmd.move MouseMove
     ]
     let model =
         { Assignment = { Sdf = ""; Settings = { ViewBox = None
@@ -77,8 +66,8 @@ let init () : Model * Cmd<Msg> =
                                                 ZRotation = 0.5 } }
           Svg = ""
           Encoded = ""
-          Sidebar = sidebarModel }
-//          DragTarget = NoTarget }
+          Sidebar = sidebarModel
+          DragTarget = NoTarget }
     model, cmd
 
 let downloadSvg (svg : string) =
@@ -105,27 +94,21 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ViewBox = Some viewBox } }
         { model with Encoded = encodedSvg; Svg = svg; Assignment = assignment },
         Cmd.none
-    | SetXRotation f ->
-        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with XRotation = f } } },
+    | SetRotation position ->
+        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with XRotation = position.X; YRotation = position.Y } } },
         Cmd.OfAsync.perform render model.Assignment GotEncoding
-    | SetYRotation f ->
-        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with YRotation = f } } },
-        Cmd.OfAsync.perform render model.Assignment GotEncoding
-    | SetZRotation f ->
-        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with ZRotation = f } } },
-        Cmd.OfAsync.perform render model.Assignment GotEncoding
-//    | MouseUp ->
-//          model, Cmd.ofMsg MouseDragEnded
-//    | MouseMove (position: Position) ->
-//          model, Cmd.ofMsg (MouseDrag position)
-//    | MouseDragStarted (guid, position) ->
-//        { model with DragTarget = Dragging }, Cmd.none
-//    | MouseDragEnded ->
-//        { model with DragTarget = NoTarget }, Cmd.none
-//    | MouseDrag (position: Position) ->
-//        match model.DragTarget with
-//        | Dragging -> model, Cmd.ofMsg (SetRotation position.X)
-//        | _ -> model, Cmd.none
+    | MouseUp ->
+          model, Cmd.ofMsg MouseDragEnded
+    | MouseMove (position: Position) ->
+          model, Cmd.ofMsg (MouseDrag position)
+    | MouseDragStarted position ->
+        { model with DragTarget = Dragging }, Cmd.none
+    | MouseDragEnded ->
+        { model with DragTarget = NoTarget }, Cmd.none
+    | MouseDrag (position: Position) ->
+        match model.DragTarget with
+        | Dragging -> model, Cmd.ofMsg (SetRotation position)
+        | _ -> model, Cmd.none
     | SidebarMsg msg ->
         let subModel, cmd, externalMsg = Sidebar.update msg model.Sidebar
         let newModel, extraCmd =
@@ -153,12 +136,6 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 let assignment = { model.Assignment with Settings = { model.Assignment.Settings with Depiction = switch } }
                 { model with Assignment = assignment },
                 Cmd.OfAsync.perform render assignment GotEncoding
-            | Sidebar.GotXRotation rotation ->
-                model, Cmd.ofMsg (SetXRotation rotation)
-            | Sidebar.GotYRotation rotation ->
-                model, Cmd.ofMsg (SetYRotation rotation)
-            | Sidebar.GotZRotation rotation ->
-                model, Cmd.ofMsg (SetZRotation rotation)
         { newModel with Sidebar = subModel }, Cmd.batch [ Cmd.map SidebarMsg cmd; extraCmd ]
 
 
@@ -192,7 +169,7 @@ let private uploadFileButton dispatch =
         ]
     ]
 
-let private svgViewer model =
+let private svgViewer (dispatch: Msg -> unit) model =
     let svg =
         match model.Encoded with
         | e when e.Length = 0 -> ""
@@ -200,6 +177,10 @@ let private svgViewer model =
 
     Html.div [
         prop.className "viewer"
+        prop.onMouseDown (fun ev ->
+            ev.preventDefault()
+            let coordsMouseDown = { X = ev.pageX; Y = ev.pageY }
+            dispatch (MouseDragStarted coordsMouseDown))
         prop.children [
             img [
                 Class "svg"
@@ -213,6 +194,6 @@ let view (model: Model) (dispatch: Msg -> unit) =
         prop.className "cinemole"
         prop.children [
             Sidebar.view model.Sidebar (SidebarMsg >> dispatch)
-            svgViewer model
+            svgViewer dispatch model
         ]
     ]

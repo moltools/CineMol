@@ -11,18 +11,12 @@ type Model = float option
 type Msg =
     | SetShowHydrogenAtoms
     | SetDepiction
-    | SetXRotation of float
-    | SetYRotation of float
-    | SetZRotation of float
     | Oops of exn
 
 type ExternalMessage =
     | NoOp
     | GotShowHydrogenAtoms
     | GotDepiction
-    | GotXRotation of float
-    | GotYRotation of float
-    | GotZRotation of float
 
 let init () =
     let model = None
@@ -34,12 +28,6 @@ let update (msg : Msg) (model : Model) : Model * ExternalMessage =
         model, ExternalMessage.GotShowHydrogenAtoms
     | SetDepiction ->
         model, ExternalMessage.GotDepiction
-    | SetXRotation rotation ->
-        model, (ExternalMessage.GotXRotation rotation)
-    | SetYRotation rotation ->
-        model, (ExternalMessage.GotYRotation rotation)
-    | SetZRotation rotation ->
-        model, (ExternalMessage.GotZRotation rotation)
     | Msg.Oops _ -> model, ExternalMessage.NoOp  // ignored for now
 
 let view (model : Model) (dispatch : Msg -> unit) =
@@ -66,31 +54,4 @@ let view (model : Model) (dispatch : Msg -> unit) =
 //                prop.text "Change depiction"
 //            ]
 //        ]
-        Html.div [
-            Slider.slider [
-                slider.isFullWidth
-                slider.isCircle
-                slider.isLarge
-                color.isBlack
-                prop.onChange (fun (ev: Browser.Types.Event) -> (SetXRotation (float ev.Value) |> dispatch))
-            ]
-        ]
-        Html.div [
-            Slider.slider [
-                slider.isFullWidth
-                slider.isCircle
-                slider.isLarge
-                color.isBlack
-                prop.onChange (fun (ev: Browser.Types.Event) -> (SetYRotation (float ev.Value) |> dispatch))
-            ]
-        ]
-        Html.div [
-            Slider.slider [
-                slider.isFullWidth
-                slider.isCircle
-                slider.isLarge
-                color.isBlack
-                prop.onChange (fun (ev: Browser.Types.Event) -> (SetZRotation (float ev.Value) |> dispatch))
-            ]
-        ]
     ]
