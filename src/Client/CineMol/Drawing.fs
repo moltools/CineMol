@@ -9,10 +9,15 @@ open Svg
 /// <summary>
 ///     Drawing options.
 /// </summary>
-type DrawingOptions = {
+type DrawOptions = {
     Depiction: Depiction
     ShowHydrogenAtoms: bool
 }
+    with
+    static member init = {
+            Depiction = Filled
+            ShowHydrogenAtoms = false
+        }
 
 /// <summary>
 ///     Filter atoms based on atom type.
@@ -70,7 +75,7 @@ let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo[]) : AtomInfo[] =
 /// </returns>
 let draw
     (viewBox: ViewBox option)
-    (options: DrawingOptions)
+    (options: DrawOptions)
     (rotation: Rotation)
     (mol: Molecule)
     : string * ViewBox =

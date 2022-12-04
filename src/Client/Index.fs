@@ -15,29 +15,30 @@ open Client.CineMol.Parsing
 open Client.CineMol.Encoding
 open Client.CineMol.Drawing
 
-type Settings =
-    { ViewBox: ViewBox option
-      Depiction: Depiction
-      ShowHydrogenAtoms: bool
-      XRotation: float
-      YRotation: float
-      ZRotation: float }
+// ============================================================================
+// Rendering SVG.
+// ============================================================================
+let render =
+    fun (vb: ViewBox option, options: DrawOptions, rot: Rotation, sdf: string) ->
+        async {
+            let molToDraw =
+                sdf
+                |> parseSdf
+                |> (fun mols -> mols.[0])
 
-type Assignment = { Settings: Settings; Sdf: string }
+            let svg, vb: string * ViewBox option =
+                if molToDraw.Atoms.Length = 0 then
+                    "", None
+                else
+                    let svg, vb = draw vb options rot molToDraw
+                    svg, Some vb
 
-let render = fun assignment -> async {
-    let svg, viewBox : string * ViewBox =
-        assignment.Sdf
-        |> parseSdf
-        |> (fun mols -> mols.[0])  // Select first molecule from SDF.
-        |> draw assignment.Settings.ViewBox
-                { Depiction = assignment.Settings.Depiction; ShowHydrogenAtoms = assignment.Settings.ShowHydrogenAtoms }
-                { AxisX = assignment.Settings.XRotation; AxisY = assignment.Settings.YRotation; AxisZ = assignment.Settings.ZRotation }
+            return (svg, svg |> toBase64String, vb)
+        }
 
-    let encodedSvg : string = svg |> toBase64String
-
-    return (svg, encodedSvg, viewBox) }
-
+// ============================================================================
+// Mouse events for dragging SVG.
+// ============================================================================
 type Position = { X: float; Y: float }
 
 type DragTarget =
@@ -47,7 +48,8 @@ type DragTarget =
 [<RequireQualifiedAccess>]
 module Cmd =
     let ups messageCtor =
-        let handler dispatch = window.addEventListener("mouseup", fun _ -> dispatch messageCtor)
+        let handler dispatch =
+            window.addEventListener("mouseup", fun _ -> dispatch messageCtor)
         [ handler ]
 
     let move messageCtor =
@@ -57,48 +59,61 @@ module Cmd =
                 { X = ev.pageX; Y = ev.pageY } |> messageCtor |> dispatch)
         [ handler ]
 
-type Model =
-    { Assignment: Assignment
-      Svg: string
-      Encoded: string
-      Sidebar: Sidebar.Model
-      DragTarget: DragTarget }
+// ============================================================================
+// Model.
+// ============================================================================
+type Model = {
+    Sdf: string
+    Svg: string
+    EncodedSvg: string
+    ViewBox: ViewBox option
+    DrawOptions: DrawOptions
+    Rotation: Rotation
+    DragTarget: DragTarget
+}
+    with
+    member x.renderArgs = x.ViewBox, x.DrawOptions, x.Rotation, x.Sdf
+    static member init = {
+            Sdf = ""
+            Svg = ""
+            EncodedSvg = ""
+            DrawOptions = DrawOptions.init
+            Rotation = Rotation.init
+            ViewBox = None
+            DragTarget = NoTarget
+        }
 
 type Msg =
+    /// GUI buttons.
     | UploadSdf of name: string * content: string
+    | ResetViewer
+    | DownloadSvg
+    | ToggleShowHydrogenAtoms
+    | ToggleDepiction
+
+    /// Rendering SVG.
     | Render
-    | GotEncoding of svg: string * encodedSvg: string * viewBox: ViewBox
-    | SidebarMsg of Sidebar.Msg
+    | GotEncoding of svg: string * encodedSvg: string * viewBox: ViewBox option
     | SetRotation of Position
+
+    /// Mouse events for dragging SVG.
     | MouseUp
     | MouseMove of Position
     | MouseDrag of Position
     | MouseDragStarted of Position
     | MouseDragEnded
 
-let init () : Model * Cmd<Msg> =
-    let sidebarModel, sidebarCmd = Sidebar.init()
-    let cmd = Cmd.batch [
-        Cmd.map SidebarMsg sidebarCmd
-        Cmd.ups MouseUp
-        Cmd.move MouseMove
-    ]
-    let model =
-        { Assignment = { Sdf = ""; Settings = { ViewBox = None
-                                                Depiction = Filled
-                                                ShowHydrogenAtoms = false
-                                                XRotation = 0.5
-                                                YRotation = 0.5
-                                                ZRotation = 0.5 } }
-          Svg = ""
-          Encoded = ""
-          Sidebar = sidebarModel
-          DragTarget = NoTarget }
-    model, cmd
+// ============================================================================
+// Actions.
+// ============================================================================
 
-let downloadSvg (svg : string) =
+/// <summary>
+///     Custom action for downloading SVG.
+/// </summary>
+let downloadSvgEvent (svg : string) =
     let anchor = Dom.document.createElement "a"
-    let contentReplace (oldValue: string) (newValue: string) (msg: string) = msg.Replace(oldValue, newValue)
+    let contentReplace (oldValue: string) (newValue: string) (msg: string) =
+        msg.Replace(oldValue, newValue)
     let encodedContent =
         svg
         |> sprintf "data:text/plain;charset=utf-8,%s"
@@ -108,63 +123,117 @@ let downloadSvg (svg : string) =
     anchor.setAttribute("download", "model.svg")
     anchor.click()
 
+// ============================================================================
+// Initializing model.
+// ============================================================================
+let init () : Model * Cmd<Msg> =
+    let cmd =
+        Cmd.batch [
+            Cmd.ups MouseUp
+            Cmd.move MouseMove
+        ]
+    Model.init, cmd
+
+// ============================================================================
+// Updating model.
+// ============================================================================
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
+
+    /// Upload SDF.
     | UploadSdf (_, content) ->
-        { model with Assignment = { model.Assignment with Sdf = content } },
-        Cmd.ofMsg Render
+        { model with Sdf = content }, Cmd.ofMsg Render
+
+    /// Reset viewer.
+    | ResetViewer ->
+        let newModel = Model.init
+        newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
+
+    /// Download SVG.
+    | DownloadSvg ->
+        downloadSvgEvent model.Svg
+        model, Cmd.none
+
+    /// Toggle show hydrogens.
+    | ToggleShowHydrogenAtoms ->
+        let toggle = not model.DrawOptions.ShowHydrogenAtoms
+
+        let newModel = {
+            model with
+                DrawOptions = {
+                    model.DrawOptions with
+                        ShowHydrogenAtoms = toggle
+                }
+            }
+
+        newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
+
+    /// Toggle depiction.
+    | ToggleDepiction ->
+        let toggle =
+            if model.DrawOptions.Depiction = Depiction.Filled then
+                Depiction.BallAndStick
+            else
+                Depiction.Filled
+
+        let newModel = {
+            model with
+                DrawOptions = {
+                    model.DrawOptions with
+                        Depiction = toggle
+                }
+            }
+
+        newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
+
+    /// Render SVG from SDF message.
     | Render ->
-        model,
-        Cmd.OfAsync.perform render model.Assignment GotEncoding
+        model, Cmd.OfAsync.perform render model.renderArgs GotEncoding
+
+    /// Store rendered, encoded SVG in model message.
     | GotEncoding (svg, encodedSvg, viewBox) ->
-        let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ViewBox = Some viewBox } }
-        { model with Encoded = encodedSvg; Svg = svg; Assignment = assignment },
-        Cmd.none
+        { model with
+            EncodedSvg = encodedSvg
+            Svg = svg
+            ViewBox = viewBox
+        }, Cmd.none
+
+    /// Set new rotation of molecule in SVG message.
     | SetRotation position ->
-        { model with Assignment = { model.Assignment with Settings = { model.Assignment.Settings with XRotation = position.X; YRotation = position.Y } } },
-        Cmd.OfAsync.perform render model.Assignment GotEncoding
+        { model with
+            Rotation = {
+                model.Rotation with
+                    AxisX = position.X
+                    AxisY = position.Y
+            }
+        },
+        Cmd.OfAsync.perform render model.renderArgs GotEncoding
+
+    /// Mouse drag messages for rendered, encoded SVG in model.
     | MouseUp ->
-          model, Cmd.ofMsg MouseDragEnded
+        model, Cmd.ofMsg MouseDragEnded
+
     | MouseMove (position: Position) ->
-          model, Cmd.ofMsg (MouseDrag position)
+        model, Cmd.ofMsg (MouseDrag position)
+
     | MouseDragStarted position ->
         { model with DragTarget = Dragging }, Cmd.none
+
     | MouseDragEnded ->
         { model with DragTarget = NoTarget }, Cmd.none
+
     | MouseDrag (position: Position) ->
         match model.DragTarget with
         | Dragging -> model, Cmd.ofMsg (SetRotation position)
         | _ -> model, Cmd.none
-    | SidebarMsg msg ->
-        let subModel, cmd, externalMsg = Sidebar.update msg model.Sidebar
-        let newModel, extraCmd =
-            match externalMsg with
-            | Sidebar.NoOp ->
-                model, Cmd.none
-            | Sidebar.Reset ->
-                let assignment = { model.Assignment with Sdf = ""; Settings = { model.Assignment.Settings with ViewBox = None } }
-                { model with Encoded = ""; Svg = ""; Assignment = assignment },
-                Cmd.OfAsync.perform render assignment GotEncoding
-            | Sidebar.UploadSdf (_, src) ->
-                let assignment = { model.Assignment with Sdf = src }
-                { model with Assignment = assignment }, Cmd.ofMsg Render
-            | Sidebar.DownloadSvg ->
-                printf $"svg: {model.Svg}"
-                downloadSvg model.Svg
-                model, Cmd.none
-            | Sidebar.GotShowHydrogenAtoms ->
-                let switch = not model.Assignment.Settings.ShowHydrogenAtoms
-                let assignment = { model.Assignment with Settings = { model.Assignment.Settings with ShowHydrogenAtoms = switch } }
-                { model with Assignment = assignment },
-                Cmd.OfAsync.perform render assignment GotEncoding
-            | Sidebar.GotDepiction ->
-                let switch = if model.Assignment.Settings.Depiction = BallAndStick then Filled else BallAndStick
-                let assignment = { model.Assignment with Settings = { model.Assignment.Settings with Depiction = switch } }
-                { model with Assignment = assignment },
-                Cmd.OfAsync.perform render assignment GotEncoding
-        { newModel with Sidebar = subModel }, Cmd.batch [ Cmd.map SidebarMsg cmd; extraCmd ]
 
+// ============================================================================
+// GUI element: upload file button.
+// ============================================================================
 
+/// <summary>
+///     Custom action for uploading V2000 molfile (SDF).
+/// </summary>
 let private uploadFileEvent dispatch =
     Fulma.File.input [
         Props [
@@ -180,26 +249,71 @@ let private uploadFileEvent dispatch =
         ]
     ]
 
+/// <summary>
+///     Upload file button for uploading V2000 molfile (SDF).
+/// </summary>
 let private uploadFileButton dispatch =
     Html.div [
         prop.children [
             Bulma.button.a [
-                button.isOutlined
-                button.isFullWidth
-                color.isBlack
                 prop.children [
-                    Html.span "select SDF (Mol V2000) file"
+                    Html.span "Select SDF (Mol V2000) file"
                     uploadFileEvent dispatch
                 ]
             ]
         ]
     ]
 
+// ============================================================================
+// GUI element: reset viewer button.
+// ============================================================================
+
+/// <summary>
+///     Reset viewer button.
+/// </summary>
+let private resetViewerButton dispatch =
+    Html.div [
+        prop.children [
+            Bulma.button.a [
+                prop.children [
+                    Html.span "Reset viewer"
+                ]
+                prop.onClick (fun _ -> ResetViewer |> dispatch)
+            ]
+        ]
+    ]
+
+// ============================================================================
+// GUI element: download button.
+// ============================================================================
+
+/// <summary>
+///     Reset viewer button.
+/// </summary>
+let private downloadButton dispatch =
+    Html.div [
+        prop.children [
+            Bulma.button.a [
+                prop.children [
+                    Html.span "Download SVG"
+                ]
+                prop.onClick (fun _ -> DownloadSvg |> dispatch)
+            ]
+        ]
+    ]
+
+// ============================================================================
+// GUI element: SVG viewer.
+// ============================================================================
+
+/// <summary>
+///     SVG viewer.
+/// </summary>
 let private svgViewer (dispatch: Msg -> unit) model =
     let svg =
-        match model.Encoded with
+        match model.EncodedSvg with
         | e when e.Length = 0 -> ""
-        | _ -> $"data:image/svg+xml;base64,{model.Encoded}"
+        | _ -> $"data:image/svg+xml;base64,{model.EncodedSvg}"
 
     Html.div [
         prop.className "viewer"
@@ -215,11 +329,64 @@ let private svgViewer (dispatch: Msg -> unit) model =
         ]
     ]
 
+// ============================================================================
+// GUI element: show hydrogens button.
+// ============================================================================
+
+/// <summary>
+///     Reset viewer button.
+/// </summary>
+let private showHydrogensButton dispatch =
+    Html.div [
+        prop.children [
+            Bulma.button.a [
+                prop.children [
+                    Html.span "Toggle show hydrogens"
+                ]
+                prop.onClick (fun _ -> ToggleShowHydrogenAtoms |> dispatch)
+            ]
+        ]
+    ]
+
+// ============================================================================
+// GUI element: change depiction button.
+// ============================================================================
+
+/// <summary>
+///     Reset viewer button.
+/// </summary>
+let private changeDepictionButton dispatch =
+    Html.div [
+        prop.children [
+            Bulma.button.a [
+                prop.children [
+                    Html.span "Toggle depiction"
+                ]
+                prop.onClick (fun _ -> ToggleDepiction |> dispatch)
+            ]
+        ]
+    ]
+
+// ============================================================================
+// Main view.
+// ============================================================================
+
+/// <container>
+///     Main view.
+/// </container>
 let view (model: Model) (dispatch: Msg -> unit) =
     Html.div [
-        prop.className "cinemole"
+        prop.className "cinemol"
         prop.children [
-            Sidebar.view model.Sidebar (SidebarMsg >> dispatch)
-            svgViewer dispatch model
+            Html.div [
+                resetViewerButton dispatch
+                uploadFileButton dispatch
+                downloadButton dispatch
+                showHydrogensButton dispatch
+                changeDepictionButton dispatch
+            ]
+            Html.div [
+                svgViewer dispatch model
+            ]
         ]
     ]

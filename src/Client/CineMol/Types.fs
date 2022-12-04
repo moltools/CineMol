@@ -47,6 +47,12 @@ let celery: Color = { R = 170; G = 187; B = 93 }
 // Geometry types.
 // ============================================================================
 type Rotation = { AxisX: float; AxisY: float; AxisZ: float }
+    with
+    static member init = {
+            AxisX = 0.0
+            AxisY = 0.0
+            AxisZ = 0.0
+        }
 
 type Axis = | X | Y | Z
     with
@@ -158,7 +164,8 @@ type AtomInfo =
                   -> NoIntersection
         | d when (d + this.ProjectedRadius) < other.ProjectedRadius -> Eclipsed
         | _ ->
-            // Intersection plane
+
+            /// Intersection plane.
             let A = 2.0 * (other.ProjectedCenter.X - this.ProjectedCenter.X)
             let B = 2.0 * (other.ProjectedCenter.Y - this.ProjectedCenter.Y)
             let C = 2.0 * (other.ProjectedCenter.Z - this.ProjectedCenter.Z)
@@ -167,7 +174,7 @@ type AtomInfo =
                     this.ProjectedCenter.Z ** 2.0 - other.ProjectedCenter.Z ** 2.0 -
                     this.ProjectedRadius ** 2.0 + other. ProjectedRadius ** 2.0
 
-            // Intersection center
+            /// Intersection center.
             let t = (this.ProjectedCenter.X * A + this.ProjectedCenter.Y * B + this.ProjectedCenter.Z * C + D) /
                     (A * (this.ProjectedCenter.X - other.ProjectedCenter.X) +
                      B * (this.ProjectedCenter.Y - other.ProjectedCenter.Y) +
@@ -177,10 +184,13 @@ type AtomInfo =
             let z = this.ProjectedCenter.Z + t * (other.ProjectedCenter.Z - this.ProjectedCenter.Z)
             let intersectionCenter: Point = { X = x; Y = y; Z = z }
 
-            // Intersection
-            let x = (this.ProjectedRadius ** 2.0 + dist ** 2.0 - other.ProjectedRadius ** 2.0) / (2.0 * this.ProjectedRadius * dist)
-            // TODO: Quick fix to make sure to prevent NaNs -- real solution would be making sure program does not
-            // TODO: try to clip objects that move in front of each other
+            /// Intersection.
+            let x =
+                (this.ProjectedRadius ** 2.0 + dist ** 2.0 - other.ProjectedRadius ** 2.0) /
+                (2.0 * this.ProjectedRadius * dist)
+            // TODO: Quick fix to make sure to prevent NaNs -- real solution
+            // TODO: would be making sure program does not try to clip objects
+            // TODO: that move in front of each other
             if x < 1.0 then
                 let alpha = Math.Acos(x)
                 let R = this.ProjectedRadius * Math.Sin alpha
