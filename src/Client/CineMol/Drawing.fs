@@ -6,9 +6,6 @@ open Helpers
 open Types
 open Svg
 
-/// <summary>
-///     Drawing options.
-/// </summary>
 type DrawOptions = {
     Depiction: Depiction
     ShowHydrogenAtoms: bool
@@ -19,85 +16,45 @@ type DrawOptions = {
             ShowHydrogenAtoms = false
         }
 
-/// <summary>
-///     Filter atoms based on atom type.
-/// </summary>
-/// <param name="atomType">
-///     Atom type to filter atoms on.
-/// </param>
-/// <param name="atoms">
-///     Atoms to filter on atom type.
-/// </param>
-/// <returns>
-///     Filtered atoms.
-/// </returns>
 let filterAtoms (atomType: Atom) (atoms: AtomInfo[]) : AtomInfo[] =
     Array.filter(fun (atom: AtomInfo) -> atom.Type <> atomType) atoms
 
-/// <summary>
-///     Rotate atoms around axis.
-/// </summary>
-/// <param name="axis">
-///     Axis to rotate atoms around.
-/// </param>
-/// <param name="rads">
-///     Number of radians to rotate atoms around axis.
-/// </param>
-/// <param name="atoms">
-///     Atoms to rotate around axis.
-/// </param>
-/// <returns>
-///     Rotated atoms.
-/// </returns>
 let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo[]) : AtomInfo[] =
     atoms
     |> Array.map (fun (atom: AtomInfo) ->
         atom.Rotate axis ((rads / 100.0) * 2.0 * Math.PI))
 
-/// <summary>
-///     Create SVG representation of molecule.
-/// </summary>
-/// <param name="viewBox">
-///     View box for SVG. Will calcualte view box bounds based on dimensions
-///     of molecule if not supplied.
-/// </param>
-/// <param name="options">
-///     Drawing options.
-/// </param>
-/// <param name="rotation">
-///     Rotation options.
-/// </param>
-/// <param name="mol">
-///     Molecule to draw.
-/// </param>
-/// <returns>
-///     Tuple of SVG string and current bounds view box.
-/// </returns>
+let changeDistanceToAtoms (ratio: float) (atoms: AtomInfo[]) : AtomInfo[] =
+    atoms
+    |> Array.map (fun a -> { a with
+                                OriginalCenter = {
+                                    X = a.OriginalCenter.X * ratio
+                                    Y = a.OriginalCenter.Y * ratio
+                                    Z = a.OriginalCenter.Z * ratio
+                                }
+                                OriginalRadius = a.OriginalRadius * ratio
+                            })
+
 let draw
     (viewBox: ViewBox option)
     (options: DrawOptions)
     (rotation: Rotation)
+    (zoom: Zoom)
     (mol: Molecule)
     : string * ViewBox =
 
-    /// Filter atoms based on atom type.
-    let atoms =
-        if options.ShowHydrogenAtoms = false then
-            filterAtoms H mol.Atoms
-        else
-            mol.Atoms
-
     /// Rotate atoms based on supplied rotations in radians around axes.
-    let atoms =
-        atoms
-        |> rotateAtoms Y rotation.AxisX
-        |> rotateAtoms Z rotation.AxisY
-        |> rotateAtoms X rotation.AxisZ
+    let mol = {
+        mol with Atoms = mol.Atoms
+                         |> rotateAtoms Y rotation.AxisX
+                         |> rotateAtoms Z rotation.AxisY
+                         |> rotateAtoms X rotation.AxisZ
+    }
 
-    /// Calculate view box offset.
+    /// Calculate view box offset (set before zoom, otherwise view box changes with zoom).
     let offsetViewBox =
         let minimumOffset = 2.0
-        match atoms |> Array.map (fun a -> a.OriginalCenter.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
+        match mol.Atoms |> Array.map (fun a -> a.OriginalCenter.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
         | x when x < minimumOffset -> minimumOffset | x -> x
 
     let viewBox =
@@ -109,13 +66,23 @@ let draw
     let pov: Point = { X = 1E-5; Y = 1E-5; Z = focalLength }
     let distPovOrigin: float = pov.Distance origin
 
+    /// Filter atoms based on atom type.
+    let mol = { mol with Atoms = if options.ShowHydrogenAtoms = false then filterAtoms H mol.Atoms else mol.Atoms }
+
+    /// Apply zoom based on supplied scroll.
+    /// Distance to (0, 0) and size of items will proportionally shrink or grow
+    /// based on scroll direction.
+    let mol = { mol with Atoms = changeDistanceToAtoms zoom.Ratio mol.Atoms }
+
     /// Sort drawing order point cloud based on distance point to POV.
-    let atoms = atoms |> Array.sortBy (fun atom -> atom.OriginalCenter.Distance pov |> (*) -1.0)
+    let mol = { mol with Atoms = mol.Atoms |> Array.sortBy (fun atom -> atom.OriginalCenter.Distance pov |> (*) -1.0) }
 
     /// Recalculate radius points based on distance point to POV.
-    let atoms = atoms |> Array.map (fun atom ->
-        let projectedRadius = (distPovOrigin / (pov.Distance atom.OriginalCenter)) * atom.OriginalRadius
-        { atom with ProjectedRadius = projectedRadius })
+    let mol = { mol with Atoms = mol.Atoms
+                                 |> Array.map (fun atom ->
+                                     let projectedRadius = (distPovOrigin / (pov.Distance atom.OriginalCenter)) * atom.OriginalRadius
+                                     { atom with ProjectedRadius = projectedRadius })
+    }
 
     let cameraForward: Vector = { X = -pov.X; Y = -pov.Y; Z = -pov.Z }
     let cameraPerpendicular: Vector = { X = cameraForward.Y; Y = -cameraForward.X; Z = 0.0 }
@@ -125,6 +92,6 @@ let draw
         { atom with ProjectedCenter = projectedCenter }
 
     /// Apply perspective projection on 3D point cloud on 2D view box
-    let atoms = atoms |> Array.map (fun atom -> setPerspective atom)
+    let mol = { mol with Atoms = mol.Atoms |> Array.map (fun atom -> setPerspective atom) }
 
-    writeSVG viewBox options.Depiction atoms, viewBox
+    writeSVG viewBox options.Depiction mol.Atoms, viewBox

@@ -19,7 +19,7 @@ open Client.CineMol.Drawing
 // Rendering SVG.
 // ============================================================================
 let render =
-    fun (vb: ViewBox option, options: DrawOptions, rot: Rotation, sdf: string) ->
+    fun (vb: ViewBox option, options: DrawOptions, rot: Rotation, zoom: Zoom, sdf: string) ->
         async {
             let molToDraw =
                 sdf
@@ -30,7 +30,7 @@ let render =
                 if molToDraw.Atoms.Length = 0 then
                     "", None
                 else
-                    let svg, vb = draw vb options rot molToDraw
+                    let svg, vb = draw vb options rot zoom molToDraw
                     svg, Some vb
 
             return (svg, svg |> toBase64String, vb)
@@ -78,16 +78,18 @@ type Model = {
     ViewBox: ViewBox option
     DrawOptions: DrawOptions
     Rotation: Rotation
+    Zoom: Zoom
     DragTarget: DragTarget
 }
     with
-    member x.renderArgs = x.ViewBox, x.DrawOptions, x.Rotation, x.Sdf
+    member x.renderArgs = x.ViewBox, x.DrawOptions, x.Rotation, x.Zoom, x.Sdf
     static member init = {
             Sdf = ""
             Svg = ""
             EncodedSvg = ""
             DrawOptions = DrawOptions.init
             Rotation = Rotation.init
+            Zoom = Zoom.init
             ViewBox = None
             DragTarget = NoTarget
         }
@@ -240,9 +242,21 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         | Dragging -> model, Cmd.ofMsg (SetRotation position)
         | _ -> model, Cmd.none
 
+    /// Mouse scroll message for rendered, encoded SVG in model.
     | WheelScroll (wheel: WheelPosition) ->
-        wheel.Delta |> printf "scroll %A"
-        model, Cmd.none
+        let incr =
+            if wheel.Delta < 0.0 then
+                -0.05
+            else
+                +0.05
+
+        let newModel =
+            { model with
+                Zoom = {
+                    model.Zoom with Ratio = model.Zoom.Ratio + incr
+                }
+            }
+        newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
 
 // ============================================================================
 // GUI element: upload file button.

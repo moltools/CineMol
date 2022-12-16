@@ -46,6 +46,10 @@ let celery: Color = { R = 170; G = 187; B = 93 }
 // ============================================================================
 // Geometry types.
 // ============================================================================
+type Zoom = { Ratio: float }
+    with
+    static member init = { Ratio = 1.0 }
+
 type Rotation = { AxisX: float; AxisY: float; AxisZ: float }
     with
     static member init = {
