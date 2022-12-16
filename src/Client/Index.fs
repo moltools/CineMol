@@ -37,9 +37,11 @@ let render =
         }
 
 // ============================================================================
-// Mouse events for dragging SVG.
+// Mouse events for SVG.
 // ============================================================================
-type Position = { X: float; Y: float }
+type MousePosition = { X: float; Y: float }
+
+type WheelPosition = { Delta: float }
 
 type DragTarget =
     | Dragging
@@ -57,6 +59,13 @@ module Cmd =
             window.addEventListener("mousemove", fun ev ->
                 let ev = ev :?> MouseEvent
                 { X = ev.pageX; Y = ev.pageY } |> messageCtor |> dispatch)
+        [ handler ]
+
+    let wheel messageCtor =
+        let handler dispatch =
+            window.addEventListener("mousewheel", fun ev ->
+                let ev = ev :?> MouseWheelEvent
+                { Delta = ev.wheelDelta } |> messageCtor |> dispatch)
         [ handler ]
 
 // ============================================================================
@@ -94,14 +103,17 @@ type Msg =
     /// Rendering SVG.
     | Render
     | GotEncoding of svg: string * encodedSvg: string * viewBox: ViewBox option
-    | SetRotation of Position
+    | SetRotation of MousePosition
 
     /// Mouse events for dragging SVG.
     | MouseUp
-    | MouseMove of Position
-    | MouseDrag of Position
-    | MouseDragStarted of Position
+    | MouseMove of MousePosition
+    | MouseDrag of MousePosition
+    | MouseDragStarted of MousePosition
     | MouseDragEnded
+
+    /// Mouse events for zooming in and out on SVG.
+    | WheelScroll of WheelPosition
 
 // ============================================================================
 // Actions.
@@ -131,6 +143,7 @@ let init () : Model * Cmd<Msg> =
         Cmd.batch [
             Cmd.ups MouseUp
             Cmd.move MouseMove
+            Cmd.wheel WheelScroll
         ]
     Model.init, cmd
 
@@ -213,7 +226,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | MouseUp ->
         model, Cmd.ofMsg MouseDragEnded
 
-    | MouseMove (position: Position) ->
+    | MouseMove (position: MousePosition) ->
         model, Cmd.ofMsg (MouseDrag position)
 
     | MouseDragStarted position ->
@@ -222,10 +235,14 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | MouseDragEnded ->
         { model with DragTarget = NoTarget }, Cmd.none
 
-    | MouseDrag (position: Position) ->
+    | MouseDrag (position: MousePosition) ->
         match model.DragTarget with
         | Dragging -> model, Cmd.ofMsg (SetRotation position)
         | _ -> model, Cmd.none
+
+    | WheelScroll (wheel: WheelPosition) ->
+        wheel.Delta |> printf "scroll %A"
+        model, Cmd.none
 
 // ============================================================================
 // GUI element: upload file button.
@@ -303,33 +320,6 @@ let private downloadButton dispatch =
     ]
 
 // ============================================================================
-// GUI element: SVG viewer.
-// ============================================================================
-
-/// <summary>
-///     SVG viewer.
-/// </summary>
-let private svgViewer (dispatch: Msg -> unit) model =
-    let svg =
-        match model.EncodedSvg with
-        | e when e.Length = 0 -> ""
-        | _ -> $"data:image/svg+xml;base64,{model.EncodedSvg}"
-
-    Html.div [
-        prop.className "viewer"
-        prop.onMouseDown (fun ev ->
-            ev.preventDefault()
-            let coordsMouseDown = { X = ev.pageX; Y = ev.pageY }
-            dispatch (MouseDragStarted coordsMouseDown))
-        prop.children [
-            img [
-                Class "svg"
-                Src svg
-            ]
-        ]
-    ]
-
-// ============================================================================
 // GUI element: show hydrogens button.
 // ============================================================================
 
@@ -363,6 +353,33 @@ let private changeDepictionButton dispatch =
                     Html.span "Toggle depiction"
                 ]
                 prop.onClick (fun _ -> ToggleDepiction |> dispatch)
+            ]
+        ]
+    ]
+
+// ============================================================================
+// GUI element: SVG viewer.
+// ============================================================================
+
+/// <summary>
+///     SVG viewer.
+/// </summary>
+let private svgViewer (dispatch: Msg -> unit) model =
+    let svg =
+        match model.EncodedSvg with
+        | e when e.Length = 0 -> ""
+        | _ -> $"data:image/svg+xml;base64,{model.EncodedSvg}"
+
+    Html.div [
+        prop.className "viewer"
+        prop.onMouseDown (fun ev ->
+            ev.preventDefault()
+            let coordsMouseDown = { X = ev.pageX; Y = ev.pageY }
+            dispatch (MouseDragStarted coordsMouseDown))
+        prop.children [
+            img [
+                Class "svg"
+                Src svg
             ]
         ]
     ]
