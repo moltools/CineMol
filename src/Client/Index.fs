@@ -244,22 +244,11 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 
     /// Mouse scroll message for rendered, encoded SVG in model.
     | WheelScroll (wheel: WheelPosition) ->
-        let incr =
-            if wheel.Delta < 0.0 then
-                -0.05
-            else
-                +0.05
-
+        let incr = if wheel.Delta < 0.0 then -0.05 else +0.05
         let newRatio =
             let newRatio = model.Zoom.Ratio + incr
-            if newRatio < 0.0 then 0.0 else newRatio 
-
-        let newModel =
-            { model with
-                Zoom = {
-                    model.Zoom with Ratio = newRatio
-                }
-            }
+            if newRatio < 0.0 then 0.0 else newRatio
+        let newModel = { model with Zoom = { model.Zoom with Ratio = newRatio } }
         newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
 
 // ============================================================================
@@ -280,7 +269,13 @@ let private uploadFileEvent dispatch =
                     reader.onload <- fun _ ->
                         let content = reader.result :?> string
                         (name, content) |> UploadSdf |> dispatch
-                    reader.readAsText file )
+                    reader.readAsText file
+
+                    /// Setting value to empty string removes cached filename
+                    /// again and makes sure you can upload the same file
+                    /// (after refresh) for a second time.
+                    (ev.target :?> HTMLInputElement).value <- ""
+            )
         ]
     ]
 
