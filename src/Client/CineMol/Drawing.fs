@@ -48,7 +48,7 @@ let draw
         mol with Atoms = mol.Atoms
                          |> rotateAtoms Y rotation.AxisX
                          |> rotateAtoms Z rotation.AxisY
-                         |> rotateAtoms X rotation.AxisZ
+                         |> rotateAtoms X rotation.AxisY
     }
 
     /// Calculate view box offset (set before zoom, otherwise view box changes with zoom).
