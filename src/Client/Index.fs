@@ -250,10 +250,14 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             else
                 +0.05
 
+        let newRatio =
+            let newRatio = model.Zoom.Ratio + incr
+            if newRatio < 0.0 then 0.0 else newRatio 
+
         let newModel =
             { model with
                 Zoom = {
-                    model.Zoom with Ratio = model.Zoom.Ratio + incr
+                    model.Zoom with Ratio = newRatio
                 }
             }
         newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
