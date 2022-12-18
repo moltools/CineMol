@@ -22,11 +22,11 @@ let writeAtomDefs atom =
     let d1, d2, d3, d4, d5 = atom.Type.Color.Gradient
     $"\n<radialGradient\
     \n\tid=\"radial-gradient-{atom.Index}\"\
-    \n\tcx=\"{floatToStr atom.ProjectedCenter.X}\"\
-    \n\tcy=\"{floatToStr atom.ProjectedCenter.Y}\"\
-    \n\tfx=\"{floatToStr atom.ProjectedCenter.X}\"\
-    \n\tfy=\"{floatToStr atom.ProjectedCenter.Y}\"\
-    \n\tr=\"{floatToStr (atom.ProjectedRadius + 0.4)}\"\
+    \n\tcx=\"{floatToStr atom.C.X}\"\
+    \n\tcy=\"{floatToStr atom.C.Y}\"\
+    \n\tfx=\"{floatToStr atom.C.X}\"\
+    \n\tfy=\"{floatToStr atom.C.Y}\"\
+    \n\tr=\"{floatToStr (atom.R + 0.4)}\"\
     \n\tgradientTransform=\"matrix(1, 0, 0, 1, 0, 0)\"\
     \n\tgradientUnits=\"userSpaceOnUse\"\
     \n>\
@@ -45,13 +45,49 @@ let writeAtomDefs atom =
 let alphaIsoscelesTriangle (p1: Point) (p2: Point) (r: Radius) : float =
     Math.Acos((2.0 * r ** 2.0 - (p1.Distance p2)) / (2.0 * r ** 2.0))
 
-let writeAtom (atom: AtomInfo) (atoms: AtomInfo[]) =
+let writeArc (final: Point) (radius: Radius) : string =
+    $"A {floatToStr radius} {floatToStr radius} 0 1 0 {floatToStr final.X} {floatToStr final.Y}"
+
+let reconstructShape (atom: AtomInfo) (edges: (Point * Point)[]) : string =
+    match Array.toList edges with
+    | (p1, p2)::tail ->
+        let arcs =
+            [ for p3, p4 in tail do $" L {floatToStr p3.X} {floatToStr p3.Y} {writeArc p4 atom.R} " ]
+            |> String.concat ""
+
+        $"\n<path\
+        \n\tclass=\"atom-{atom.Index}\"\
+        \n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} {writeArc p2 atom.R} {arcs} L {floatToStr p1.X} {floatToStr p1.Y}\"
+        \n/>"
+
+    | [] -> ""
+
+let drawAtom (atom: AtomInfo) : string =
     $"\n<circle\
     \n\tclass=\"atom-{atom.Index}\"\
-    \n\tcx=\"{floatToStr atom.ProjectedCenter.X}\"\
-    \n\tcy=\"{floatToStr atom.ProjectedCenter.Y}\"\
-    \n\tr=\"{floatToStr atom.ProjectedRadius}\"\
+    \n\tcx=\"{floatToStr atom.C.X}\"\
+    \n\tcy=\"{floatToStr atom.C.Y}\"\
+    \n\tr=\"{floatToStr atom.R}\"\
     \n/>"
+
+let writeAtom (atom: AtomInfo) (otherAtoms: AtomInfo[]) =
+    let clippingAtoms = [|
+        for otherAtom in otherAtoms do
+            match atom.Intersect otherAtom with
+            | IntersectionCircle (p, r, v) -> yield (p, r, v)
+            | _ -> () |]
+
+    match clippingAtoms with
+
+    /// No clipping. Draw atom as full circle.
+    | cs when cs.Length = 0 -> drawAtom atom
+
+    /// Clipping. Calculate clipped parts of atom before drawing.
+    | cs ->
+            let intersections = Array.map (fun (p, r, v) -> intersectionBetweenCircles atom.C atom.R p r) cs
+            let intersectionPoints = [| for intersection in intersections do match intersection with | None -> () | Some (p1, p2) -> yield (p1, p2) |]
+            if intersectionPoints.Length = 0 then drawAtom atom
+            else reconstructShape atom intersectionPoints
 
 let writeAtomsStyle (atoms: AtomInfo[]) : string =
     atoms
@@ -72,7 +108,7 @@ let add (s: string) (sb: StringBuilder) : StringBuilder = sb.Append(s)
 
 let stringify (sb: StringBuilder) : string = sb.ToString()
 
-let writeSVG viewBox depiction atoms : string =
+let writeSVG viewBox depiction atoms pov : string =
     StringBuilder()
     |> add (header viewBox)
     |> add "\n<defs>\n<style>"

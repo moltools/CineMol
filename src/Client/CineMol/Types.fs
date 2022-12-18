@@ -86,7 +86,8 @@ and Point = { X: float; Y: float; Z: float }
     static member Pow (p: Point) (d: float) : Point =
         { X = p.X ** d; Y = p.Y ** d; Z = p.Z ** d }
 
-    static member Sum (p: Point) : float = p.X + p.Y + p.Z
+    static member Sum (p: Point) : float =
+        p.X + p.Y + p.Z
 
     member p1.Distance (p2: Point) : float =
         Math.Sqrt(Point.Sum(Point.Pow (p1 - p2) 2.0))
@@ -104,9 +105,22 @@ and Point = { X: float; Y: float; Z: float }
 
 and Vector = { X: float; Y: float; Z: float }
     with
-    member u.SumOfSquares : float = u.X ** 2.0 + u.Y ** 2.0 + u.Z ** 2.0
+    member u.SumOfSquares : float =
+        u.X ** 2.0 + u.Y ** 2.0 + u.Z ** 2.0
 
-    member u.Magnitude : float = Math.Sqrt(u.SumOfSquares)
+    member u.Magnitude : float =
+        Math.Sqrt(u.SumOfSquares)
+
+    static member (*) (k, v: Vector) =
+        { X = k * v.X; Y = k * v.Y; Z = k * v.Z }
+
+    static member (+) (v1: Vector, v2: Vector) =
+        { X = v1.X + v2.X; Y = v1.Y + v2.Y; Z = v1.Z + v2.Z }
+
+    member u.Norm : Vector =
+        let mag = u.Magnitude
+        let div = if mag = 0.0 then infinity else 1.0 / mag
+        div * u
 
     member u.Dot (v: Vector) : float = u.X * v.X + u.Y * v.Y + u.Z * v.Z
 
@@ -151,85 +165,67 @@ type Atom = | C | N | O | S | H | Unknown
 type AtomInfo =
     { Index: Index
       Type: Atom
-      OriginalCenter: Point
-      ProjectedCenter: Point
-      OriginalRadius: Radius
-      ProjectedRadius: Radius }
+      C: Point
+      R: Radius }
     with
     member x.Rotate (axis: Axis) (rad: float) : AtomInfo =
-        { x with OriginalCenter = x.OriginalCenter.Rotate axis rad }
+        { x with C = x.C.Rotate axis rad }
 
     member this.Intersect (other: AtomInfo) : SphereSphereIntersection =
-        let dist = this.ProjectedCenter.Distance other.ProjectedCenter
+        let dist = this.C.Distance other.C
 
         match dist with
-        | d when d > (this.ProjectedRadius + other.ProjectedRadius) ||
-                 (d = 0.0 && this.ProjectedRadius = other.ProjectedRadius)
-                  -> NoIntersection
-        | d when (d + this.ProjectedRadius) < other.ProjectedRadius -> Eclipsed
+        | d when d >= (this.R + other.R) || (d = 0.0 && this.R = other.R)
+            -> NoIntersection
+        | d when (d + this.R) < other.R
+            -> Eclipsed
         | _ ->
+            // Intersection plane
+            let A = 2.0 * (other.C.X - this.C.X)
+            let B = 2.0 * (other.C.Y - this.C.Y)
+            let C = 2.0 * (other.C.Z - this.C.Z)
+            let D = this.C.X ** 2.0 - other.C.X ** 2.0 +
+                    this.C.Y ** 2.0 - other.C.Y ** 2.0 +
+                    this.C.Z ** 2.0 - other.C.Z ** 2.0 -
+                    this.R ** 2.0 + other. R ** 2.0
 
-            /// Intersection plane.
-            let A = 2.0 * (other.ProjectedCenter.X - this.ProjectedCenter.X)
-            let B = 2.0 * (other.ProjectedCenter.Y - this.ProjectedCenter.Y)
-            let C = 2.0 * (other.ProjectedCenter.Z - this.ProjectedCenter.Z)
-            let D = this.ProjectedCenter.X ** 2.0 - other.ProjectedCenter.X ** 2.0 +
-                    this.ProjectedCenter.Y ** 2.0 - other.ProjectedCenter.Y ** 2.0 +
-                    this.ProjectedCenter.Z ** 2.0 - other.ProjectedCenter.Z ** 2.0 -
-                    this.ProjectedRadius ** 2.0 + other. ProjectedRadius ** 2.0
-
-            /// Intersection center.
-            let t = (this.ProjectedCenter.X * A + this.ProjectedCenter.Y * B + this.ProjectedCenter.Z * C + D) /
-                    (A * (this.ProjectedCenter.X - other.ProjectedCenter.X) +
-                     B * (this.ProjectedCenter.Y - other.ProjectedCenter.Y) +
-                     C * (this.ProjectedCenter.Z - other.ProjectedCenter.Z))
-            let x = this.ProjectedCenter.X + t * (other.ProjectedCenter.X - this.ProjectedCenter.X)
-            let y = this.ProjectedCenter.Y + t * (other.ProjectedCenter.Y - this.ProjectedCenter.Y)
-            let z = this.ProjectedCenter.Z + t * (other.ProjectedCenter.Z - this.ProjectedCenter.Z)
+            // Intersection center
+            let t = (this.C.X * A + this.C.Y * B + this.C.Z * C + D) /
+                    (A * (this.C.X - other.C.X) +
+                     B * (this.C.Y - other.C.Y) +
+                     C * (this.C.Z - other.C.Z))
+            let x = this.C.X + t * (other.C.X - this.C.X)
+            let y = this.C.Y + t * (other.C.Y - this.C.Y)
+            let z = this.C.Z + t * (other.C.Z - this.C.Z)
             let intersectionCenter: Point = { X = x; Y = y; Z = z }
 
-            /// Intersection.
-            let x =
-                (this.ProjectedRadius ** 2.0 + dist ** 2.0 - other.ProjectedRadius ** 2.0) /
-                (2.0 * this.ProjectedRadius * dist)
-            // TODO: Quick fix to make sure to prevent NaNs -- real solution
-            // TODO: would be making sure program does not try to clip objects
-            // TODO: that move in front of each other
+            // Intersection
+            let x = (this.R ** 2.0 + dist ** 2.0 - other.R ** 2.0) / (2.0 * this.R * dist)
             if x < 1.0 then
                 let alpha = Math.Acos(x)
-                let R = this.ProjectedRadius * Math.Sin alpha
-
+                let R = this.R * Math.Sin alpha
                 match R with
                 | 0.0 -> IntersectionPoint intersectionCenter
                 | _ ->
-                    let v = this.ProjectedCenter.FindVector other.ProjectedCenter
+                    let v = this.C.FindVector other.C
                     IntersectionCircle (intersectionCenter, R, v)
             else
                 NoIntersection
 
-let createAtom (index: int) (atomType: Atom) (center: Point) (radius: Radius) : AtomInfo =
-    { Index = index
-      Type = atomType
-      OriginalCenter = center
-      OriginalRadius = radius
-      ProjectedCenter = center
-      ProjectedRadius = radius }
+let createAtom (index: int) (atomType: Atom) (c: Point) (r: Radius) : AtomInfo =
+    { Index = index; Type = atomType; C = c; R = r }
 
 // ============================================================================
 // Molecule types.
 // ============================================================================
-type Molecule = {
-    Atoms: AtomInfo[]
-}
+type Molecule = { Atoms: AtomInfo[] }
 
 // ============================================================================
 // Drawing types.
 // ============================================================================
 type ViewBox = float * float * float * float
 
-type Depiction =
-    | Filled
-    | BallAndStick
+type Depiction = | Filled | BallAndStick
 
 let origin: Point = { X = 0.0; Y = 0.0; Z = 0.0 }
 

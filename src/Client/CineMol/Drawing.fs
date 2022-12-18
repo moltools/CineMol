@@ -25,15 +25,11 @@ let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo[]) : AtomInfo[] =
         atom.Rotate axis ((rads / 100.0) * 2.0 * Math.PI))
 
 let changeDistanceToAtoms (ratio: float) (atoms: AtomInfo[]) : AtomInfo[] =
-    atoms
-    |> Array.map (fun a -> { a with
-                                OriginalCenter = {
-                                    X = a.OriginalCenter.X * ratio
-                                    Y = a.OriginalCenter.Y * ratio
-                                    Z = a.OriginalCenter.Z * ratio
-                                }
-                                OriginalRadius = a.OriginalRadius * ratio
-                            })
+    let transform a =
+        { a with C = { X = a.C.X * ratio
+                       Y = a.C.Y * ratio
+                       Z = a.C.Z * ratio}; R = a.R * ratio }
+    Array.map (fun a -> transform a) atoms
 
 let draw
     (viewBox: ViewBox option)
@@ -54,7 +50,7 @@ let draw
     /// Calculate view box offset (set before zoom, otherwise view box changes with zoom).
     let offsetViewBox =
         let minimumOffset = 2.0
-        match mol.Atoms |> Array.map (fun a -> a.OriginalCenter.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
+        match mol.Atoms |> Array.map (fun a -> a.C.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
         | x when x < minimumOffset -> minimumOffset | x -> x
 
     let viewBox =
@@ -75,23 +71,23 @@ let draw
     let mol = { mol with Atoms = changeDistanceToAtoms zoom.Ratio mol.Atoms }
 
     /// Sort drawing order point cloud based on distance point to POV.
-    let mol = { mol with Atoms = mol.Atoms |> Array.sortBy (fun atom -> atom.OriginalCenter.Distance pov |> (*) -1.0) }
+    let mol = { mol with Atoms = mol.Atoms |> Array.sortBy (fun atom -> atom.C.Distance pov |> (*) -1.0) }
 
     /// Recalculate radius points based on distance point to POV.
-    let mol = { mol with Atoms = mol.Atoms
-                                 |> Array.map (fun atom ->
-                                     let projectedRadius = (distPovOrigin / (pov.Distance atom.OriginalCenter)) * atom.OriginalRadius
-                                     { atom with ProjectedRadius = projectedRadius })
-    }
+//    let mol = { mol with Atoms = mol.Atoms
+//                                 |> Array.map (fun atom ->
+//                                     let projectedRadius = (distPovOrigin / (pov.Distance atom.C)) * atom.R
+//                                     { atom with R = projectedRadius })
+//    }
 
     let cameraForward: Vector = { X = -pov.X; Y = -pov.Y; Z = -pov.Z }
     let cameraPerpendicular: Vector = { X = cameraForward.Y; Y = -cameraForward.X; Z = 0.0 }
     let cameraHorizon: Vector = cameraForward.Cross cameraPerpendicular
     let setPerspective (atom: AtomInfo) : AtomInfo =
-        let projectedCenter = project cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength atom.OriginalCenter
-        { atom with ProjectedCenter = projectedCenter }
+        let projectedCenter = project cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength atom.C
+        { atom with C = projectedCenter }
 
     /// Apply perspective projection on 3D point cloud on 2D view box
-    let mol = { mol with Atoms = mol.Atoms |> Array.map (fun atom -> setPerspective atom) }
+//    let mol = { mol with Atoms = mol.Atoms |> Array.map (fun atom -> setPerspective atom) }
 
-    writeSVG viewBox options.Depiction mol.Atoms, viewBox
+    writeSVG viewBox options.Depiction mol.Atoms pov, viewBox
