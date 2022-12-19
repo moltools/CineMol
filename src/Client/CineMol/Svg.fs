@@ -1,12 +1,10 @@
 module Client.CineMol.Svg
 
-open System
 open System.Text
 
 open Helpers
 open Styles
 open Types
-open Geometry
 
 let header ((xMin, yMin, width, height): ViewBox) =
     $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
@@ -16,10 +14,10 @@ let header ((xMin, yMin, width, height): ViewBox) =
     \n\tviewBox=\"{xMin} {yMin} {width} {height}\"\
     \n>"
 
-let writeAtomStyle atom =
+let writeAtomStyleFilled atom =
     $"\n.atom-{atom.Index}{{fill:url(#radial-gradient-{atom.Index});}}"
 
-let writeAtomDefs atom =
+let writeAtomDefsFilled atom =
     let r1, g1, b1 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[0]
     let r2, g2, b2 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[1]
     let r3, g3, b3 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[2]
@@ -47,27 +45,22 @@ let writeAtomDefs atom =
     stop-color=\"rgb({floatToStr r5},{floatToStr g5},{floatToStr b5})\"/>\
     \n</radialGradient>"
 
-let alphaIsoscelesTriangle (p1: Point2D) (p2: Point2D) (r: Radius) : float =
-    Math.Acos((2.0 * r ** 2.0 - (p1.Distance p2)) / (2.0 * r ** 2.0))
+let reconstructShape (atom: AtomInfo) : string =
+    let writeArc (final: Point2D) (radius: Radius) (sweep: Sweep) : string =
+        $"A {floatToStr radius} {floatToStr radius} 0 {sweep.ToString()} 0 {floatToStr final.X} {floatToStr final.Y}"
 
-let writeArc (final: Point2D) (radius: Radius) : string =
-    $"A {floatToStr radius} {floatToStr radius} 0 1 0 {floatToStr final.X} {floatToStr final.Y}"
-
-let reconstructShape (atom: AtomInfo) (edges: (Point2D * Point2D)[]) : string =
-    match Array.toList edges with
-    | (p1, p2)::tail ->
+    match atom.Clipping with
+    | {Line = (p1, p2); Sweep = sweep1}::tail ->
         let arcs =
-            [ for p3, p4 in tail do $" L {floatToStr p3.X} {floatToStr p3.Y} {writeArc p4 atom.Radius} " ]
+            [ for {Line = (p3, p4); Sweep = sweep2} in tail do $" L {floatToStr p3.X} {floatToStr p3.Y} {writeArc p4 atom.Radius sweep2} " ]
             |> String.concat ""
-
         $"\n<path\
         \n\tclass=\"atom-{atom.Index}\"\
-        \n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} {writeArc p2 atom.Radius} {arcs} L {floatToStr p1.X} {floatToStr p1.Y}\"
+        \n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} {writeArc p2 atom.Radius sweep1} {arcs} L {floatToStr p1.X} {floatToStr p1.Y}\"
         \n/>"
-
     | [] -> ""
 
-let drawAtom (atom: AtomInfo) : string =
+let drawAtomFilled (atom: AtomInfo) : string =
     $"\n<circle\
     \n\tclass=\"atom-{atom.Index}\"\
     \n\tcx=\"{floatToStr atom.Center.X}\"\
@@ -75,57 +68,58 @@ let drawAtom (atom: AtomInfo) : string =
     \n\tr=\"{floatToStr atom.Radius}\"\
     \n/>"
 
-let writeAtom (atom: AtomInfo) (otherAtoms: AtomInfo[]) =
-    let clippingAtoms = [|
-        for otherAtom in otherAtoms do
-            match atom.Intersect otherAtom with
-            | IntersectionCircle (p, r, v) -> yield (p, r, v)
-            | _ -> () |]
+let writeAtomFilled (atom: AtomInfo) =
+    match atom.Clipping with
+    | [] -> drawAtomFilled atom
+    | _ -> reconstructShape atom
 
-    match clippingAtoms with
-    // No clipping
-    | cs when cs.Length = 0 ->
-        drawAtom atom
-
-    // Clipping
-    | cs ->
-            let intersections =
-                cs
-                |> Array.map (fun (p, r, v) ->
-                    let center2D = { X = atom.Center.X; Y = atom.Center.Y }
-                    let clipWithCenter2D = { X = p.X; Y = p.Y }
-                    intersectionBetweenCircles center2D atom.Radius clipWithCenter2D r)
-            let intersectionPoints = [| for intersection in intersections do match intersection with | None -> () | Some (p1, p2) -> yield (p1, p2) |]
-            if intersectionPoints.Length = 0 then drawAtom atom
-            else reconstructShape atom intersectionPoints
-
-let writeAtomsStyle (atoms: AtomInfo[]) : string =
+let writeAtomsStyleFilled (atoms: AtomInfo[]) : string =
     atoms
-    |> Array.map writeAtomStyle
+    |> Array.map writeAtomStyleFilled
     |> String.concat ""
 
-let writeAtomsDefs (atoms: AtomInfo[]) : string =
+let writeAtomsDefsFilled (atoms: AtomInfo[]) : string =
     atoms
-    |> Array.map writeAtomDefs
+    |> Array.map writeAtomDefsFilled
     |> String.concat ""
 
-let writeAtoms (atoms: AtomInfo[]) : string =
+let writeAtomsFilled (atoms: AtomInfo[]) : string =
     atoms
-    |> Array.map (fun atom -> writeAtom atom atoms)
+    |> Array.map (fun atom -> writeAtomFilled atom)
     |> String.concat ""
 
 let add (s: string) (sb: StringBuilder) : StringBuilder = sb.Append(s)
 
 let stringify (sb: StringBuilder) : string = sb.ToString()
 
-let writeSVG viewBox depiction atoms pov : string =
-    StringBuilder()
-    |> add (header viewBox)
-    |> add "\n<defs>\n<style>"
-    |> add (writeAtomsStyle atoms)
-    |> add "\n</style>"
-    |> add (writeAtomsDefs atoms)
-    |> add "\n</defs>"
-    |> add (writeAtoms atoms)
-    |> add "\n</svg>"
-    |> stringify
+let writeSVG viewBox depiction mol : string =
+    match depiction with
+    | Filled ->
+        StringBuilder()
+        |> add (header viewBox)
+        |> add "\n<defs>\n<style>"
+        |> add (writeAtomsStyleFilled mol.Atoms)
+        |> add "\n</style>"
+        |> add (writeAtomsDefsFilled mol.Atoms)
+        |> add "\n</defs>"
+        |> add (writeAtomsFilled mol.Atoms)
+        |> add "\n</svg>"
+        |> stringify
+
+    | BallAndStick ->
+        StringBuilder()
+        |> add (header viewBox)
+        |> add "\n<defs>\n<style>"
+        |> add "\n</style>"
+        |> add "\n</defs>"
+        |> add "\n</svg>"
+        |> stringify
+
+    | Tube ->
+        StringBuilder()
+        |> add (header viewBox)
+        |> add "\n<defs>\n<style>"
+        |> add "\n</style>"
+        |> add "\n</defs>"
+        |> add "\n</svg>"
+        |> stringify

@@ -107,11 +107,16 @@ type SphereSphereIntersection =
     | IntersectionPoint of Point3D
     | IntersectionCircle of Point3D * Radius * Vector
 
+type Clipping = { Line: Point2D * Point2D; Sweep: Sweep }
+and Sweep = | Zero | One
+    with override x.ToString() = match x with | Zero -> "0" | One -> "1"
+
 type AtomInfo =
     { Index: Index
       AtomType: AtomType
       Center: Point3D
-      Radius: Radius }
+      Radius: Radius
+      Clipping: Clipping list }
     with
     member x.Rotate (axis: Axis) (rad: float) : AtomInfo =
         { x with Center = x.Center.Rotate axis rad }
@@ -156,13 +161,13 @@ type AtomInfo =
                 NoIntersection
 
 let createAtom (index: int) (atomType: AtomType) (c: Point3D) (r: Radius) : AtomInfo =
-    { Index = index; AtomType = atomType; Center = c; Radius = r }
+    { Index = index; AtomType = atomType; Center = c; Radius = r; Clipping = [] }
 
 type Molecule = { Atoms: AtomInfo[] }
 
 type ViewBox = float * float * float * float
 
-type Depiction = | Filled | BallAndStick
+type Depiction = | Filled | BallAndStick | Tube
 
 let origin: Point3D = { X = 0.0; Y = 0.0; Z = 0.0 }
 

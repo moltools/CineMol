@@ -188,6 +188,8 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let toggle =
             if model.DrawOptions.Depiction = Depiction.Filled then
                 Depiction.BallAndStick
+            elif model.DrawOptions.Depiction = Depiction.BallAndStick then
+                Depiction.Tube
             else
                 Depiction.Filled
 
