@@ -3,24 +3,11 @@ module Client.CineMol.Parsing
 open System
 open System.Text.RegularExpressions
 
+open Styles
 open Types
 
-/// <summary>
-///     Exception to throw when parser encounters error when parsing.
-/// </summary>
 exception ParserError of string
 
-/// <summary>
-///     Constructs regular expression for atom line in V2000 molfile.
-/// </summary>
-/// <returns>
-///     Regular expression for atom line in V2000 molfile that matches four
-///     groups (in the following order):
-///         1) X coordinate
-///         2) Y coordinate
-///         3) Z coordinate
-///         4) atom type
-/// </returns>
 let atomLine : string =
     let s = @"\s{1,}"
     let d = @"[-+]?[0-9]*\.?[0-9]+"
@@ -33,16 +20,6 @@ let atomLine : string =
     |> (@) [ "^" ]
     |> String.concat ""
 
-/// <summary>
-///     Active pattern for matching and parsing atom line in V2000 molfile
-/// </summary>
-/// <param name="line">
-///     Input line to apply atom line regular expression on.
-/// </param>
-/// <returns>
-///     List of matched groups, if there was a match with the regular
-///     expression.
-/// </returns>
 let (|AtomLine|_|) (line: string) : string list option =
     let m = Regex.Match(line, atomLine)
     if m.Success then
@@ -50,42 +27,31 @@ let (|AtomLine|_|) (line: string) : string list option =
     else
         None
 
-/// <summary>
-///     Cast atom symbol to Atom.
-/// </summary>
-/// <param name="atom">
-///     Atom symbol.
-/// </param>
-/// <returns>
-///     Casted atom type.
-/// </returns>
-let tryCastToAtom (atom: string) : Atom =
+let tryCastToAtom (atom: string) : AtomType =
     match atom with
-    | "C" -> C | "N" -> N | "O" -> O | "S" -> S | "H" -> H
+    | "H"  -> H  | "He" -> He | "Li" -> Li | "Be" -> Be | "B"  -> B  | "C"  -> C  | "N"  -> N
+    | "O"  -> O  | "F"  -> F  | "Ne" -> Ne | "Na" -> Na | "Mg" -> Mg | "Al" -> Al | "Si" -> Si
+    | "P"  -> P  | "S"  -> S  | "Cl" -> Cl | "Ar" -> Ar | "K"  -> K  | "Ca" -> Ca | "Sc" -> Sc
+    | "Ti" -> Ti | "V"  -> V  | "Cr" -> Cr | "Mn" -> Mn | "Fe" -> Fe | "Co" -> Co | "Ni" -> Ni
+    | "Cu" -> Cu | "Zn" -> Zn | "Ga" -> Ga | "Ge" -> Ge | "As" -> As | "Se" -> Se | "Br" -> Br
+    | "Kr" -> Kr | "Rb" -> Rb | "Sr" -> Sr | "Zr" -> Zr | "Nb" -> Nb | "Mo" -> Mo | "Tc" -> Tc
+    | "Ru" -> Ru | "Rh" -> Rh | "Pd" -> Pd | "Ag" -> Ag | "Cd" -> Cd | "In" -> In | "Sn" -> Sn
+    | "Sb" -> Sb | "Te" -> Te | "I"  -> I  | "Xe" -> Xe | "Cs" -> Cs | "Ba" -> Ba | "La" -> La
+    | "Ce" -> Ce | "Pr" -> Pr | "Nd" -> Nd | "Pm" -> Pm | "Sm" -> Sm | "Eu" -> Eu | "Gd" -> Gd
+    | "Tb" -> Tb | "Dy" -> Dy | "Ho" -> Ho | "Er" -> Er | "Tm" -> Tm | "Yb" -> Yb | "Lu" -> Lu
+    | "Hf" -> Hf | "Ta" -> Ta | "W"  -> W  | "Re" -> Re | "Os" -> Os | "Ir" -> Ir | "Pt" -> Pt
+    | "Au" -> Au | "Hg" -> Hg | "Tl" -> Tl | "Pb" -> Pb | "Bi" -> Bi | "Po" -> Po | "At" -> At
+    | "Rn" -> Rn | "Fr" -> Fr | "Ra" -> Ra | "Ac" -> Ac | "Th" -> Th | "Pa" -> Pa | "U"  -> U
+    | "Np" -> Np | "Pu" -> Pu | "Am" -> Am | "Cm" -> Cm | "Bk" -> Bk | "Cf" -> Cf | "Es" -> Es
+    | "Fm" -> Fm | "Md" -> Md | "No" -> No | "Lr" -> Lr | "Rf" -> Rf | "Db" -> Db | "Sg" -> Sg
+    | "Bh" -> Bh | "Hs" -> Hs | "Mt" -> Mt | "Ds" -> Ds | "Rg" -> Rg | "Cn" -> Cn | "Nh" -> Nh
+    | "Fl" -> Fl | "Mc" -> Mc | "Lv" -> Lv | "Ts" -> Ts | "Og" -> Og | "Y"  -> AtomType.Y
     | _ -> Unknown
 
-/// <summary>
-///     Try to cast float string to float.
-/// </summary>
-/// <param name="s">
-///     Float string.
-/// </param>
-/// <returns>
-///     Casted float, if successfully cast. Otherwise, float 0.0.
-/// </returns>
 let tryCastToFloat (s: string) : float =
     try s |> float
     with :? FormatException -> 0.0
 
-/// <summary>
-///     Parse molecules from V2000 molfile.
-/// </summary>
-/// <param name="sdf">
-///     SDF string to parse molecules from.
-/// </param>
-/// <returns>
-///     Parsed molecules from SDF string.
-/// </returns>
 let parseSdf (sdf: string) : Molecule[] =
     let mutable atoms: AtomInfo list = []
     let mutable atomCount: int = 0
@@ -99,12 +65,12 @@ let parseSdf (sdf: string) : Molecule[] =
             | AtomLine [ x; y; z; symbol] ->
                 atomCount <- atomCount + 1
                 let atomType = tryCastToAtom symbol
-                let center: Point = {
+                let center: Point3D = {
                     X = tryCastToFloat x
                     Y = tryCastToFloat y
                     Z = tryCastToFloat z
                 }
-                let radius: Radius = atomType.Radius
+                let radius: Radius = getAtomRadius Default atomType |> normalizeRadius Default
                 let atom = createAtom atomCount atomType center radius
                 atoms <- atoms @ [ atom ]
             | _ -> ()

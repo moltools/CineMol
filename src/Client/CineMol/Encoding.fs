@@ -2,34 +2,14 @@ module Client.CineMol.Encoding
 
 open System
 
-/// <summary>
-///     Exception to thrown when encoder encounters unexpected character.
-/// </summary>
 exception UnexpectedCharToEncode of string
 
-/// <summary>
-///     Defines available encodings for encoding a character.
-/// </summary>
 type Encoding = | ISO_8859_1
     with
-
-    /// <summary>
-    ///     Encode character according to Encoding into unsigned 8-bit natural
-    ///     number.
-    /// </summary>
-    /// <param name="c">
-    ///     Character to encode.
-    /// </param>
-    /// <returns>
-    ///     Unsigned 8-bit natural number.
-    /// </returns>
-    /// <exception cref="Encoding.EncodingError">
-    ///     Thrown when no encoding is available for supplied character `c`.
-    /// </exception>
     member x.GetEncoding (c: char) : byte =
         match x with
 
-        /// Encode character according to ISO 8859-1.
+        // Encode character according to ISO 8859-1.
         | ISO_8859_1 ->
             match c with
             | '\t'  | '\n'  | ' '  -> 32uy
@@ -62,30 +42,11 @@ type Encoding = | ISO_8859_1
                 |> UnexpectedCharToEncode
                 |> raise
 
-/// <summary>
-///     Encode a string according to supplied encoding into unsigned 8-bit byte
-///     array.
-/// </summary>
-/// <param name="encoding">
-///     Type of encoding to use to encode a string into a byte array.
-/// </param>
-/// <param name="src">
-///     Source string to encode into an usigned 8-bit byte array.
-/// </param>
 let encode (encoding: Encoding) (src: string) : byte[] =
     src
     |> Seq.toArray
     |> Array.map (fun c -> encoding.GetEncoding c)
 
-/// <summary>
-///     Convert string of characters to base 64 string.
-/// </summary>
-/// <param name="toEncode">
-///     Character string to encode.
-/// </param>
-/// <returns>
-///     Base 64 string representation for input string.
-/// </returns>
 let toBase64String (toEncode : string) : string =
     let bytes =  encode ISO_8859_1 toEncode
     Convert.ToBase64String(bytes)

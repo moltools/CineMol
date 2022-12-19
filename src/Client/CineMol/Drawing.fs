@@ -3,6 +3,7 @@ module Client.CineMol.Drawing
 open System
 
 open Helpers
+open Styles
 open Types
 open Svg
 
@@ -16,8 +17,8 @@ type DrawOptions = {
             ShowHydrogenAtoms = false
         }
 
-let filterAtoms (atomType: Atom) (atoms: AtomInfo[]) : AtomInfo[] =
-    Array.filter(fun (atom: AtomInfo) -> atom.Type <> atomType) atoms
+let filterAtoms (atomType: AtomType) (atoms: AtomInfo[]) : AtomInfo[] =
+    Array.filter(fun (atom: AtomInfo) -> atom.AtomType <> atomType) atoms
 
 let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo[]) : AtomInfo[] =
     atoms
@@ -26,9 +27,9 @@ let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo[]) : AtomInfo[] =
 
 let changeDistanceToAtoms (ratio: float) (atoms: AtomInfo[]) : AtomInfo[] =
     let transform a =
-        { a with C = { X = a.C.X * ratio
-                       Y = a.C.Y * ratio
-                       Z = a.C.Z * ratio}; R = a.R * ratio }
+        { a with Center = { X = a.Center.X * ratio
+                            Y = a.Center.Y * ratio
+                            Z = a.Center.Z * ratio}; Radius = a.Radius * ratio }
     Array.map (fun a -> transform a) atoms
 
 let draw
@@ -50,7 +51,7 @@ let draw
     /// Calculate view box offset (set before zoom, otherwise view box changes with zoom).
     let offsetViewBox =
         let minimumOffset = 2.0
-        match mol.Atoms |> Array.map (fun a -> a.C.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
+        match mol.Atoms |> Array.map (fun a -> a.Center.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
         | x when x < minimumOffset -> minimumOffset | x -> x
 
     let viewBox =
@@ -59,7 +60,7 @@ let draw
         | Some x -> x
 
     let focalLength: float = offsetViewBox
-    let pov: Point = { X = 1E-5; Y = 1E-5; Z = focalLength }
+    let pov: Point3D = { X = 1E-5; Y = 1E-5; Z = focalLength }
     let distPovOrigin: float = pov.Distance origin
 
     /// Filter atoms based on atom type.
@@ -71,7 +72,7 @@ let draw
     let mol = { mol with Atoms = changeDistanceToAtoms zoom.Ratio mol.Atoms }
 
     /// Sort drawing order point cloud based on distance point to POV.
-    let mol = { mol with Atoms = mol.Atoms |> Array.sortBy (fun atom -> atom.C.Distance pov |> (*) -1.0) }
+    let mol = { mol with Atoms = mol.Atoms |> Array.sortBy (fun atom -> atom.Center.Distance pov |> (*) -1.0) }
 
     /// Recalculate radius points based on distance point to POV.
 //    let mol = { mol with Atoms = mol.Atoms
@@ -84,8 +85,8 @@ let draw
     let cameraPerpendicular: Vector = { X = cameraForward.Y; Y = -cameraForward.X; Z = 0.0 }
     let cameraHorizon: Vector = cameraForward.Cross cameraPerpendicular
     let setPerspective (atom: AtomInfo) : AtomInfo =
-        let projectedCenter = project cameraPerpendicular cameraHorizon cameraForward (pov: Point) focalLength atom.C
-        { atom with C = projectedCenter }
+        let projectedCenter = project cameraPerpendicular cameraHorizon cameraForward (pov: Point3D) focalLength atom.Center
+        { atom with Center = projectedCenter }
 
     /// Apply perspective projection on 3D point cloud on 2D view box
 //    let mol = { mol with Atoms = mol.Atoms |> Array.map (fun atom -> setPerspective atom) }

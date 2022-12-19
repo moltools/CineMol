@@ -9,6 +9,7 @@
         <None Include="paket.references" />
         <Compile Include="CineMol\Encoding.fs" />
         <Compile Include="CineMol\Helpers.fs" />
+        <Compile Include="CineMol\Styles.fs" />
         <Compile Include="CineMol\Types.fs" />
         <Compile Include="CineMol\Parsing.fs" />
         <Compile Include="CineMol\Geometry.fs" />

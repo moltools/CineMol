@@ -1,106 +1,74 @@
 ﻿module Client.CineMol.Types
 
 open System
+open Styles
 
-// ============================================================================
-// Color types.
-// ============================================================================
-type DiffusionRate = float
-
-let diffusionRate1: DiffusionRate = 0.0
-let diffusionRate2: DiffusionRate = 0.11
-let diffusionRate3: DiffusionRate = 0.34
-let diffusionRate4: DiffusionRate = 0.66
-let diffusionRate5: DiffusionRate = 01.0
-
-type Gradient = Color * Color * Color * Color * Color
-
-and Color = { R: int; G: int; B: int }
-    with
-    member x.Diffuse (factor : float) : Color =
-        { R = int ((float x.R) * factor)
-          G = int ((float x.G) * factor)
-          B = int ((float x.B) * factor) }
-
-    member x.Gradient : Gradient =
-        ( x.Diffuse (1.0 - diffusionRate1),
-          x.Diffuse (1.0 - diffusionRate2),
-          x.Diffuse (1.0 - diffusionRate3),
-          x.Diffuse (1.0 - diffusionRate4),
-          x.Diffuse (1.0 - diffusionRate5) )
-
-let dodgerBlue: Color = { R = 1; G = 122; B = 255 }
-let mutedRed: Color = { R = 215; G = 80; B = 77 }
-let grey: Color = { R = 104; G = 104; B = 104 }
-let lightGrey: Color = { R = 238 ; G = 238 ; B = 238 }
-let neon: Color = { R = 108; G = 71; B = 255 }
-let turquoise: Color = { R = 57; G = 192; B = 200 }
-let safetyOrange: Color = { R = 249; G = 99; B = 0 }
-let wildMelon: Color = { R = 243; G = 37; B = 113 }
-let coral: Color = { R = 255; G = 147; B = 130 }
-let amber: Color = { R = 245; G = 201; B = 0 }
-let tan: Color = { R = 205; G = 173; B = 122 }
-let celery: Color = { R = 170; G = 187; B = 93 }
-
-
-// ============================================================================
-// Geometry types.
-// ============================================================================
 type Zoom = { Ratio: float }
     with
     static member init = { Ratio = 1.0 }
 
 type Rotation = { AxisX: float; AxisY: float; AxisZ: float }
     with
-    static member init = {
-            AxisX = 0.0
-            AxisY = 0.0
-            AxisZ = 0.0
-        }
+    static member init =
+        { AxisX = 0.0; AxisY = 0.0; AxisZ = 0.0 }
 
 type Axis = | X | Y | Z
     with
-    member x.RotationMatrix : Point * float -> Point =
+    member x.RotationMatrix : Point3D * float -> Point3D =
         match x with
         | X ->
-            (fun (p: Point, rad: float) ->
+            (fun (p: Point3D, rad: float) ->
                 { X = p.X
                   Y = p.Y * Math.Cos(rad) - p.Z * Math.Sin(rad)
                   Z = p.Y * Math.Sin(rad) + p.Z * Math.Cos(rad) })
         | Y ->
-            (fun (p: Point, rad: float) ->
+            (fun (p: Point3D, rad: float) ->
                 { X = p.X * Math.Cos(rad) + p.Z * Math.Sin(rad)
                   Y = p.Y
                   Z = p.Z * Math.Cos(rad) - p.X * Math.Sin(rad) })
         | Z ->
-            (fun (p: Point, rad: float) ->
+            (fun (p: Point3D, rad: float) ->
                 { X = p.X * Math.Cos(rad) - p.Y * Math.Sin(rad)
                   Y = p.X * Math.Sin(rad) + p.Y * Math.Cos(rad)
                   Z = p.Z })
 
-and Point = { X: float; Y: float; Z: float }
+and Point2D = { X: float; Y: float }
     with
-    static member (-) (p1: Point, c2: Point) : Point =
-        { X = p1.X - c2.X; Y = p1.Y - c2.Y; Z = p1.Z - c2.Z }
+    static member (-) (p1: Point2D, p2: Point2D) : Point2D =
+        { X = p1.X - p2.X; Y = p1.Y - p2.Y }
 
-    static member Pow (p: Point) (d: float) : Point =
+    static member Pow (p: Point2D) (d: float) : Point2D =
+        { X = p.X ** d; Y = p.Y ** d }
+
+    static member Sum (p: Point2D) : float =
+        p.X + p.Y
+
+    member p1.Distance (p2: Point2D) : float =
+        Math.Sqrt(Point2D.Sum(Point2D.Pow (p1 - p2) 2.0))
+
+and Point3D = { X: float; Y: float; Z: float }
+    with
+    static member (-) (p1: Point3D, p2: Point3D) : Point3D =
+        { X = p1.X - p2.X; Y = p1.Y - p2.Y; Z = p1.Z - p2.Z }
+
+    static member Pow (p: Point3D) (d: float) : Point3D =
         { X = p.X ** d; Y = p.Y ** d; Z = p.Z ** d }
 
-    static member Sum (p: Point) : float =
+    static member Sum (p: Point3D) : float =
         p.X + p.Y + p.Z
 
-    member p1.Distance (p2: Point) : float =
-        Math.Sqrt(Point.Sum(Point.Pow (p1 - p2) 2.0))
+    member p1.Distance (p2: Point3D) : float =
+        Math.Sqrt(Point3D.Sum(Point3D.Pow (p1 - p2) 2.0))
 
-    member p1.Centroid (p2: Point) : Point =
+    member p1.Centroid (p2: Point3D) : Point3D =
         { X = (p1.X + p2.X) / 2.0
           Y = (p1.Y + p2.X) / 2.0
           Z = (p1.Z + p2.Z) / 2.0 }
 
-    member p.Rotate (axis: Axis) (rad: float) : Point =
+    member p.Rotate (axis: Axis) (rad: float) : Point3D =
         axis.RotationMatrix(p, rad)
 
-    member p1.FindVector (p2: Point) : Vector =
+    member p1.FindVector (p2: Point3D) : Vector =
         { X = p2.X - p1.X; Y = p2.Y - p1.Y; Z = p2.Z - p1.Z }
 
 and Vector = { X: float; Y: float; Z: float }
@@ -131,116 +99,85 @@ and Vector = { X: float; Y: float; Z: float }
 
     member x.ProjectVector (v: Vector) : float = (v.Dot x) / v.Magnitude
 
-
-// ============================================================================
-// Atom types.
-// ============================================================================
 type Index = int
-
-type Radius = float
 
 type SphereSphereIntersection =
     | Eclipsed
     | NoIntersection
-    | IntersectionPoint of Point
-    | IntersectionCircle of Point * Radius * Vector
-
-type Atom = | C | N | O | S | H | Unknown
-    with
-    member x.Radius : float =
-        match x with
-        | S -> 1.2
-        | H -> 0.6
-        | _ -> 1.0
-
-    member x.Color : Color =
-        match x with
-        | C -> grey
-        | N -> dodgerBlue
-        | O -> mutedRed
-        | S -> amber
-        | H -> lightGrey
-        | _ -> safetyOrange
+    | IntersectionPoint of Point3D
+    | IntersectionCircle of Point3D * Radius * Vector
 
 type AtomInfo =
     { Index: Index
-      Type: Atom
-      C: Point
-      R: Radius }
+      AtomType: AtomType
+      Center: Point3D
+      Radius: Radius }
     with
     member x.Rotate (axis: Axis) (rad: float) : AtomInfo =
-        { x with C = x.C.Rotate axis rad }
+        { x with Center = x.Center.Rotate axis rad }
 
     member this.Intersect (other: AtomInfo) : SphereSphereIntersection =
-        let dist = this.C.Distance other.C
+        let dist = this.Center.Distance other.Center
 
         match dist with
-        | d when d >= (this.R + other.R) || (d = 0.0 && this.R = other.R)
+        | d when d >= (this.Radius + other.Radius) || (d = 0.0 && this.Radius = other.Radius)
             -> NoIntersection
-        | d when (d + this.R) < other.R
+
+        | d when (d + this.Radius) < other.Radius
             -> Eclipsed
+
         | _ ->
             // Intersection plane
-            let A = 2.0 * (other.C.X - this.C.X)
-            let B = 2.0 * (other.C.Y - this.C.Y)
-            let C = 2.0 * (other.C.Z - this.C.Z)
-            let D = this.C.X ** 2.0 - other.C.X ** 2.0 +
-                    this.C.Y ** 2.0 - other.C.Y ** 2.0 +
-                    this.C.Z ** 2.0 - other.C.Z ** 2.0 -
-                    this.R ** 2.0 + other. R ** 2.0
+            let A = 2.0 * (other.Center.X - this.Center.X)
+            let B = 2.0 * (other.Center.Y - this.Center.Y)
+            let C = 2.0 * (other.Center.Z - this.Center.Z)
+            let D = this.Center.X ** 2.0 - other.Center.X ** 2.0 + this.Center.Y ** 2.0 - other.Center.Y ** 2.0 +
+                    this.Center.Z ** 2.0 - other.Center.Z ** 2.0 - this.Radius ** 2.0 + other.Radius ** 2.0
 
             // Intersection center
-            let t = (this.C.X * A + this.C.Y * B + this.C.Z * C + D) /
-                    (A * (this.C.X - other.C.X) +
-                     B * (this.C.Y - other.C.Y) +
-                     C * (this.C.Z - other.C.Z))
-            let x = this.C.X + t * (other.C.X - this.C.X)
-            let y = this.C.Y + t * (other.C.Y - this.C.Y)
-            let z = this.C.Z + t * (other.C.Z - this.C.Z)
-            let intersectionCenter: Point = { X = x; Y = y; Z = z }
+            let t = (this.Center.X * A + this.Center.Y * B + this.Center.Z * C + D) /
+                    (A * (this.Center.X - other.Center.X) + B * (this.Center.Y - other.Center.Y) + C * (this.Center.Z - other.Center.Z))
+            let x = this.Center.X + t * (other.Center.X - this.Center.X)
+            let y = this.Center.Y + t * (other.Center.Y - this.Center.Y)
+            let z = this.Center.Z + t * (other.Center.Z - this.Center.Z)
+            let intersectionCenter: Point3D = { X = x; Y = y; Z = z }
 
             // Intersection
-            let x = (this.R ** 2.0 + dist ** 2.0 - other.R ** 2.0) / (2.0 * this.R * dist)
+            let x = (this.Radius ** 2.0 + dist ** 2.0 - other.Radius ** 2.0) / (2.0 * this.Radius * dist)
             if x < 1.0 then
                 let alpha = Math.Acos(x)
-                let R = this.R * Math.Sin alpha
+                let R = this.Radius * Math.Sin alpha
                 match R with
                 | 0.0 -> IntersectionPoint intersectionCenter
                 | _ ->
-                    let v = this.C.FindVector other.C
+                    let v = this.Center.FindVector other.Center
                     IntersectionCircle (intersectionCenter, R, v)
             else
                 NoIntersection
 
-let createAtom (index: int) (atomType: Atom) (c: Point) (r: Radius) : AtomInfo =
-    { Index = index; Type = atomType; C = c; R = r }
+let createAtom (index: int) (atomType: AtomType) (c: Point3D) (r: Radius) : AtomInfo =
+    { Index = index; AtomType = atomType; Center = c; Radius = r }
 
-// ============================================================================
-// Molecule types.
-// ============================================================================
 type Molecule = { Atoms: AtomInfo[] }
 
-// ============================================================================
-// Drawing types.
-// ============================================================================
 type ViewBox = float * float * float * float
 
 type Depiction = | Filled | BallAndStick
 
-let origin: Point = { X = 0.0; Y = 0.0; Z = 0.0 }
+let origin: Point3D = { X = 0.0; Y = 0.0; Z = 0.0 }
 
 let physicalProjection
     cameraPerpendicular
     cameraHorizon
     cameraForward
-    (pov: Point)
-    (p: Point) : Point =
-    let pointVector = pov.FindVector(p)
+    (pov: Point3D)
+    (p: Point3D) : Point3D =
+    let pointVector = pov.FindVector p
     { X = pointVector.ProjectVector cameraPerpendicular
       Y = pointVector.ProjectVector cameraHorizon
       Z = pointVector.ProjectVector cameraForward }
 
-let perspectiveProjection (focalLength: float) (p: Point) : Point =
+let perspectiveProjection (focalLength: float) (p: Point3D) : Point3D =
     let scaleFactor = focalLength / p.Z
     { X = p.X * scaleFactor
       Y = p.Y * scaleFactor
@@ -250,10 +187,10 @@ let project
     cameraPerpendicular
     cameraHorizon
     cameraForward
-    (pov: Point)
+    (pov: Point3D)
     focalLength
-    (p: Point)
-    : Point =
+    (p: Point3D)
+    : Point3D =
     p
     |> physicalProjection cameraPerpendicular cameraHorizon cameraForward pov
     |> perspectiveProjection focalLength

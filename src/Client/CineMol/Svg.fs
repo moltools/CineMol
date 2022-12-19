@@ -4,6 +4,7 @@ open System
 open System.Text
 
 open Helpers
+open Styles
 open Types
 open Geometry
 
@@ -19,45 +20,49 @@ let writeAtomStyle atom =
     $"\n.atom-{atom.Index}{{fill:url(#radial-gradient-{atom.Index});}}"
 
 let writeAtomDefs atom =
-    let d1, d2, d3, d4, d5 = atom.Type.Color.Gradient
+    let r1, g1, b1 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[0]
+    let r2, g2, b2 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[1]
+    let r3, g3, b3 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[2]
+    let r4, g4, b4 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[3]
+    let r5, g5, b5 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[4]
     $"\n<radialGradient\
     \n\tid=\"radial-gradient-{atom.Index}\"\
-    \n\tcx=\"{floatToStr atom.C.X}\"\
-    \n\tcy=\"{floatToStr atom.C.Y}\"\
-    \n\tfx=\"{floatToStr atom.C.X}\"\
-    \n\tfy=\"{floatToStr atom.C.Y}\"\
-    \n\tr=\"{floatToStr (atom.R + 0.4)}\"\
+    \n\tcx=\"{floatToStr atom.Center.X}\"\
+    \n\tcy=\"{floatToStr atom.Center.Y}\"\
+    \n\tfx=\"{floatToStr atom.Center.X}\"\
+    \n\tfy=\"{floatToStr atom.Center.Y}\"\
+    \n\tr=\"{floatToStr (atom.Radius + 0.4)}\"\
     \n\tgradientTransform=\"matrix(1, 0, 0, 1, 0, 0)\"\
     \n\tgradientUnits=\"userSpaceOnUse\"\
     \n>\
-    \n<stop offset=\"{floatToStr diffusionRate1}\" \
-    stop-color=\"rgb({intToStr d1.R},{intToStr d1.G},{intToStr d1.B})\"/>\
-    \n<stop offset=\"{floatToStr diffusionRate2}\" \
-    stop-color=\"rgb({intToStr d2.R},{intToStr d2.G},{intToStr d2.B})\"/>\
-    \n<stop offset=\"{floatToStr diffusionRate3}\" \
-    stop-color=\"rgb({intToStr d3.R},{intToStr d3.G},{intToStr d3.B})\"/>\
-    \n<stop offset=\"{floatToStr diffusionRate4}\" \
-    stop-color=\"rgb({intToStr d4.R},{intToStr d4.G},{intToStr d4.B})\"/>\
-    \n<stop offset=\"{floatToStr diffusionRate5}\" \
-    stop-color=\"rgb({intToStr d5.R},{intToStr d5.G},{intToStr d5.B})\"/>\
+    \n<stop offset=\"{floatToStr atomColorGradient[0]}\" \
+    stop-color=\"rgb({floatToStr r1},{floatToStr g1},{floatToStr b1})\"/>\
+    \n<stop offset=\"{floatToStr atomColorGradient[1]}\" \
+    stop-color=\"rgb({floatToStr r2},{floatToStr g2},{floatToStr b2})\"/>\
+    \n<stop offset=\"{floatToStr atomColorGradient[2]}\" \
+    stop-color=\"rgb({floatToStr r3},{floatToStr g3},{floatToStr b3})\"/>\
+    \n<stop offset=\"{floatToStr atomColorGradient[3]}\" \
+    stop-color=\"rgb({floatToStr r4},{floatToStr g4},{floatToStr b4})\"/>\
+    \n<stop offset=\"{floatToStr atomColorGradient[4]}\" \
+    stop-color=\"rgb({floatToStr r5},{floatToStr g5},{floatToStr b5})\"/>\
     \n</radialGradient>"
 
-let alphaIsoscelesTriangle (p1: Point) (p2: Point) (r: Radius) : float =
+let alphaIsoscelesTriangle (p1: Point2D) (p2: Point2D) (r: Radius) : float =
     Math.Acos((2.0 * r ** 2.0 - (p1.Distance p2)) / (2.0 * r ** 2.0))
 
-let writeArc (final: Point) (radius: Radius) : string =
+let writeArc (final: Point2D) (radius: Radius) : string =
     $"A {floatToStr radius} {floatToStr radius} 0 1 0 {floatToStr final.X} {floatToStr final.Y}"
 
-let reconstructShape (atom: AtomInfo) (edges: (Point * Point)[]) : string =
+let reconstructShape (atom: AtomInfo) (edges: (Point2D * Point2D)[]) : string =
     match Array.toList edges with
     | (p1, p2)::tail ->
         let arcs =
-            [ for p3, p4 in tail do $" L {floatToStr p3.X} {floatToStr p3.Y} {writeArc p4 atom.R} " ]
+            [ for p3, p4 in tail do $" L {floatToStr p3.X} {floatToStr p3.Y} {writeArc p4 atom.Radius} " ]
             |> String.concat ""
 
         $"\n<path\
         \n\tclass=\"atom-{atom.Index}\"\
-        \n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} {writeArc p2 atom.R} {arcs} L {floatToStr p1.X} {floatToStr p1.Y}\"
+        \n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} {writeArc p2 atom.Radius} {arcs} L {floatToStr p1.X} {floatToStr p1.Y}\"
         \n/>"
 
     | [] -> ""
@@ -65,9 +70,9 @@ let reconstructShape (atom: AtomInfo) (edges: (Point * Point)[]) : string =
 let drawAtom (atom: AtomInfo) : string =
     $"\n<circle\
     \n\tclass=\"atom-{atom.Index}\"\
-    \n\tcx=\"{floatToStr atom.C.X}\"\
-    \n\tcy=\"{floatToStr atom.C.Y}\"\
-    \n\tr=\"{floatToStr atom.R}\"\
+    \n\tcx=\"{floatToStr atom.Center.X}\"\
+    \n\tcy=\"{floatToStr atom.Center.Y}\"\
+    \n\tr=\"{floatToStr atom.Radius}\"\
     \n/>"
 
 let writeAtom (atom: AtomInfo) (otherAtoms: AtomInfo[]) =
@@ -78,13 +83,18 @@ let writeAtom (atom: AtomInfo) (otherAtoms: AtomInfo[]) =
             | _ -> () |]
 
     match clippingAtoms with
+    // No clipping
+    | cs when cs.Length = 0 ->
+        drawAtom atom
 
-    /// No clipping. Draw atom as full circle.
-    | cs when cs.Length = 0 -> drawAtom atom
-
-    /// Clipping. Calculate clipped parts of atom before drawing.
+    // Clipping
     | cs ->
-            let intersections = Array.map (fun (p, r, v) -> intersectionBetweenCircles atom.C atom.R p r) cs
+            let intersections =
+                cs
+                |> Array.map (fun (p, r, v) ->
+                    let center2D = { X = atom.Center.X; Y = atom.Center.Y }
+                    let clipWithCenter2D = { X = p.X; Y = p.Y }
+                    intersectionBetweenCircles center2D atom.Radius clipWithCenter2D r)
             let intersectionPoints = [| for intersection in intersections do match intersection with | None -> () | Some (p1, p2) -> yield (p1, p2) |]
             if intersectionPoints.Length = 0 then drawAtom atom
             else reconstructShape atom intersectionPoints
