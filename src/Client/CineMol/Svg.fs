@@ -20,11 +20,11 @@ let writeAtomStyle atom =
     $"\n.atom-{atom.Index}{{fill:url(#radial-gradient-{atom.Index});}}"
 
 let writeAtomDefs atom =
-    let r1, g1, b1 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[0]
-    let r2, g2, b2 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[1]
-    let r3, g3, b3 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[2]
-    let r4, g4, b4 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[3]
-    let r5, g5, b5 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient[4]
+    let r1, g1, b1 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[0]
+    let r2, g2, b2 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[1]
+    let r3, g3, b3 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[2]
+    let r4, g4, b4 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[3]
+    let r5, g5, b5 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[4]
     $"\n<radialGradient\
     \n\tid=\"radial-gradient-{atom.Index}\"\
     \n\tcx=\"{floatToStr atom.Center.X}\"\
@@ -35,15 +35,15 @@ let writeAtomDefs atom =
     \n\tgradientTransform=\"matrix(1, 0, 0, 1, 0, 0)\"\
     \n\tgradientUnits=\"userSpaceOnUse\"\
     \n>\
-    \n<stop offset=\"{floatToStr atomColorGradient[0]}\" \
+    \n<stop offset=\"{floatToStr (1.0 - atomColorGradient.[0])}\" \
     stop-color=\"rgb({floatToStr r1},{floatToStr g1},{floatToStr b1})\"/>\
-    \n<stop offset=\"{floatToStr atomColorGradient[1]}\" \
+    \n<stop offset=\"{floatToStr (1.0 - atomColorGradient.[1])}\" \
     stop-color=\"rgb({floatToStr r2},{floatToStr g2},{floatToStr b2})\"/>\
-    \n<stop offset=\"{floatToStr atomColorGradient[2]}\" \
+    \n<stop offset=\"{floatToStr (1.0 - atomColorGradient.[2])}\" \
     stop-color=\"rgb({floatToStr r3},{floatToStr g3},{floatToStr b3})\"/>\
-    \n<stop offset=\"{floatToStr atomColorGradient[3]}\" \
+    \n<stop offset=\"{floatToStr (1.0 - atomColorGradient.[3])}\" \
     stop-color=\"rgb({floatToStr r4},{floatToStr g4},{floatToStr b4})\"/>\
-    \n<stop offset=\"{floatToStr atomColorGradient[4]}\" \
+    \n<stop offset=\"{floatToStr (1.0 - atomColorGradient.[4])}\" \
     stop-color=\"rgb({floatToStr r5},{floatToStr g5},{floatToStr b5})\"/>\
     \n</radialGradient>"
 

@@ -77,20 +77,23 @@ let getAtomRadius (style: AtomGeomStyle) (atomType: AtomType) : Radius =
     | Default ->
         // Atom radii in pico meters (based on quantum mechanical wave functions).
         match atomType with
-        | H  -> 053 | He -> 031 | Li -> 167 | Be -> 112 | B  -> 087 | C  -> 067
-        | N  -> 056 | O  -> 048 | F  -> 042 | Ne -> 038 | Na -> 190 | Mg -> 145
-        | Al -> 118 | Si -> 111 | P  -> 098 | S  -> 088 | Cl -> 079 | Ar -> 071
-        | K  -> 243 | Ca -> 194 | Sc -> 184 | Ti -> 176 | V  -> 171 | Cr -> 166
-        | Mn -> 161 | Fe -> 156 | Co -> 152 | Ni -> 149 | Cu -> 145 | Zn -> 142
-        | Ga -> 136 | Ge -> 125 | As -> 114 | Se -> 103 | Br -> 094 | Kr -> 088
-        | Rb -> 265 | Sr -> 219 | Y  -> 212 | Zr -> 206 | Nb -> 198 | Mo -> 190
-        | Tc -> 183 | Ru -> 178 | Rh -> 173 | Pd -> 169 | Ag -> 165 | Cd -> 155
-        | In -> 156 | Sn -> 145 | Sb -> 133 | Te -> 123 | I  -> 115 | Xe -> 108
-        | Cs -> 298 | Ba -> 253 | Hf -> 208 | Ta -> 200 | W  -> 193 | Re -> 188
-        | Os -> 185 | Ir -> 180 | Pt -> 177 | Au -> 174 | Hg -> 171 | Tl -> 156
-        | Pb -> 154 | Bi -> 143 | Po -> 135 | At -> 127 | Rn -> 120 | _  -> 031
+        | H  -> 037 | Li -> 152 | Be -> 112 | B  -> 088 | C  -> 077
+        | N  -> 070 | O  -> 066 | F  -> 064 | Na -> 186 | Mg -> 160
+        | Al -> 143 | Si -> 117 | P  -> 110 | S  -> 104 | Cl -> 099
+        | K  -> 231 | Ca -> 197 | Sc -> 160 | Ti -> 146 | V  -> 131
+        | Cr -> 125 | Mn -> 129 | Fe -> 126 | Co -> 126 | Ni -> 124
+        | Cu -> 128 | Zn -> 133 | Ga -> 122 | Ge -> 122 | As -> 121
+        | Se -> 117 | Br -> 114 | Rb -> 241 | Sr -> 215 | Y  -> 180
+        | Zr -> 157 | Nb -> 143 | Mo -> 136 | Tc -> 130 | Ru -> 133
+        | Rh -> 134 | Pd -> 138 | Ag -> 144 | Cd -> 149 | In -> 162
+        | Sn -> 140 | Sb -> 141 | Te -> 137 | I  -> 133 | Cs -> 262
+        | Ba -> 217 | Hf -> 157 | Ta -> 143 | W  -> 137 | Re -> 137
+        | Os -> 134 | Ir -> 135 | Pt -> 138 | Au -> 144 | Hg -> 150
+        | Tl -> 171 | Pb -> 175 | Bi -> 146 | Po -> 140 | At -> 140
+        | _  -> 077
+        |> float
 
 let normalizeRadius (style: AtomGeomStyle) (radius: Radius) : Radius =
     match style with
     // Default atom radius is normalized by dividing by hydrogen atom radius.
-    | Default -> radius / (getAtomRadius Default AtomType.H)
+    | Default -> radius / (getAtomRadius Default AtomType.C)
