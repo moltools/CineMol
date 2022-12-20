@@ -107,9 +107,8 @@ type SphereSphereIntersection =
     | IntersectionPoint of Point3D
     | IntersectionCircle of Point3D * Radius * Vector
 
-type Clipping = { Line: Point2D * Point2D; Sweep: Sweep }
-and Sweep = | Zero | One
-    with override x.ToString() = match x with | Zero -> "0" | One -> "1"
+type Clipping = { Line: Line }
+and Line = Point2D * Point2D
 
 type AtomInfo =
     { Index: Index
@@ -160,14 +159,21 @@ type AtomInfo =
             else
                 NoIntersection
 
+type BondInfo =
+    { Index: Index
+      Start: Index
+      End: Index
+      BondType: BondType }
+and BondType = | Single | Double | Triple | Aromatic | Unknown
+
 let createAtom (index: int) (atomType: AtomType) (c: Point3D) (r: Radius) : AtomInfo =
     { Index = index; AtomType = atomType; Center = c; Radius = r; Clipping = [] }
 
-type Molecule = { Atoms: AtomInfo[] }
+type Molecule = { Atoms: AtomInfo[]; Bonds: BondInfo[] }
 
 type ViewBox = float * float * float * float
 
-type Depiction = | Filled | BallAndStick | Tube
+type Depiction = | Filled | BallAndStick | Tube | Wire
 
 let origin: Point3D = { X = 0.0; Y = 0.0; Z = 0.0 }
 

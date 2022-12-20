@@ -9,7 +9,7 @@ let intersectionBetweenCircles
     (r_p1: float)
     (c_p2: Point2D)
     (r_p2: float)
-    : (Point2D * Point2D) option =
+    : Line option =
     // Calculate the distance between the center of the two circles
     let d = Math.Sqrt((c_p2.X - c_p1.X) ** 2.0 + (c_p2.Y - c_p1.Y) ** 2.0)
     // Non-intersecting circles
@@ -39,7 +39,8 @@ let clip (projAtom: AtomInfo) (projMol: Molecule) (atom: AtomInfo) (mol: Molecul
             match atom.Intersect otherAtom with
             | IntersectionCircle _ ->
                 match projAtom.Intersect projOtherAtom with
-                | IntersectionCircle (p, r, _) -> yield (p, r)
+                | IntersectionCircle (p, r, _) ->
+                    yield (p, r)
                 | _ -> ()
             | _ -> () |]
 
@@ -57,4 +58,4 @@ let clip (projAtom: AtomInfo) (projMol: Molecule) (atom: AtomInfo) (mol: Molecul
             [ for intersection in intersections do
                 match intersection with
                 | None -> ()
-                | Some (p1, p2) -> yield { Line = p1, p2; Sweep = One } ]
+                | Some (p1, p2) -> yield { Line = p1, p2 } ]

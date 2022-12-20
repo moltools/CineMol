@@ -190,6 +190,8 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 Depiction.BallAndStick
             elif model.DrawOptions.Depiction = Depiction.BallAndStick then
                 Depiction.Tube
+            elif model.DrawOptions.Depiction = Depiction.Tube then
+                Depiction.Wire
             else
                 Depiction.Filled
 
@@ -233,7 +235,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | MouseMove (position: MousePosition) ->
         model, Cmd.ofMsg (MouseDrag position)
 
-    | MouseDragStarted position ->
+    | MouseDragStarted _ ->
         { model with DragTarget = Dragging }, Cmd.none
 
     | MouseDragEnded ->
