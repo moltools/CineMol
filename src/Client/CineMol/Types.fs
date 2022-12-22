@@ -46,6 +46,10 @@ and Point2D = { X: float; Y: float }
     member p1.Distance (p2: Point2D) : float =
         Math.Sqrt(Point2D.Sum(Point2D.Pow (p1 - p2) 2.0))
 
+    member p1.Centroid (p2: Point2D) : Point2D =
+        { X = (p1.X + p2.X) / 2.0
+          Y = (p1.Y + p2.X) / 2.0 }
+
 and Point3D = { X: float; Y: float; Z: float }
     with
     static member (-) (p1: Point3D, p2: Point3D) : Point3D =

@@ -99,14 +99,13 @@ let parseSdf (sdf: string) : Molecule[] =
                 let atom = createAtom atomCount atomType center radius
                 atoms <- atoms @ [ atom ]
             | BondLine [s; e; bondType] ->
-                bondCount <- bondCount + 1
                 let bondType = tryCastToBond bondType
-                let bond: BondInfo = {
-                    Index = bondCount
-                    Start = tryCastToInt s
-                    End = tryCastToInt e
-                    BondType = bondType
-                }
-                bonds <- bonds @ [ bond ]
+                let s = tryCastToInt s
+                let e = tryCastToInt e
+                bondCount <- bondCount + 1
+                let bond: BondInfo = {Index = bondCount; Start = s; End = e; BondType = bondType}
+                bondCount <- bondCount + 1
+                let revBond: BondInfo = {Index = bondCount; Start = e; End = s; BondType = bondType}
+                bonds <- bonds @ [ bond; revBond ]
             | _ -> ()
     |]

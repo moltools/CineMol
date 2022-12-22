@@ -59,3 +59,6 @@ let clip (projAtom: AtomInfo) (projMol: Molecule) (atom: AtomInfo) (mol: Molecul
                 match intersection with
                 | None -> ()
                 | Some (p1, p2) -> yield { Line = p1, p2 } ]
+
+let calcSlope (p1: Point2D) (p2: Point2D) : float =
+    (p2.Y - p1.Y) / (p2.X - p1.X)
