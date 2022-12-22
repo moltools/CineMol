@@ -118,8 +118,7 @@ type AtomInfo =
     { Index: Index
       AtomType: AtomType
       Center: Point3D
-      Radius: Radius
-      Clipping: Clipping list }
+      Radius: Radius }
     with
     member x.Rotate (axis: Axis) (rad: float) : AtomInfo =
         { x with Center = x.Center.Rotate axis rad }
@@ -163,17 +162,27 @@ type AtomInfo =
             else
                 NoIntersection
 
+type ProjectedAtomInfo =
+    { Index: int
+      AtomType: AtomType
+      Center: Point2D
+      Radius: Radius
+      Clipping: Clipping list }
+
+
 type BondInfo =
     { Index: Index
       Start: Index
       End: Index
-      BondType: BondType }
+      BondType: BondType
+      Scaling: float }
 and BondType = | Single | Double | Triple | Aromatic | Unknown
 
 let createAtom (index: int) (atomType: AtomType) (c: Point3D) (r: Radius) : AtomInfo =
-    { Index = index; AtomType = atomType; Center = c; Radius = r; Clipping = [] }
+    { Index = index; AtomType = atomType; Center = c; Radius = r }
 
 type Molecule = { Atoms: AtomInfo[]; Bonds: BondInfo[] }
+type ProjectedMolecule = { Atoms: ProjectedAtomInfo[]; Bonds: BondInfo[] }
 
 type ViewBox = float * float * float * float
 

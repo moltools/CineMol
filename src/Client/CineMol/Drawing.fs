@@ -19,15 +19,17 @@ let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo[]) : AtomInfo[] =
     |> Array.map (fun (atom: AtomInfo) ->
         atom.Rotate axis ((rads / 100.0) * 2.0 * Math.PI))
 
-let changeDistanceToAtoms (ratio: float) (atoms: AtomInfo[]) : AtomInfo[] =
-    let transform a =
+let changeDistanceToAtoms (ratio: float) (mol: Molecule) : Molecule =
+    let transformAtom (a: AtomInfo) =
         { a with
             Center = {
                 X = a.Center.X * ratio
                 Y = a.Center.Y * ratio
                 Z = a.Center.Z * ratio  }
             Radius = a.Radius * ratio }
-    Array.map (fun a -> transform a) atoms
+    let transformBond b =
+        { b with Scaling = b.Scaling * ratio }
+    { mol with Atoms = Array.map (fun a -> transformAtom a) mol.Atoms; Bonds = Array.map (fun b -> transformBond b) mol.Bonds }
 
 let draw
     (viewBox: ViewBox option)
@@ -64,15 +66,15 @@ let draw
     let mol = { mol with Atoms = if options.ShowHydrogenAtoms = false then filterAtoms H mol.Atoms else mol.Atoms }
 
     // Apply zoom based on supplied scroll.
-    let mol = { mol with Atoms = changeDistanceToAtoms zoom.Ratio mol.Atoms }
+    let perspectiveMol = changeDistanceToAtoms zoom.Ratio mol
 
     // Sort drawing order point cloud based on distance point to POV.
-    let mol = { mol with Atoms = mol.Atoms |> Array.sortBy (fun atom -> atom.Center.Distance pov |> (*) -1.0) }
+    let perspectiveMol = { perspectiveMol with Atoms = perspectiveMol.Atoms |> Array.sortBy (fun atom -> atom.Center.Distance pov |> (*) -1.0) }
 
     // Recalculate radii based on distance point to POV.
-    let projMol = {
-        mol with
-            Atoms = mol.Atoms
+    let perspectiveMol = {
+        perspectiveMol with
+            Atoms = perspectiveMol.Atoms
             |> Array.map (fun atom ->
                 let projectedRadius = (distPovOrigin / (pov.Distance atom.Center)) * atom.Radius
                 { atom with Radius = projectedRadius }) }
@@ -84,13 +86,19 @@ let draw
     let setPerspective (atom: AtomInfo) : AtomInfo =
         let project p = project cameraPerpendicular cameraHorizon cameraForward pov focalLength p
         { atom with Center = project atom.Center }
-    let projMol = { projMol with Atoms = projMol.Atoms |> Array.map (fun atom -> setPerspective atom) }
+    let perspectiveMol = { perspectiveMol with Atoms = perspectiveMol.Atoms |> Array.map (fun atom -> setPerspective atom) }
 
     // Calculate clipping.
-    let projMol = {
-        projMol with
-            Atoms =
-                Array.zip projMol.Atoms mol.Atoms
-                |> Array.map (fun (projAtom, atom) -> { projAtom with Clipping = clip projAtom projMol atom mol }) }
+    let projectedMol =
+        { Atoms =
+            Array.zip perspectiveMol.Atoms mol.Atoms
+            |> Array.map (fun (perspectiveAtom, atom) ->
+                { Index = perspectiveAtom.Index
+                  AtomType = perspectiveAtom.AtomType
+                  Center = { X = perspectiveAtom.Center.X; Y = perspectiveAtom.Center.Y }
+                  Radius = perspectiveAtom.Radius
+                  Clipping = clip perspectiveAtom perspectiveMol atom mol
+                })
+          Bonds = perspectiveMol.Bonds }
 
-    writeSVG viewBox options.Depiction projMol, viewBox
+    writeSVG viewBox options.Depiction projectedMol, viewBox
