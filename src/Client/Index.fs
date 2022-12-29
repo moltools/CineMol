@@ -189,8 +189,6 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             if model.DrawOptions.Depiction = Depiction.Filled then
                 Depiction.BallAndStick
             elif model.DrawOptions.Depiction = Depiction.BallAndStick then
-                Depiction.Tube
-            elif model.DrawOptions.Depiction = Depiction.Tube then
                 Depiction.Wire
             else
                 Depiction.Filled

@@ -50,6 +50,30 @@ and Point2D = { X: float; Y: float }
         { X = (p1.X + p2.X) / 2.0
           Y = (p1.Y + p2.X) / 2.0 }
 
+    member p1.FindVector (p2: Point2D) : Vector2D =
+        { X = p2.X - p1.X; Y = p2.Y - p1.Y }
+
+and Vector2D = { X: float; Y: float }
+    with
+    member u.SumOfSquares : float =
+        u.X ** 2.0 + u.Y ** 2.0
+
+    member u.Magnitude : float =
+        Math.Sqrt(u.SumOfSquares)
+
+    static member (*) (k, v: Vector2D) =
+        { X = k * v.X; Y = k * v.Y }
+
+    static member (+) (v1: Vector2D, v2: Vector2D) =
+        { X = v1.X + v2.X; Y = v1.Y + v2.Y }
+
+    member u.Norm : Vector2D =
+        let mag = u.Magnitude
+        let div = if mag = 0.0 then infinity else 1.0 / mag
+        div * u
+
+    member u.Dot (v: Vector2D) : float = u.X * v.X + u.Y * v.Y
+
 and Point3D = { X: float; Y: float; Z: float }
     with
     static member (-) (p1: Point3D, p2: Point3D) : Point3D =
@@ -72,10 +96,10 @@ and Point3D = { X: float; Y: float; Z: float }
     member p.Rotate (axis: Axis) (rad: float) : Point3D =
         axis.RotationMatrix(p, rad)
 
-    member p1.FindVector (p2: Point3D) : Vector =
+    member p1.FindVector (p2: Point3D) : Vector3D =
         { X = p2.X - p1.X; Y = p2.Y - p1.Y; Z = p2.Z - p1.Z }
 
-and Vector = { X: float; Y: float; Z: float }
+and Vector3D = { X: float; Y: float; Z: float }
     with
     member u.SumOfSquares : float =
         u.X ** 2.0 + u.Y ** 2.0 + u.Z ** 2.0
@@ -83,25 +107,25 @@ and Vector = { X: float; Y: float; Z: float }
     member u.Magnitude : float =
         Math.Sqrt(u.SumOfSquares)
 
-    static member (*) (k, v: Vector) =
+    static member (*) (k, v: Vector3D) =
         { X = k * v.X; Y = k * v.Y; Z = k * v.Z }
 
-    static member (+) (v1: Vector, v2: Vector) =
+    static member (+) (v1: Vector3D, v2: Vector3D) =
         { X = v1.X + v2.X; Y = v1.Y + v2.Y; Z = v1.Z + v2.Z }
 
-    member u.Norm : Vector =
+    member u.Norm : Vector3D =
         let mag = u.Magnitude
         let div = if mag = 0.0 then infinity else 1.0 / mag
         div * u
 
-    member u.Dot (v: Vector) : float = u.X * v.X + u.Y * v.Y + u.Z * v.Z
+    member u.Dot (v: Vector3D) : float = u.X * v.X + u.Y * v.Y + u.Z * v.Z
 
-    member u.Cross (v: Vector) : Vector =
+    member u.Cross (v: Vector3D) : Vector3D =
         { X = u.Y * v.Z - u.Z * v.Y
           Y = u.Z * v.X - u.X * v.Z
           Z = u.X * v.Y - u.Y * v.X }
 
-    member x.ProjectVector (v: Vector) : float = (v.Dot x) / v.Magnitude
+    member x.ProjectVector (v: Vector3D) : float = (v.Dot x) / v.Magnitude
 
 type Index = int
 
@@ -109,7 +133,7 @@ type SphereSphereIntersection =
     | Eclipsed
     | NoIntersection
     | IntersectionPoint of Point3D
-    | IntersectionCircle of Point3D * Radius * Vector
+    | IntersectionCircle of Point3D * Radius * Vector3D
 
 type Clipping = { Line: Line }
 and Line = Point2D * Point2D
@@ -186,7 +210,7 @@ type ProjectedMolecule = { Atoms: ProjectedAtomInfo[]; Bonds: BondInfo[] }
 
 type ViewBox = float * float * float * float
 
-type Depiction = | Filled | BallAndStick | Tube | Wire
+type Depiction = | Filled | BallAndStick | Wire
 
 let origin: Point3D = { X = 0.0; Y = 0.0; Z = 0.0 }
 
@@ -196,7 +220,7 @@ let physicalProjection
     cameraForward
     (pov: Point3D)
     (p: Point3D) : Point3D =
-    let pointVector = pov.FindVector p
+    let pointVector: Vector3D = pov.FindVector p
     { X = pointVector.ProjectVector cameraPerpendicular
       Y = pointVector.ProjectVector cameraHorizon
       Z = pointVector.ProjectVector cameraForward }

@@ -75,14 +75,14 @@ let draw
     let perspectiveMol = {
         perspectiveMol with
             Atoms = perspectiveMol.Atoms
-            |> Array.map (fun atom ->
-                let projectedRadius = (distPovOrigin / (pov.Distance atom.Center)) * atom.Radius
-                { atom with Radius = projectedRadius }) }
+                    |> Array.map (fun atom ->
+                        let projectedRadius = (distPovOrigin / (pov.Distance atom.Center)) * atom.Radius
+                        { atom with Radius = projectedRadius }) }
 
     // Apply perspective projection on 3D point cloud on 2D view box
-    let cameraForward: Vector = { X = -pov.X; Y = -pov.Y; Z = -pov.Z }
-    let cameraPerpendicular: Vector = { X = cameraForward.Y; Y = -cameraForward.X; Z = 0.0 }
-    let cameraHorizon: Vector = cameraForward.Cross cameraPerpendicular
+    let cameraForward: Vector3D = { X = -pov.X; Y = -pov.Y; Z = -pov.Z }
+    let cameraPerpendicular: Vector3D = { X = cameraForward.Y; Y = -cameraForward.X; Z = 0.0 }
+    let cameraHorizon: Vector3D = cameraForward.Cross cameraPerpendicular
     let setPerspective (atom: AtomInfo) : AtomInfo =
         let project p = project cameraPerpendicular cameraHorizon cameraForward pov focalLength p
         { atom with Center = project atom.Center }
@@ -97,7 +97,8 @@ let draw
                   AtomType = perspectiveAtom.AtomType
                   Center = { X = perspectiveAtom.Center.X; Y = perspectiveAtom.Center.Y }
                   Radius = perspectiveAtom.Radius
-                  Clipping = clip perspectiveAtom perspectiveMol atom mol
+//                  Clipping = clip perspectiveAtom perspectiveMol atom mol
+                  Clipping = []
                 })
           Bonds = perspectiveMol.Bonds }
 

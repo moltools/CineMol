@@ -62,3 +62,31 @@ let clip (projAtom: AtomInfo) (projMol: Molecule) (atom: AtomInfo) (mol: Molecul
 
 let calcSlope (p1: Point2D) (p2: Point2D) : float =
     (p2.Y - p1.Y) / (p2.X - p1.X)
+
+// https://library.fridoverweij.com/docs/intersection_line_circle.html
+let intersectionBetweenCircleAndLine
+    (c_p: Point2D)
+    (r_p: float)
+    (l_p1: Point2D)
+    (l_p2: Point2D)
+    : (Point2D * Point2D) option =
+    let a = calcSlope l_p1 l_p2
+    let b = -1.0
+    let c = l_p1.Y - (a * l_p1.X)
+    let y x = (a * x) + c
+
+    let A = ((a * a) / (b * b)) + 1.0
+    let B = 2.0 * (((a * c) / (b * b)) - c_p.X + (a / b) * c_p.Y)
+    let C = (c_p.X * c_p.X) + (c_p.Y * c_p.Y) + ((2.0 * c) / b) * c_p.Y + ((c * c) / (b * b)) - (r_p * r_p)
+
+    let d = (B * B) - 4.0 * A * C
+    if d > 0.0 then
+        let x1 = (-B + Math.Sqrt(d)) / (2.0 * A)
+        let y1 = y x1
+        let x2 = (-B - Math.Sqrt(d)) / (2.0 * A)
+        let y2 = y x2
+        Some (
+            { X = x1; Y = y1 },
+            { X = x2; Y = y2 }
+        )
+    else None
