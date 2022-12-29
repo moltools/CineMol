@@ -167,7 +167,7 @@ let writeBallAndStick (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string 
         \n\tr=\"{floatToStr (atom.Radius / 2.0)}\"\
         \n/>"
 
-    let drawBond (bond: BondInfo) (s: ProjectedAtomInfo) (e: ProjectedAtomInfo) : string =
+    let drawSingleBond (bond: BondInfo) (s: ProjectedAtomInfo) (e: ProjectedAtomInfo) : string =
         let round = round 3
         let width = 0.15 * bond.Scaling
         let sProj: Point2D = { X = s.Center.X; Y = s.Center.Y }
@@ -206,6 +206,76 @@ let writeBallAndStick (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string 
         \n\t\tL {floatToStr sTop.X} {floatToStr sTop.Y}\"\
         \n/>"
 
+    let drawDoubleBond (bond: BondInfo) (s: ProjectedAtomInfo) (e: ProjectedAtomInfo) : string =
+        let round = round 3
+        let sProj: Point2D = { X = s.Center.X; Y = s.Center.Y }
+        let eProj: Point2D = { X = e.Center.X; Y = e.Center.Y }
+
+        let factor = 0.20
+        let sProj: Point2D = {
+            X = sProj.X + (factor * s.Radius) * (sProj.FindVector eProj).X
+            Y = sProj.Y + (factor * s.Radius) * (sProj.FindVector eProj).Y
+        }
+        let eProj: Point2D = {
+            X = eProj.X + (factor * e.Radius) * (eProj.FindVector sProj).X
+            Y = eProj.Y + (factor * e.Radius) * (eProj.FindVector sProj).Y
+        }
+
+        let width = 0.10 * bond.Scaling
+        let slope = calcSlope sProj eProj
+        let perpSlope = -1.0 * (1.0 / slope)  // Opposite reciprocal to get perpendicular slope
+        let t =  width / Math.Sqrt (1.0 + Math.Pow(perpSlope, 2.0))
+
+        let aSideTop, aSideBot: Point2D * Point2D = (
+            { X = round (sProj.X + t); Y = round (sProj.Y + (perpSlope * t)) },
+            { X = round (eProj.X + t); Y = round (eProj.Y + (perpSlope * t)) }
+        )
+        let bSideTop, bSideBot: Point2D * Point2D = (
+            { X = round (sProj.X - t); Y = round (sProj.Y - (perpSlope * t)) },
+            { X = round (eProj.X - t); Y = round (eProj.Y - (perpSlope * t)) }
+        )
+
+        let constructCylinder p1 p2 =
+            let width = 0.05 * bond.Scaling
+            // Construct cylinder for bond line
+            let slope = calcSlope p1 p2
+            let perpSlope = -1.0 * (1.0 / slope)  // Opposite reciprocal to get perpendicular slope
+            let t =  width / Math.Sqrt (1.0 + Math.Pow(perpSlope, 2.0))
+            let sTop: Point2D = { X = round (p1.X + t); Y = round (p1.Y + (perpSlope * t)) }
+            let sBot: Point2D = { X = round (p1.X - t); Y = round (p1.Y - (perpSlope * t)) }
+            let eTop: Point2D = { X = round (p2.X + t); Y = round (p2.Y + (perpSlope * t)) }
+            let eBot: Point2D = { X = round (p2.X - t); Y = round (p2.Y - (perpSlope * t)) }
+            let sSweep, eSweep = if p1.Y > p2.Y then 1, 0 else 0, 1
+            sTop, sBot, eTop, eBot, sSweep, eSweep
+
+        let sTop1, sBot1, eTop1, eBot1, sSweep1, eSweep1 = constructCylinder aSideTop aSideBot
+        let sTop2, sBot2, eTop2, eBot2, sSweep2, eSweep2 = constructCylinder bSideTop bSideBot
+
+        // Draw bond
+        [
+            $"<path \
+            \n\tclass=\"bond-{bond.Index}\"
+            \n\tstyle=\"stroke:rgb(0,0,0);stroke-width:0.05\"
+            \n\td= \
+            \n\t\t\"M {floatToStr sTop1.X} {floatToStr sTop1.Y}\
+            \n\t\tA {floatToStr width} {floatToStr width} 0 0 {intToStr sSweep1} {floatToStr sBot1.X} {floatToStr sBot1.Y}\
+            \n\t\tL {floatToStr eBot1.X} {floatToStr eBot1.Y}\
+            \n\t\tA {floatToStr width} {floatToStr width} 0 0 {intToStr eSweep1} {floatToStr eTop1.X} {floatToStr eTop1.Y}\
+            \n\t\tL {floatToStr sTop1.X} {floatToStr sTop1.Y}\"\
+            \n/>"
+
+            $"<path \
+            \n\tclass=\"bond-{bond.Index}\"
+            \n\tstyle=\"stroke:rgb(0,0,0);stroke-width:0.05\"
+            \n\td= \
+            \n\t\t\"M {floatToStr sTop2.X} {floatToStr sTop2.Y}\
+            \n\t\tA {floatToStr width} {floatToStr width} 0 0 {intToStr sSweep2} {floatToStr sBot2.X} {floatToStr sBot2.Y}\
+            \n\t\tL {floatToStr eBot2.X} {floatToStr eBot2.Y}\
+            \n\t\tA {floatToStr width} {floatToStr width} 0 0 {intToStr eSweep2} {floatToStr eTop2.X} {floatToStr eTop2.Y}\
+            \n\t\tL {floatToStr sTop2.X} {floatToStr sTop2.Y}\"\
+            \n/>"
+        ]
+        |> String.concat ""
 
     let rec findAtom (l: ProjectedAtomInfo list) atomIdx : ProjectedAtomInfo option =
         match l with
@@ -227,7 +297,11 @@ let writeBallAndStick (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string 
                 for atomBond in atomBonds do
                     if not (List.contains atomBond.End drawnAtoms) then
                         match findAtom atoms atomBond.End with
-                        | Some endAtom -> yield drawBond atomBond startAtom endAtom
+                        | Some endAtom ->
+                            match atomBond.BondType with
+                            | Single -> yield drawSingleBond atomBond startAtom endAtom
+                            | Double -> yield drawDoubleBond atomBond startAtom endAtom
+                            | _ -> ()
                         | None -> ()
     ]
     |> String.concat ""

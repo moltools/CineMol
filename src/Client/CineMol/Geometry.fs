@@ -52,8 +52,8 @@ let clip (projAtom: AtomInfo) (projMol: Molecule) (atom: AtomInfo) (mol: Molecul
             let intersections =
                 cs
                 |> Array.map (fun (p, r) ->
-                    let center2D = { X = projAtom.Center.X; Y = projAtom.Center.Y }
-                    let clipWithCenter2D = { X = p.X; Y = p.Y }
+                    let center2D: Point2D = { X = projAtom.Center.X; Y = projAtom.Center.Y }
+                    let clipWithCenter2D: Point2D = { X = p.X; Y = p.Y }
                     intersectionBetweenCircles center2D projAtom.Radius clipWithCenter2D r)
             [ for intersection in intersections do
                 match intersection with
