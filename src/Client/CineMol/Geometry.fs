@@ -64,6 +64,7 @@ let calcSlope (p1: Point2D) (p2: Point2D) : float =
     (p2.Y - p1.Y) / (p2.X - p1.X)
 
 // https://library.fridoverweij.com/docs/intersection_line_circle.html
+// not used; might contain bugs
 let intersectionBetweenCircleAndLine
     (c_p: Point2D)
     (r_p: float)
