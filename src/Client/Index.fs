@@ -262,7 +262,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
 
 // ============================================================================
-// GUI element: upload file button.
+// Buttons
 // ============================================================================
 let private uploadFileEvent dispatch =
     Fulma.File.input [
@@ -286,90 +286,47 @@ let private uploadFileEvent dispatch =
     ]
 
 let private uploadFileButton dispatch =
-    Html.div [
+    Bulma.button.a [
+        prop.className "sidebar-button"
         prop.children [
-            Bulma.button.a [
-                prop.children [
-                    Html.span "Select SDF (Mol V2000) file"
-                    uploadFileEvent dispatch
-                ]
-            ]
+            Html.i [ prop.className "fas fa-star" ]
+            uploadFileEvent dispatch
         ]
     ]
 
-// ============================================================================
-// GUI element: reset viewer button.
-// ============================================================================
 let private resetViewerButton dispatch =
-    Html.div [
-        prop.children [
-            Bulma.button.a [
-                prop.children [
-                    Html.span "Reset viewer"
-                ]
-                prop.onClick (fun _ -> ResetViewer |> dispatch)
-            ]
-        ]
+    Bulma.button.a [
+        prop.className "sidebar-button"
+        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.onClick (fun _ -> ResetViewer |> dispatch)
     ]
 
-// ============================================================================
-// GUI element: download button.
-// ============================================================================
 let private downloadButton dispatch =
-    Html.div [
-        prop.children [
-            Bulma.button.a [
-                prop.children [
-                    Html.span "Download SVG"
-                ]
-                prop.onClick (fun _ -> DownloadSvg |> dispatch)
-            ]
-        ]
+    Bulma.button.a [
+        prop.className "sidebar-button"
+        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.onClick (fun _ -> DownloadSvg |> dispatch)
     ]
 
-// ============================================================================
-// GUI element: show hydrogens button.
-// ============================================================================
 let private showHydrogensButton dispatch =
-    Html.div [
-        prop.children [
-            Bulma.button.a [
-                prop.children [
-                    Html.span "Toggle show hydrogens"
-                ]
-                prop.onClick (fun _ -> ToggleShowHydrogenAtoms |> dispatch)
-            ]
-        ]
+    Bulma.button.a [
+        prop.className "sidebar-button"
+        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.onClick (fun _ -> ToggleShowHydrogenAtoms |> dispatch)
     ]
 
-// ============================================================================
-// GUI element: change depiction button.
-// ============================================================================
 let private changeDepictionButton dispatch =
-    Html.div [
-        prop.children [
-            Bulma.button.a [
-                prop.children [
-                    Html.span "Toggle depiction"
-                ]
-                prop.onClick (fun _ -> ToggleDepiction |> dispatch)
-            ]
-        ]
+    Bulma.button.a [
+        prop.className "sidebar-button"
+        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.onClick (fun _ -> ToggleDepiction |> dispatch)
     ]
 
-// ============================================================================
-// GUI element: change background style
-// ============================================================================
 let private changeBackgroundStyle dispatch =
-    Html.div [
-        prop.children [
-            Bulma.button.a [
-                prop.children [
-                    Html.span "Toggle background"
-                ]
-                prop.onClick (fun _ -> ToggleBackgroundStyle |> dispatch)
-            ]
-        ]
+    Bulma.button.a [
+        prop.className "sidebar-button"
+        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.onClick (fun _ -> ToggleBackgroundStyle |> dispatch)
     ]
 
 // ============================================================================
@@ -386,14 +343,14 @@ let private svgViewer (dispatch: Msg -> unit) model =
             $"data:image/svg+xml;base64,{model.EncodedSvg}"
 
     Html.div [
-        prop.className "viewer"
+        prop.className "viewer-window"
         prop.onMouseDown (fun ev ->
             ev.preventDefault()
             let coordsMouseDown = { X = ev.pageX; Y = ev.pageY }
             dispatch (MouseDragStarted coordsMouseDown))
         prop.children [
             img [
-                Class "svg"
+                Class "viewer-svg"
                 Style [ BackgroundColor model.ViewerBackgroundStyle.toHex ]
                 Src svg
             ]
@@ -412,15 +369,16 @@ let view (model: Model) (dispatch: Msg -> unit) =
         prop.className "cinemol"
         prop.children [
             Html.div [
-                resetViewerButton dispatch
-                uploadFileButton dispatch
-                downloadButton dispatch
-                showHydrogensButton dispatch
-                changeDepictionButton dispatch
-                changeBackgroundStyle dispatch
+                prop.className "sidebar"
+                prop.children [
+                    uploadFileButton dispatch
+                    resetViewerButton dispatch
+                    downloadButton dispatch
+                    showHydrogensButton dispatch
+                    changeDepictionButton dispatch
+                    changeBackgroundStyle dispatch
+                ]
             ]
-            Html.div [
-                svgViewer dispatch model
-            ]
+            svgViewer dispatch model
         ]
     ]

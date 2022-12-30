@@ -11,12 +11,26 @@ html, body {
 .cinemol{
     background-color: green;
     overflow: hidden;
+    height: 100vh;
+    width: 100vw;
 }
 
-.viewer {
+.sidebar {
+    height: 100%;
+    width: 50px;
+    float: left;
+    background-color: blue;
+}
+
+.viewer-window {
+    float: left;
     background-color: red;
     width: 500px;
     height: 500px;
 }
 
-.svg {}
+.sidebar-button {
+    width: 50px;
+}
+
+.viewer-svg {}
