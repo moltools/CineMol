@@ -5,11 +5,10 @@
 
 html, body {
     margin: 0;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .cinemol{
-    background-color: green;
     overflow: hidden;
     height: 100vh;
     width: 100vw;
@@ -19,18 +18,33 @@ html, body {
     height: 100%;
     width: 50px;
     float: left;
-    background-color: blue;
+    background-color: darkgrey;
 }
 
 .viewer-window {
     float: left;
-    background-color: red;
-    width: 500px;
-    height: 500px;
 }
 
 .sidebar-button {
-    width: 50px;
+    border-style: solid;
+    border-color: black;
+    border-radius: 0;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    width: 42px;
+}
+
+.sidebar-button:hover {
+    cursor: default;
+    border-style: solid;
+    border-color: black;
+    background-color: #306eb5;
 }
 
 .viewer-svg {}
+
+.fas {
+    color: black;
+}

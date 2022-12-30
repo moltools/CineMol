@@ -163,7 +163,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 
     /// Reset viewer.
     | ResetViewer ->
-        let newModel = Model.init
+        let newModel = { Model.init with ViewerBackgroundStyle = model.ViewerBackgroundStyle }
         newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
 
     /// Download SVG.
@@ -289,7 +289,7 @@ let private uploadFileButton dispatch =
     Bulma.button.a [
         prop.className "sidebar-button"
         prop.children [
-            Html.i [ prop.className "fas fa-star" ]
+            Html.i [ prop.className "fas fa-upload" ]
             uploadFileEvent dispatch
         ]
     ]
@@ -297,35 +297,36 @@ let private uploadFileButton dispatch =
 let private resetViewerButton dispatch =
     Bulma.button.a [
         prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.children [ Html.i [ prop.className "fas fa-sync" ] ]
         prop.onClick (fun _ -> ResetViewer |> dispatch)
     ]
 
 let private downloadButton dispatch =
     Bulma.button.a [
         prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.children [ Html.i [ prop.className "fas fa-download" ] ]
         prop.onClick (fun _ -> DownloadSvg |> dispatch)
     ]
 
 let private showHydrogensButton dispatch =
     Bulma.button.a [
         prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.style [ style.fontWeight 700; style.color "#000000" ]
+        prop.children [ Html.span "Hs" ]
         prop.onClick (fun _ -> ToggleShowHydrogenAtoms |> dispatch)
     ]
 
 let private changeDepictionButton dispatch =
     Bulma.button.a [
         prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.children [ Html.i [ prop.className "fas fa-eye" ] ]
         prop.onClick (fun _ -> ToggleDepiction |> dispatch)
     ]
 
 let private changeBackgroundStyle dispatch =
     Bulma.button.a [
         prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-star" ] ]
+        prop.children [ Html.i [ prop.className "fas fa-adjust" ] ]
         prop.onClick (fun _ -> ToggleBackgroundStyle |> dispatch)
     ]
 
@@ -342,8 +343,17 @@ let private svgViewer (dispatch: Msg -> unit) model =
         | _ ->
             $"data:image/svg+xml;base64,{model.EncodedSvg}"
 
+    let size =
+        let width = int window.innerWidth - 50
+        let height = int window.innerHeight
+        if width < height then
+            [ style.width width; style.height width ]
+        else
+            [ style.width height; style.height height ]
+
     Html.div [
         prop.className "viewer-window"
+        prop.style size
         prop.onMouseDown (fun ev ->
             ev.preventDefault()
             let coordsMouseDown = { X = ev.pageX; Y = ev.pageY }
@@ -367,12 +377,13 @@ let private svgViewer (dispatch: Msg -> unit) model =
 let view (model: Model) (dispatch: Msg -> unit) =
     Html.div [
         prop.className "cinemol"
+        prop.style [ style.backgroundColor model.ViewerBackgroundStyle.toHex ]
         prop.children [
             Html.div [
                 prop.className "sidebar"
                 prop.children [
-                    uploadFileButton dispatch
                     resetViewerButton dispatch
+                    uploadFileButton dispatch
                     downloadButton dispatch
                     showHydrogensButton dispatch
                     changeDepictionButton dispatch
