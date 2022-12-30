@@ -103,9 +103,21 @@ let parseSdf (sdf: string) : Molecule[] =
                 let s = tryCastToInt s
                 let e = tryCastToInt e
                 bondCount <- bondCount + 1
-                let bond: BondInfo = {Index = bondCount; Start = s; End = e; BondType = bondType; Scaling = 1.0}
+                let bond: BondInfo = {
+                    Index = bondCount
+                    Start = s
+                    End = e
+                    BondType = bondType
+                    Scaling = 1.0
+                }
                 bondCount <- bondCount + 1
-                let revBond: BondInfo = {Index = bondCount; Start = e; End = s; BondType = bondType; Scaling = 1.0}
+                let revBond: BondInfo = {
+                    Index = bondCount
+                    Start = e
+                    End = s
+                    BondType = bondType
+                    Scaling = 1.0
+                }
                 bonds <- bonds @ [ bond; revBond ]
             | _ -> ()
     |]

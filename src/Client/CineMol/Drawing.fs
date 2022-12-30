@@ -83,10 +83,13 @@ let draw
     let cameraForward: Vector3D = { X = -pov.X; Y = -pov.Y; Z = -pov.Z }
     let cameraPerpendicular: Vector3D = { X = cameraForward.Y; Y = -cameraForward.X; Z = 0.0 }
     let cameraHorizon: Vector3D = cameraForward.Cross cameraPerpendicular
-    let setPerspective (atom: AtomInfo) : AtomInfo =
-        let project p = project cameraPerpendicular cameraHorizon cameraForward pov focalLength p
-        { atom with Center = project atom.Center }
-    let perspectiveMol = { perspectiveMol with Atoms = perspectiveMol.Atoms |> Array.map (fun atom -> setPerspective atom) }
+    let project p = project cameraPerpendicular cameraHorizon cameraForward pov focalLength p
+    let setPerspectiveAtom (atom: AtomInfo) : AtomInfo = { atom with Center = project atom.Center }
+
+    let perspectiveMol = {
+        perspectiveMol with
+            Atoms = perspectiveMol.Atoms |> Array.map (fun atom -> setPerspectiveAtom atom)
+    }
 
     // Calculate clipping.
     let projectedMol =

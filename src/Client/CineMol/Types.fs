@@ -46,9 +46,9 @@ and Point2D = { X: float; Y: float }
     member p1.Distance (p2: Point2D) : float =
         Math.Sqrt(Point2D.Sum(Point2D.Pow (p1 - p2) 2.0))
 
-    member p1.Centroid (p2: Point2D) : Point2D =
+    member p1.Midpoint (p2: Point2D) : Point2D =
         { X = (p1.X + p2.X) / 2.0
-          Y = (p1.Y + p2.X) / 2.0 }
+          Y = (p1.Y + p2.Y) / 2.0 }
 
     member p1.FindVector (p2: Point2D) : Vector2D =
         { X = p2.X - p1.X; Y = p2.Y - p1.Y }
@@ -187,7 +187,7 @@ type AtomInfo =
                 NoIntersection
 
 type ProjectedAtomInfo =
-    { Index: int
+    { Index: Index
       AtomType: AtomType
       Center: Point2D
       Radius: Radius

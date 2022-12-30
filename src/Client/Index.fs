@@ -71,6 +71,9 @@ module Cmd =
 // ============================================================================
 // Model.
 // ============================================================================
+type ViewerBackgroundStyle = | Dark | Light
+with member x.toHex = match x with | Dark -> "#000000" | Light -> "#FFFFFF"
+
 type Model = {
     Sdf: string
     Svg: string
@@ -80,6 +83,7 @@ type Model = {
     Rotation: Rotation
     Zoom: Zoom
     DragTarget: DragTarget
+    ViewerBackgroundStyle: ViewerBackgroundStyle
 }
     with
     member x.renderArgs = x.ViewBox, x.DrawOptions, x.Rotation, x.Zoom, x.Sdf
@@ -92,6 +96,7 @@ type Model = {
             Zoom = Zoom.init
             ViewBox = None
             DragTarget = NoTarget
+            ViewerBackgroundStyle = Dark
         }
 
 type Msg =
@@ -101,6 +106,7 @@ type Msg =
     | DownloadSvg
     | ToggleShowHydrogenAtoms
     | ToggleDepiction
+    | ToggleBackgroundStyle
 
     /// Rendering SVG.
     | Render
@@ -120,10 +126,6 @@ type Msg =
 // ============================================================================
 // Actions.
 // ============================================================================
-
-/// <summary>
-///     Custom action for downloading SVG.
-/// </summary>
 let downloadSvgEvent (svg : string) =
     let anchor = Dom.document.createElement "a"
     let contentReplace (oldValue: string) (newValue: string) (msg: string) =
@@ -203,6 +205,12 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 
         newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
 
+    /// Toggle backgroundc color
+    | ToggleBackgroundStyle ->
+        let toggle = if model.ViewerBackgroundStyle = Dark then Light else Dark
+        let newModel = { model with ViewerBackgroundStyle = toggle }
+        newModel, Cmd.none
+
     /// Render SVG from SDF message.
     | Render ->
         model, Cmd.OfAsync.perform render model.renderArgs GotEncoding
@@ -256,10 +264,6 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 // ============================================================================
 // GUI element: upload file button.
 // ============================================================================
-
-/// <summary>
-///     Custom action for uploading V2000 molfile (SDF).
-/// </summary>
 let private uploadFileEvent dispatch =
     Fulma.File.input [
         Props [
@@ -281,9 +285,6 @@ let private uploadFileEvent dispatch =
         ]
     ]
 
-/// <summary>
-///     Upload file button for uploading V2000 molfile (SDF).
-/// </summary>
 let private uploadFileButton dispatch =
     Html.div [
         prop.children [
@@ -299,10 +300,6 @@ let private uploadFileButton dispatch =
 // ============================================================================
 // GUI element: reset viewer button.
 // ============================================================================
-
-/// <summary>
-///     Reset viewer button.
-/// </summary>
 let private resetViewerButton dispatch =
     Html.div [
         prop.children [
@@ -318,10 +315,6 @@ let private resetViewerButton dispatch =
 // ============================================================================
 // GUI element: download button.
 // ============================================================================
-
-/// <summary>
-///     Reset viewer button.
-/// </summary>
 let private downloadButton dispatch =
     Html.div [
         prop.children [
@@ -337,10 +330,6 @@ let private downloadButton dispatch =
 // ============================================================================
 // GUI element: show hydrogens button.
 // ============================================================================
-
-/// <summary>
-///     Reset viewer button.
-/// </summary>
 let private showHydrogensButton dispatch =
     Html.div [
         prop.children [
@@ -356,10 +345,6 @@ let private showHydrogensButton dispatch =
 // ============================================================================
 // GUI element: change depiction button.
 // ============================================================================
-
-/// <summary>
-///     Reset viewer button.
-/// </summary>
 let private changeDepictionButton dispatch =
     Html.div [
         prop.children [
@@ -373,17 +358,32 @@ let private changeDepictionButton dispatch =
     ]
 
 // ============================================================================
+// GUI element: change background style
+// ============================================================================
+let private changeBackgroundStyle dispatch =
+    Html.div [
+        prop.children [
+            Bulma.button.a [
+                prop.children [
+                    Html.span "Toggle background"
+                ]
+                prop.onClick (fun _ -> ToggleBackgroundStyle |> dispatch)
+            ]
+        ]
+    ]
+
+// ============================================================================
 // GUI element: SVG viewer.
 // ============================================================================
-
-/// <summary>
-///     SVG viewer.
-/// </summary>
 let private svgViewer (dispatch: Msg -> unit) model =
     let svg =
         match model.EncodedSvg with
-        | e when e.Length = 0 -> ""
-        | _ -> $"data:image/svg+xml;base64,{model.EncodedSvg}"
+        | e when e.Length = 0 ->
+            let emptySvg = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{0} {0} {100} {100}\"><style></style></svg>"
+            let encoded = emptySvg |> toBase64String
+            $"data:image/svg+xml;base64,{encoded}"
+        | _ ->
+            $"data:image/svg+xml;base64,{model.EncodedSvg}"
 
     Html.div [
         prop.className "viewer"
@@ -394,6 +394,7 @@ let private svgViewer (dispatch: Msg -> unit) model =
         prop.children [
             img [
                 Class "svg"
+                Style [ BackgroundColor model.ViewerBackgroundStyle.toHex ]
                 Src svg
             ]
         ]
@@ -416,6 +417,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
                 downloadButton dispatch
                 showHydrogensButton dispatch
                 changeDepictionButton dispatch
+                changeBackgroundStyle dispatch
             ]
             Html.div [
                 svgViewer dispatch model
