@@ -84,6 +84,7 @@ type Model = {
     Zoom: Zoom
     DragTarget: DragTarget
     ViewerBackgroundStyle: ViewerBackgroundStyle
+    SidebarCollapsed: bool
 }
     with
     member x.renderArgs = x.ViewBox, x.DrawOptions, x.Rotation, x.Zoom, x.Sdf
@@ -97,6 +98,7 @@ type Model = {
             ViewBox = None
             DragTarget = NoTarget
             ViewerBackgroundStyle = Dark
+            SidebarCollapsed = false
         }
 
 type Msg =
@@ -107,6 +109,7 @@ type Msg =
     | ToggleShowHydrogenAtoms
     | ToggleDepiction
     | ToggleBackgroundStyle
+    | ToggleSidebar
 
     /// Rendering SVG.
     | Render
@@ -163,7 +166,11 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 
     /// Reset viewer.
     | ResetViewer ->
-        let newModel = { Model.init with ViewerBackgroundStyle = model.ViewerBackgroundStyle }
+        let newModel = {
+            Model.init with
+                ViewerBackgroundStyle = model.ViewerBackgroundStyle
+                SidebarCollapsed = model.SidebarCollapsed
+        }
         newModel, Cmd.OfAsync.perform render newModel.renderArgs GotEncoding
 
     /// Download SVG.
@@ -209,6 +216,11 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | ToggleBackgroundStyle ->
         let toggle = if model.ViewerBackgroundStyle = Dark then Light else Dark
         let newModel = { model with ViewerBackgroundStyle = toggle }
+        newModel, Cmd.none
+
+    /// Toggle sidebar
+    | ToggleSidebar ->
+        let newModel = { model with SidebarCollapsed = not model.SidebarCollapsed }
         newModel, Cmd.none
 
     /// Render SVG from SDF message.
@@ -285,67 +297,135 @@ let private uploadFileEvent dispatch =
         ]
     ]
 
-let private uploadFileButton dispatch =
+let private uploadFileButton sidebarCollapsed dispatch =
+    let className, label =
+        match sidebarCollapsed with
+        | true -> "sidebar-button-collapsed", ""
+        | false -> "sidebar-button-expanded", "Upload (V2000 SDF)"
     Bulma.button.a [
-        prop.className "sidebar-button"
+        prop.className className
         prop.children [
             Html.i [ prop.className "fas fa-upload" ]
+            Html.span [
+                prop.style [ style.marginLeft (length.em 0.5) ]
+                prop.text label
+            ]
             uploadFileEvent dispatch
         ]
     ]
 
-let private resetViewerButton dispatch =
+let private resetViewerButton sidebarCollapsed dispatch =
+    let className, label =
+        match sidebarCollapsed with
+        | true -> "sidebar-button-collapsed", ""
+        | false -> "sidebar-button-expanded", "Refresh"
     Bulma.button.a [
-        prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-sync" ] ]
+        prop.className className
+        prop.children [
+            Html.i [ prop.className "fas fa-sync" ]
+            Html.span [
+                prop.style [ style.marginLeft (length.em 0.5) ]
+                prop.text label
+            ]
+        ]
         prop.onClick (fun _ -> ResetViewer |> dispatch)
     ]
 
-let private downloadButton dispatch =
+let private downloadButton sidebarCollapsed dispatch =
+    let className, label =
+        match sidebarCollapsed with
+        | true -> "sidebar-button-collapsed", ""
+        | false -> "sidebar-button-expanded", "Download"
     Bulma.button.a [
-        prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-download" ] ]
+        prop.className className
+        prop.children [
+            Html.i [ prop.className "fas fa-download" ]
+            Html.span [
+                prop.style [ style.marginLeft (length.em 0.5) ]
+                prop.text label
+            ]
+        ]
         prop.onClick (fun _ -> DownloadSvg |> dispatch)
     ]
 
-let private showHydrogensButton dispatch =
+let private showHydrogensButton sidebarCollapsed dispatch =
+    let className, label =
+        match sidebarCollapsed with
+        | true -> "sidebar-button-collapsed", ""
+        | false -> "sidebar-button-expanded", "Toggle hydrogens"
     Bulma.button.a [
-        prop.className "sidebar-button"
-        prop.style [ style.fontWeight 700; style.color "#000000" ]
-        prop.children [ Html.span "Hs" ]
+        prop.className className
+        prop.children [
+            Html.div [
+                prop.style [ style.fontWeight 700; style.color "#000000" ]
+                prop.children [ Html.span "Hs" ]
+            ]
+            Html.span [
+                prop.style [ style.marginLeft (length.em 0.3) ]
+                prop.text label
+            ]
+        ]
         prop.onClick (fun _ -> ToggleShowHydrogenAtoms |> dispatch)
     ]
 
-let private changeDepictionButton dispatch =
+let private changeDepictionButton sidebarCollapsed dispatch =
+    let className, label =
+        match sidebarCollapsed with
+        | true -> "sidebar-button-collapsed", ""
+        | false -> "sidebar-button-expanded", "Toggle depiction"
     Bulma.button.a [
-        prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-eye" ] ]
+        prop.className className
+        prop.children [
+            Html.i [ prop.className "fas fa-eye" ]
+            Html.span [
+                prop.style [ style.marginLeft (length.em 0.5) ]
+                prop.text label
+            ]
+        ]
         prop.onClick (fun _ -> ToggleDepiction |> dispatch)
     ]
 
-let private changeBackgroundStyleButton dispatch =
+let private changeBackgroundStyleButton sidebarCollapsed dispatch =
+    let className, label =
+        match sidebarCollapsed with
+        | true -> "sidebar-button-collapsed", ""
+        | false -> "sidebar-button-expanded", "Toggle background"
     Bulma.button.a [
-        prop.className "sidebar-button"
-        prop.children [ Html.i [ prop.className "fas fa-adjust" ] ]
+        prop.className className
+        prop.children [
+            Html.i [ prop.className "fas fa-adjust" ]
+            Html.span [
+                prop.style [ style.marginLeft (length.em 0.5) ]
+                prop.text label
+            ]
+        ]
         prop.onClick (fun _ -> ToggleBackgroundStyle |> dispatch)
     ]
 
-let private reportBugButton =
+let private reportBugButton sidebarCollapsed =
+    let className, label =
+        match sidebarCollapsed with
+        | true -> "sidebar-button-collapsed", ""
+        | false -> "sidebar-button-expanded", "Report bug"
     Bulma.button.a [
-        prop.className "sidebar-button"
+        prop.className className
         prop.href "https://github.com/moltools/cinemol/issues"
         prop.rel "noreffer noopener"
         prop.target "_blank"
         prop.children [
             Html.i [ prop.className "fas fa-bug" ]
+            Html.span [
+                prop.style [ style.marginLeft (length.em 0.5) ]
+                prop.text label
+            ]
         ]
     ]
 
 
 // ============================================================================
-// GUI element: SVG viewer.
+// SVG viewer
 // ============================================================================
-let private svgViewer (dispatch: Msg -> unit) model =
+let private svgViewer sidebarCollapsed (dispatch: Msg -> unit) model =
     let svg =
         match model.EncodedSvg with
         | e when e.Length = 0 ->
@@ -355,8 +435,11 @@ let private svgViewer (dispatch: Msg -> unit) model =
         | _ ->
             $"data:image/svg+xml;base64,{model.EncodedSvg}"
 
+    let sidebarWidth =
+        match sidebarCollapsed with | true -> 50 | false -> 200
+
     let size =
-        let width = int window.innerWidth - 50
+        let width = int window.innerWidth - sidebarWidth
         let height = int window.innerHeight
         if width < height then
             [ style.width width; style.height width ]
@@ -382,27 +465,55 @@ let private svgViewer (dispatch: Msg -> unit) model =
 // ============================================================================
 // Main view.
 // ============================================================================
-
-/// <container>
-///     Main view.
-/// </container>
 let view (model: Model) (dispatch: Msg -> unit) =
     Html.div [
         prop.className "cinemol"
         prop.style [ style.backgroundColor model.ViewerBackgroundStyle.toHex ]
         prop.children [
             Html.div [
-                prop.className "sidebar"
+                prop.className (
+                    match model.SidebarCollapsed with
+                    | true -> "sidebar-collapsed"
+                    | false -> "sidebar-expanded"
+                )
                 prop.children [
-                    resetViewerButton dispatch
-                    uploadFileButton dispatch
-                    downloadButton dispatch
-                    showHydrogensButton dispatch
-                    changeDepictionButton dispatch
-                    changeBackgroundStyleButton dispatch
-                    reportBugButton
+                    resetViewerButton model.SidebarCollapsed dispatch
+                    uploadFileButton model.SidebarCollapsed dispatch
+                    downloadButton model.SidebarCollapsed dispatch
+                    showHydrogensButton model.SidebarCollapsed dispatch
+                    changeDepictionButton model.SidebarCollapsed dispatch
+                    changeBackgroundStyleButton model.SidebarCollapsed dispatch
+                    reportBugButton model.SidebarCollapsed
+
+                    Html.div [
+                        prop.className "sidebar-collapse-button"
+                        prop.style [
+                            style.fontWeight 700
+                            style.fontSize 20
+                            style.color "#000000"
+                        ]
+                        prop.children [
+                            Html.span [ prop.style [ style.marginLeft (length.em 0.5) ] ]
+                            Html.i [
+                                prop.className (
+                                    match model.SidebarCollapsed with
+                                    | true -> "fas fa-angle-right"
+                                    | false -> "fas fa-angle-left"
+                                )
+                            ]
+                            Html.span [ prop.style [ style.marginLeft (length.em -0.1) ] ]
+                            Html.i [
+                                prop.className (
+                                    match model.SidebarCollapsed with
+                                    | true -> "fas fa-angle-right"
+                                    | false -> "fas fa-angle-left"
+                                )
+                            ]
+                        ]
+                        prop.onClick (fun _ -> ToggleSidebar |> dispatch)
+                    ]
                 ]
             ]
-            svgViewer dispatch model
+            svgViewer model.SidebarCollapsed dispatch model
         ]
     ]
