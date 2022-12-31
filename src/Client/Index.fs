@@ -323,12 +323,24 @@ let private changeDepictionButton dispatch =
         prop.onClick (fun _ -> ToggleDepiction |> dispatch)
     ]
 
-let private changeBackgroundStyle dispatch =
+let private changeBackgroundStyleButton dispatch =
     Bulma.button.a [
         prop.className "sidebar-button"
         prop.children [ Html.i [ prop.className "fas fa-adjust" ] ]
         prop.onClick (fun _ -> ToggleBackgroundStyle |> dispatch)
     ]
+
+let private reportBugButton =
+    Bulma.button.a [
+        prop.className "sidebar-button"
+        prop.href "https://github.com/moltools/cinemol/issues"
+        prop.rel "noreffer noopener"
+        prop.target "_blank"
+        prop.children [
+            Html.i [ prop.className "fas fa-bug" ]
+        ]
+    ]
+
 
 // ============================================================================
 // GUI element: SVG viewer.
@@ -387,7 +399,8 @@ let view (model: Model) (dispatch: Msg -> unit) =
                     downloadButton dispatch
                     showHydrogensButton dispatch
                     changeDepictionButton dispatch
-                    changeBackgroundStyle dispatch
+                    changeBackgroundStyleButton dispatch
+                    reportBugButton
                 ]
             ]
             svgViewer dispatch model
