@@ -11,7 +11,7 @@ exception ParserError of string
 let s = @"\s{1,}"
 let d = @"[-+]?[0-9]*\.?[0-9]+"
 let d_cap = $"({d})"
-let w_cap = $@"(\w+)"
+let w_cap = @"(\w+)"
 
 let atomLine : string =
     [ "$" ]

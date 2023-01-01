@@ -100,7 +100,7 @@ let draw
                   AtomType = perspectiveAtom.AtomType
                   Center = { X = perspectiveAtom.Center.X; Y = perspectiveAtom.Center.Y }
                   Radius = perspectiveAtom.Radius
-                  Clipping =
+                  Clippings =
                       match options.Depiction with
                       | Filled -> clip perspectiveAtom perspectiveMol atom mol
                       | _ -> []
