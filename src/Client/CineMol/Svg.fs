@@ -47,19 +47,17 @@ let writeAtomDefs (atom: ProjectedAtomInfo) : string =
     stop-color=\"rgb({floatToStr r5},{floatToStr g5},{floatToStr b5})\"/>\
     \n</radialGradient>"
 
-let writeAtomsDefs (atoms: ProjectedAtomInfo[]) : string =
+let writeAtomsDefs (atoms: ProjectedAtomInfo list) : string =
     atoms
-    |> Array.map writeAtomDefs
+    |> List.map writeAtomDefs
     |> String.concat ""
 
-let writeAtomsStyle (atoms: ProjectedAtomInfo[]) : string =
+let writeAtomsStyle (atoms: ProjectedAtomInfo list) : string =
     atoms
-    |> Array.map (fun atom -> $"\n.atom-{atom.Index}{{fill:url(#radial-gradient-{atom.Index});}}")
+    |> List.map (fun atom -> $"\n.atom-{atom.Index}{{fill:url(#radial-gradient-{atom.Index});}}")
     |> String.concat ""
 
-let writeBondDefs (atoms: ProjectedAtomInfo[]) (bond: BondInfo) : string =
-    let atoms = Array.toList atoms
-
+let writeBondDefs (atoms: ProjectedAtomInfo list) (bond: BondInfo) : string =
     let rec findAtom (l: ProjectedAtomInfo list) atomIdx : ProjectedAtomInfo option =
         match l with
         | [] -> None
@@ -93,14 +91,14 @@ let writeBondDefs (atoms: ProjectedAtomInfo[]) (bond: BondInfo) : string =
         \n</linearGradient>"
     | _ -> ""
 
-let writeBondsDefs (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string =
+let writeBondsDefs (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : string =
     bonds
-    |> Array.map (writeBondDefs atoms)
+    |> List.map (writeBondDefs atoms)
     |> String.concat ""
 
-let writeBondsStyle (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string =
+let writeBondsStyle (bonds: BondInfo list) : string =
     bonds
-    |> Array.map (fun bond ->
+    |> List.map (fun bond ->
         $"\n.bond-{bond.Index}-atom-{bond.Start}{{fill:url(#linear-gradient-{bond.Index}-atom-{bond.Start});}}
         \n.bond-{bond.Index}-atom-{bond.End}{{fill:url(#linear-gradient-{bond.Index}-atom-{bond.End});}}"
     )
@@ -110,21 +108,116 @@ let writeBondsStyle (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string =
 // Shapes
 // =====================================================================================================================
 let reconstructShape (atom: ProjectedAtomInfo) : string =
-    let writeArc (final: Point2D) (radius: Radius) : string =
-        let sweep = 1
+    /// Modulo 2 pi
+    let rec norm (rad: float) : float =
+        let pi2 = 2.0 * Math.PI
+        match rad with
+        | x when x > pi2 -> norm (x - pi2)
+        | x when x < 0.0 -> norm (x + pi2)
+        | x -> x
+
+    let dist ref p = p - ref |> norm
+
+    /// Direction center to point on circle in radians
+    let dir (p: Point2D) : float = Math.Atan2(p.Y - atom.Center.Y, p.X - atom.Center.X)
+
+    /// Order clippings
+    let mutable start: float option = None
+    let orderedClipping =
+        [ for { Line = (p1, p2) } in atom.Clipping do
+            match start with
+            | None ->
+                let a1, a2 = dir p1, dir p2
+                start <- Some a1
+                (dist a1 a1, p1), (dist a1 a2, p2)
+            | Some ref ->
+                let a1, a2 = dir p1, dir p2
+                /// Point on circle closest to ref comes first; flip around clipping if not the case
+                if dist ref a1 < dist ref a2 then (dist ref a1, p1), (dist ref a2, p2)
+                else (dist ref a2, p2), (dist ref a1, p1) ]
+        |> List.sortBy (fun ((x, _), (_, _)) -> x)
+
+    /// Merge clippings if they intersect
+    let rec mergeClipping (merged: ((float * Point2D) * (float * Point2D)) list)
+                          (cs: ((float * Point2D) * (float * Point2D)) list) :
+                          ((float * Point2D) * (float * Point2D)) list =
+        match cs with
+        | c1::c2::rest ->
+            let (a1,p1),(a2,p2) = c1
+            let (a3,p3),(a4,p4) = c2
+            if a2 > a4 then mergeClipping (merged @ [c1]) rest
+            elif a2 < a3 then mergeClipping (merged @ [c1]) ([c2] @ rest)
+            else
+//                let i = intersectionBetweenLines (p1, p2) (p3, p4)
+//                let c1New = (a1,p1),(a2,i)
+//                let c2New = (a3,i),(a4,p4)
+                let c1New = (a1,p1),(a2,p2)
+                let c2New = (a2,p2),(a4,p4)
+                mergeClipping (merged @ [c1New]) ([c2New] @ rest)
+        | [c] -> merged @ [c]
+        | [] -> merged
+
+    let preppedClipping: Line list =
+        mergeClipping [] orderedClipping
+        |> List.map (fun ((_, p1),(_, p2)) -> p1, p2)
+
+    let writeArc (final: Point2D) : string =
+        let radius = atom.Radius
+        let sweep = "1"
         $"A {floatToStr radius} {floatToStr radius} 0 {sweep} 0 {floatToStr final.X} {floatToStr final.Y}"
 
-    match atom.Clipping with
-    | {Line = (p1, p2)}::tail ->
-        let arcs =
-            [ for {Line = (p3, p4)} in tail do $" L {floatToStr p3.X} {floatToStr p3.Y} {writeArc p4 atom.Radius} " ]
-            |> String.concat ""
-        $"\n<path\
-        \n\tclass=\"atom-{atom.Index}\"\
-        \n\tstyle=\"stroke:rgb(0,0,0);stroke-width:0.025\"
-        \n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} {writeArc p2 atom.Radius} {arcs} L {floatToStr p1.X} {floatToStr p1.Y}\"
-        \n/>"
-    | [] -> ""
+    /// Draw ordered and merged clipping paths
+//    let mutable start: Point2D option = None
+//    let rec writeSvg (s: string list) (cs: Line list) : string list =
+//        match cs with
+//        | [] -> s
+//        | [(p1, p2)] when s.Length = 0 && cs.Length = 1 ->
+//            let arc = writeArc p1 atom.Radius
+//            s @ [$"\n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} {arc}\""]
+//        | (p1, p2)::rest when s.Length = 0 ->
+//            start <- Some p1
+//            writeSvg [ $"\n\td=\"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} " ] rest
+//        | (p1, p2)::rest ->
+//            let connectToStart =
+//                match start with
+//                | Some pStart -> writeArc pStart atom.Radius
+//                | None -> "" // will connect with straight line in this case ...
+//            let sNew =
+//                if rest.Length = 0 then
+//                    s @ [
+//                        writeArc p1 atom.Radius
+//                        $" L {floatToStr p2.X} {floatToStr p2.Y} "
+//                        connectToStart
+//                        "\""
+//                    ]
+//                else s @ [ writeArc p1 atom.Radius; $"L {floatToStr p2.X} {floatToStr p2.Y} " ]
+//            writeSvg sNew rest
+
+
+    let cs = preppedClipping |> List.toArray
+    let clipping =
+        if cs.Length = 1 then
+            let p1, p2 = cs.[0]
+            [ $"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} {writeArc p1}" ]
+        elif cs.Length = 2 then
+            let p1, p2 = cs.[0]
+            let p3, p4 = cs.[1]
+            [ $"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} L {floatToStr p3.X} {floatToStr p3.Y} L {floatToStr p4.X} {floatToStr p4.Y} L {floatToStr p1.X} {floatToStr p1.Y} " ]
+        else
+            let p1, p2 = cs.[0]
+            let p3, p4 = cs.[cs.Length - 1]
+            [ $"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} " ]
+            @ [ for a, b in cs.[1..cs.Length - 1] do $"L {floatToStr a.X} {floatToStr a.Y} L {floatToStr b.X} {floatToStr b.Y}" ]
+            @ [ $"L {floatToStr p3.X} {floatToStr p3.Y} L {floatToStr p4.X} {floatToStr p4.Y} L {floatToStr p1.X} {floatToStr p1.Y} " ]
+
+    [ $"\n<path\
+    \n\tclass=\"atom-{atom.Index}\"\
+    \n\tstyle=\"stroke:rgb(0,0,0);stroke-width:0.025\"" ]
+    @ ["\n\td=\""]
+    @ clipping
+    @ ["\"/>"]
+    |> String.concat ""
+
 
 let drawAtomFilled (atom: ProjectedAtomInfo) : string =
     $"\n<circle\
@@ -140,15 +233,12 @@ let writeAtomFilled (atom: ProjectedAtomInfo) : string =
     | [] -> drawAtomFilled atom
     | _ -> reconstructShape atom
 
-let writeAtomsFilled (atoms: ProjectedAtomInfo[]) : string =
+let writeAtomsFilled (atoms: ProjectedAtomInfo list) : string =
     atoms
-    |> Array.map (fun atom -> writeAtomFilled atom)
+    |> List.map (fun atom -> writeAtomFilled atom)
     |> String.concat ""
 
-let writeAtomsWire (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string =
-    let atoms = Array.toList atoms
-    let bonds = Array.toList bonds
-
+let writeAtomsWire (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : string =
     let rec findAtom (l: ProjectedAtomInfo list) atomIdx : ProjectedAtomInfo option =
         match l with
         | [] -> None
@@ -204,10 +294,7 @@ let writeAtomsWire (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string =
 
 type BondEnd = | Start | End
 
-let writeBallAndStick (atoms: ProjectedAtomInfo[]) (bonds: BondInfo[]) : string =
-    let atoms = Array.toList atoms
-    let bonds = Array.toList bonds
-
+let writeBallAndStick (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : string =
     let drawAtom (atom: ProjectedAtomInfo) : string =
         $"<circle\
         \n\tclass=\"atom-{atom.Index}\"\
@@ -406,7 +493,7 @@ let writeSVG viewBox depiction (mol: ProjectedMolecule) : string =
         |> add (header viewBox)
         |> add "\n<defs>\n<style>"
         |> add (writeAtomsStyle mol.Atoms)
-        |> add (writeBondsStyle mol.Atoms mol.Bonds)
+        |> add (writeBondsStyle mol.Bonds)
         |> add "\n</style>"
         |> add (writeAtomsDefs mol.Atoms)
         |> add (writeBondsDefs mol.Atoms mol.Bonds)
@@ -424,5 +511,3 @@ let writeSVG viewBox depiction (mol: ProjectedMolecule) : string =
         |> add (writeAtomsWire mol.Atoms mol.Bonds)
         |> add "\n</svg>"
         |> stringify
-
-    | _ -> "fails_drawing"  // Other depictions not yet implemented

@@ -33,16 +33,15 @@ let intersectionBetweenCircles
             let y4 = y2 + h2 * (c_p2.X - c_p1.X) / d
             Some ({ X = x3; Y = y3 }, { X = x4; Y = y4 })
 
-let clip (projAtom: AtomInfo) (projMol: Molecule) (atom: AtomInfo) (mol: Molecule) : Clipping list =
+let clip (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecule) : Clipping list =
     let clippingAtoms = [|
-        for projOtherAtom, otherAtom in Array.zip projMol.Atoms mol.Atoms do
-            match atom.Intersect otherAtom with
-            | IntersectionCircle _ ->
-                match projAtom.Intersect projOtherAtom with
-                | IntersectionCircle (p, r, _) ->
-                    yield (p, r)
-                | _ -> ()
-            | _ -> () |]
+        for persOtherAtom, otherAtom in List.zip persMol.Atoms mol.Atoms do
+            match atom.Intersects otherAtom with
+            | true ->
+                match persAtom.Intersection persOtherAtom with
+                | IntersectionCircle (p, r, _) -> yield p, r | _ -> ()
+            | false -> ()
+    |]
 
     match clippingAtoms with
     // No clipping
@@ -52,9 +51,9 @@ let clip (projAtom: AtomInfo) (projMol: Molecule) (atom: AtomInfo) (mol: Molecul
             let intersections =
                 cs
                 |> Array.map (fun (p, r) ->
-                    let center2D: Point2D = { X = projAtom.Center.X; Y = projAtom.Center.Y }
+                    let center2D: Point2D = { X = persAtom.Center.X; Y = persAtom.Center.Y }
                     let clipWithCenter2D: Point2D = { X = p.X; Y = p.Y }
-                    intersectionBetweenCircles center2D projAtom.Radius clipWithCenter2D r)
+                    intersectionBetweenCircles center2D persAtom.Radius clipWithCenter2D r)
             [ for intersection in intersections do
                 match intersection with
                 | None -> ()
@@ -91,3 +90,16 @@ let intersectionBetweenCircleAndLine
             { X = x2; Y = y2 }
         )
     else None
+
+/// Assumes two lines are not parallel
+let intersectionBetweenLines (l1: Line) (l2: Line) : Point2D =
+    let p1, p2 = l1
+    let p3, p4 = l2
+    let a1 = calcSlope p1 p2
+    let c1 = p1.Y - (a1 * p1.X)
+    let a2 = calcSlope p3 p4
+    let c2 = p3.Y - (a2 * p3.X)
+    let x = (c1 - c2) / (a1 - a2)
+    let y = (a1 * x) + c1
+    { X = x; Y = y }
+

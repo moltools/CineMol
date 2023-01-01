@@ -11,13 +11,12 @@ open Svg
 type DrawOptions = {Depiction: Depiction; ShowHydrogenAtoms: bool }
     with static member init = { Depiction = Filled; ShowHydrogenAtoms = false }
 
-let filterAtoms (atomType: AtomType) (atoms: AtomInfo[]) : AtomInfo[] =
-    Array.filter(fun (atom: AtomInfo) -> atom.AtomType <> atomType) atoms
+let filterAtoms (atomType: AtomType) (atoms: AtomInfo list) : AtomInfo list =
+    List.filter(fun (atom: AtomInfo) -> atom.AtomType <> atomType) atoms
 
-let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo[]) : AtomInfo[] =
+let rotateAtoms (axis: Axis) (rads: float) (atoms: AtomInfo list) : AtomInfo list =
     atoms
-    |> Array.map (fun (atom: AtomInfo) ->
-        atom.Rotate axis ((rads / 100.0) * 2.0 * Math.PI))
+    |> List.map (fun (atom: AtomInfo) -> atom.Rotate axis ((rads / 100.0) * 2.0 * Math.PI))
 
 let changeDistanceToAtoms (ratio: float) (mol: Molecule) : Molecule =
     let transformAtom (a: AtomInfo) =
@@ -29,7 +28,7 @@ let changeDistanceToAtoms (ratio: float) (mol: Molecule) : Molecule =
             Radius = a.Radius * ratio }
     let transformBond b =
         { b with Scaling = b.Scaling * ratio }
-    { mol with Atoms = Array.map (fun a -> transformAtom a) mol.Atoms; Bonds = Array.map (fun b -> transformBond b) mol.Bonds }
+    { mol with Atoms = List.map (fun a -> transformAtom a) mol.Atoms; Bonds = List.map (fun b -> transformBond b) mol.Bonds }
 
 let draw
     (viewBox: ViewBox option)
@@ -39,7 +38,7 @@ let draw
     (mol: Molecule)
     : string * ViewBox =
 
-    // Rotate atoms based on supplied rotations in radians around axes.
+    // Rotate atoms based on supplied rotations in radians around axes
     let mol = {
         mol with Atoms = mol.Atoms
                          |> rotateAtoms Y rotation.AxisX
@@ -47,10 +46,10 @@ let draw
                          |> rotateAtoms X rotation.AxisY
     }
 
-    // Calculate view box offset (set before zoom, otherwise view box changes with zoom).
+    // Calculate view box offset (set before zoom, otherwise view box changes with zoom)
     let offsetViewBox =
         let minimumOffset = 2.0
-        match mol.Atoms |> Array.map (fun a -> a.Center.Distance origin) |> Array.max |> (*) 2.0 |> round 0 with
+        match mol.Atoms |> List.map (fun a -> a.Center.Distance origin) |> List.max |> (*) 2.0 |> round 0 with
         | x when x < minimumOffset -> minimumOffset | x -> x
 
     let viewBox =
@@ -62,20 +61,21 @@ let draw
     let pov: Point3D = { X = 1E-5; Y = 1E-5; Z = focalLength }
     let distPovOrigin: float = pov.Distance origin
 
-    // Filter atoms based on atom type.
+    // Filter atoms based on atom type
     let mol = { mol with Atoms = if options.ShowHydrogenAtoms = false then filterAtoms H mol.Atoms else mol.Atoms }
 
-    // Apply zoom based on supplied scroll.
-    let perspectiveMol = changeDistanceToAtoms zoom.Ratio mol
+    // Sort drawing order point cloud based on distance point to POV
+    let mol = { mol with Atoms = mol.Atoms |> List.sortBy (fun atom -> atom.Center.Distance pov |> (*) -1.0) }
 
-    // Sort drawing order point cloud based on distance point to POV.
-    let perspectiveMol = { perspectiveMol with Atoms = perspectiveMol.Atoms |> Array.sortBy (fun atom -> atom.Center.Distance pov |> (*) -1.0) }
+
+    // Apply zoom based on supplied scroll
+    let perspectiveMol = changeDistanceToAtoms zoom.Ratio mol
 
     // Recalculate radii based on distance point to POV.
     let perspectiveMol = {
         perspectiveMol with
             Atoms = perspectiveMol.Atoms
-                    |> Array.map (fun atom ->
+                    |> List.map (fun atom ->
                         let projectedRadius = (distPovOrigin / (pov.Distance atom.Center)) * atom.Radius
                         { atom with Radius = projectedRadius }) }
 
@@ -88,20 +88,22 @@ let draw
 
     let perspectiveMol = {
         perspectiveMol with
-            Atoms = perspectiveMol.Atoms |> Array.map (fun atom -> setPerspectiveAtom atom)
+            Atoms = perspectiveMol.Atoms |> List.map (fun atom -> setPerspectiveAtom atom)
     }
 
-    // Calculate clipping.
+    // Calculate clipping
     let projectedMol =
         { Atoms =
-            Array.zip perspectiveMol.Atoms mol.Atoms
-            |> Array.map (fun (perspectiveAtom, atom) ->
+            List.zip perspectiveMol.Atoms mol.Atoms
+            |> List.map (fun (perspectiveAtom, atom) ->
                 { Index = perspectiveAtom.Index
                   AtomType = perspectiveAtom.AtomType
                   Center = { X = perspectiveAtom.Center.X; Y = perspectiveAtom.Center.Y }
                   Radius = perspectiveAtom.Radius
-//                  Clipping = clip perspectiveAtom perspectiveMol atom mol
-                  Clipping = []
+                  Clipping =
+                      match options.Depiction with
+                      | Filled -> clip perspectiveAtom perspectiveMol atom mol
+                      | _ -> []
                 })
           Bonds = perspectiveMol.Bonds }
 

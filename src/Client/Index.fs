@@ -436,7 +436,7 @@ let private svgViewer sidebarCollapsed (dispatch: Msg -> unit) model =
             $"data:image/svg+xml;base64,{model.EncodedSvg}"
 
     let sidebarWidth =
-        match sidebarCollapsed with | true -> 50 | false -> 200
+        match sidebarCollapsed with | true -> 60 | false -> 210
 
     let size =
         let width = int window.innerWidth - sidebarWidth

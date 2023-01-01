@@ -147,7 +147,12 @@ type AtomInfo =
     member x.Rotate (axis: Axis) (rad: float) : AtomInfo =
         { x with Center = x.Center.Rotate axis rad }
 
-    member this.Intersect (other: AtomInfo) : SphereSphereIntersection =
+    member this.Intersects (other: AtomInfo) : bool =
+        match this.Center.Distance other.Center with
+        | x when x <= this.Radius + other.Radius -> true
+        | _ -> false
+
+    member this.Intersection (other: AtomInfo) : SphereSphereIntersection =
         let dist = this.Center.Distance other.Center
 
         match dist with
@@ -205,8 +210,8 @@ and BondType = | Single | Double | Triple | Aromatic | Unknown
 let createAtom (index: int) (atomType: AtomType) (c: Point3D) (r: Radius) : AtomInfo =
     { Index = index; AtomType = atomType; Center = c; Radius = r }
 
-type Molecule = { Atoms: AtomInfo[]; Bonds: BondInfo[] }
-type ProjectedMolecule = { Atoms: ProjectedAtomInfo[]; Bonds: BondInfo[] }
+type Molecule = { Atoms: AtomInfo list; Bonds: BondInfo list }
+type ProjectedMolecule = { Atoms: ProjectedAtomInfo list; Bonds: BondInfo list }
 
 type ViewBox = float * float * float * float
 

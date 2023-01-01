@@ -84,7 +84,7 @@ let parseSdf (sdf: string) : Molecule[] =
         for line in sdf.Split [|'\n'|] do
             match line with
             | line when line.Contains("$$$$") = true ->
-                yield { Atoms = atoms |> List.toArray; Bonds = bonds |> List.toArray }
+                yield { Atoms = atoms; Bonds = bonds }
                 atomCount <- 0
                 atoms <- []
             | AtomLine [ x; y; z; symbol] ->
