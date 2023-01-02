@@ -146,123 +146,98 @@ let drawAtom (atom: ProjectedAtomInfo) : string =
     let line p = Line p
     let arc p largeArcFlag sweepFlag = Arc (atom.Radius, p, largeArcFlag, sweepFlag)
 
+    let determineFlags (p1: Point2D) (p2: Point2D) pos =
+        match p1.Distance p2 < (2.0 * atom.Radius), pos with
+        | true, SameSide -> Zero, One
+        | true, OppositeSide -> One, One
+        | false, SameSide -> One, Zero
+        | false, OppositeSide -> Zero, Zero
+
     match atom.Clippings with
     /// No clipping; draw full circle for atom
     | [] -> svgCircle atom
 
     /// A single clipping; draw part atom circle with a chipped of clipping
     | [{Line = (p1, p2); AtomCentersPosition = pos}] ->
-        let largeArcFlag, sweepFlag =
-            printf "error: %A" <| (p1.Distance p2 < (2.0 * atom.Radius), pos, atom.AtomType)
-            match p1.Distance p2 < (2.0 * atom.Radius), pos with
-            | true, SameSide -> Zero, One
-            | true, OppositeSide -> One, One
-            | false, SameSide -> One, Zero
-            | false, OppositeSide -> Zero, Zero
-        [ opening
-          start p1
-          line p2
-          arc p1 largeArcFlag sweepFlag
-          closing
-        ] |> pathToSvg
+        let largeArcFlag, sweepFlag = determineFlags p1 p2 pos
+        [ opening; start p1; line p2; arc p1 largeArcFlag sweepFlag; closing ]
+        |> pathToSvg
 
     /// Multiple clippings; reconstruct shape by consecutively chipping of clippings
     | head::tail ->
-        ""
+        let { Line = (p1, p2); AtomCentersPosition = pos } = head
+        let pi2 = 2.0 * Math.PI
+        let rec normalize (rad: float) : float =
+            match rad with
+            | x when x > pi2 -> normalize (x - pi2)
+            | x when x < 0.0 -> normalize (x + pi2)
+            | x -> x
 
+        let dist refTheta theta = theta - refTheta |> normalize
 
-//    /// Modulo 2 pi
-//    let rec norm (rad: float) : float =
-//        let pi2 = 2.0 * Math.PI
-//        match rad with
-//        | x when x > pi2 -> norm (x - pi2)
-//        | x when x < 0.0 -> norm (x + pi2)
-//        | x -> x
-//
-//    let dist ref p = p - ref |> norm
-//
-//    /// Direction center to point on circle in radians
-//    let dir (p: Point2D) : float = Math.Atan2(p.Y - atom.Center.Y, p.X - atom.Center.X)
+        /// Calculates direction center to point on circle (theta)
+        let direction (p: Point2D) = Math.Atan2(p.Y - atom.Center.Y, p.X - atom.Center.X)
 
-//    /// Order clippings
-//    let mutable start: float option = None
-//    let orderedClipping =
-//        [ for clipItem in atom.Clipping do
-//            let { Line = (p1, p2); Clip = clipPart } = clipItem
-//            match start with
-//            | None ->
-//                let a1, a2 = dir p1, dir p2
-//                start <- Some a1
-//                (dist a1 a1, p1), (dist a1 a2, p2), clipItem
-//            | Some ref ->
-//                let a1, a2 = dir p1, dir p2
-//                /// Point on circle closest to ref comes first; flip around clipping if not the case
-//                if dist ref a1 < dist ref a2 then (dist ref a1, p1), (dist ref a2, p2), clipItem
-//                else (dist ref a2, p2), (dist ref a1, p1), clipItem ]
-//        |> List.sortBy (fun ((x, _), (_, _), _) -> x)
-//
-//    /// Merge clippings if they intersect
-//    let rec mergeClipping (merged: ((float * Point2D) * (float * Point2D) * CircleClipping) list)
-//                          (cs: ((float * Point2D) * (float * Point2D) * CircleClipping) list) :
-//                          ((float * Point2D) * (float * Point2D) * CircleClipping) list =
-//        match cs with
-//        | c1::c2::rest ->
-//            let (a1,p1),(a2,p2),clipItem1 = c1
-//            let (a3,p3),(a4,p4),clipItem2 = c2
-//
-//
-//            if a2 > a4 then mergeClipping (merged @ [c1]) rest
-//            elif a2 < a3 then mergeClipping (merged @ [c1]) ([c2] @ rest)
-//            else
-//                match intersectionBetweenLines (p1, p2) (p3, p4) with
-//                | None -> mergeClipping (merged @ [c1]) ([c2] @ rest)
-//                | Some i ->
-//                    if atom.Center.Distance i > atom.Radius then
-//                        // This means intersection is outside of atom, so no actual clipping, which shouldn't happen!
-//                        printf "error: intersection two clipping lines is outside of atom radius!"
-//                        mergeClipping (merged @ [c1]) ([c2] @ rest)
-//                    else
-//                        let c1New = (a1,p1),(a2,i),clipItem1
-//                        let c2New = (a3,i),(a4,p4),clipItem2
-//        //                let c1New = (a1,p1),(a2,p2),clipItem1 // recalc clip side
-//        //                let c2New = (a2,p2),(a4,p4),clipItem2 // recalc clip side
-//                        mergeClipping (merged @ [c1New]) ([c2New] @ rest)
-//        | [c] -> merged @ [c]
-//        | [] -> merged
-//
-//    let preppedClipping: (Line * CircleClipping) list =
-//        mergeClipping [] orderedClipping
-//        |> List.map (fun ((_, p1),(_, p2),clipItem) -> (p1, p2), clipItem)
-//
-//    let writeArc (final: Point2D) (clipSide: CirclePart) : string =
-//        let radius = atom.Radius
-//        let sweep = match clipSide with | NotCenterPart -> "0" | CenterPart -> "1"
-//        $"A {floatToStr radius} {floatToStr radius} 0 {sweep} {sweep} {floatToStr final.X} {floatToStr final.Y}"
-//
-//    /// Draw ordered and merged clipping paths
-//    let cs = preppedClipping |> List.toArray
-//    let clipping =
-//        if cs.Length = 1 then
-//            let (p1, p2), clipItem = cs.[0]
-//            [ $"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} {writeArc p1 clipItem.Clip}" ]
-//        elif cs.Length = 2 then
-//            let (p1, p2), clipItem1 = cs.[0]
-//            let (p3, p4), clipItem2 = cs.[1]
-//            [ $"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} L {floatToStr p3.X} {floatToStr p3.Y} L {floatToStr p4.X} {floatToStr p4.Y} L {floatToStr p1.X} {floatToStr p1.Y} " ]
-//        else
-//            let (p1, p2), clipItem1 = cs.[0]
-//            let (p3, p4), clipItem2 = cs.[cs.Length - 1]
-//            [ $"M {floatToStr p1.X} {floatToStr p1.Y} L {floatToStr p2.X} {floatToStr p2.Y} " ]
-//            @ [ for (a, b), clipItem3 in cs.[1..cs.Length - 1] do $"L {floatToStr a.X} {floatToStr a.Y} L {floatToStr b.X} {floatToStr b.Y}" ]
-//            @ [ $"L {floatToStr p3.X} {floatToStr p3.Y} L {floatToStr p4.X} {floatToStr p4.Y} L {floatToStr p1.X} {floatToStr p1.Y} " ]
+        /// Pick reference point
+        let refTheta =
+            let refTheta = direction p1
+            if dist refTheta (direction p2) > pi2 then direction p2
+            else refTheta
 
-//    [ $"\n<path\
-//    \n\tclass=\"atom-{atom.Index}\"\
-//    \n\tstyle=\"stroke:rgb(0,0,0);stroke-width:0.025\"" ]
-//    @ ["\n\td=\""]
-////    @ clipping
-//    @ ["\"/>"]
-//    |> String.concat ""
+        /// Check for eclipsed clippings
+        let sections =
+            [ head ] @ tail
+            |> List.map (fun { Line = (p1, p2); AtomCentersPosition = pos } ->
+                let aDist = dist refTheta (direction p1)
+                let bDist = dist refTheta (direction p2)
+                if aDist < bDist then
+                    aDist, bDist, { Line = (p1, p2); AtomCentersPosition = pos }
+                else
+                    bDist, aDist, { Line = (p2, p1); AtomCentersPosition = pos })
+            |> List.sortBy (fun (a1, _, _) -> a1)
+
+        let sections =
+            [ for section in sections do
+                  let a1, a2, clipping = section
+                  let eclipsed =
+                      sections
+                      |> List.map (fun (b1, b2, _) -> b1 < a1 && b2 > a2)
+                      |> List.contains true
+                  match eclipsed with
+                  | true -> ()
+                  | false -> section ]
+
+        let mutable s: Point2D option = None
+        let rec reconstruct merged toMerge : Path =
+            match toMerge with
+            | [] -> merged
+            | [c] ->
+                let _, _, { Line = (p1, p2); AtomCentersPosition = pos } = c
+                let largeArcFlag, sweepFlag = determineFlags p1 p2 pos
+                match s with
+                | None -> [ start p1; line p2; arc p1 largeArcFlag sweepFlag ]
+//                | Some s -> merged @ [ arc p1 largeArcFlag sweepFlag; line p2; arc s largeArcFlag sweepFlag ]
+                | Some s -> merged @ [ arc p1 Zero One; line p2; arc s Zero One ]
+            | c1::c2::tail ->
+                let a1a, a1b, { Line = (p1a, p1b); AtomCentersPosition = pos1 } = c1
+                let largeArcFlag1, sweepFlag1 = determineFlags p1a p1b pos1
+                let a2a, a2b, { Line = (p2a, p2b); AtomCentersPosition = pos2 } = c2
+                let largeArcFlag2, sweepFlag2 = determineFlags p2a p2b pos2
+                match a2a < a1b with
+                | true ->
+                    /// TODO: merge clippings; skip c2 for now
+                    reconstruct merged ([ c1 ] @ tail)
+                | false ->
+                    match s with
+                    | None ->
+                        s <- Some p1a
+                        reconstruct (merged @ [ start p1a; line p1b ]) ([ c2 ] @ tail)
+                    | _ ->
+//                        reconstruct (merged @ [ arc p1a largeArcFlag1 sweepFlag1; line p1b ]) ([ c2 ] @ tail)
+                        reconstruct (merged @ [ arc p1a Zero One; line p1b ]) ([ c2 ] @ tail)
+
+        [ opening ] @ (reconstruct [] sections) @ [ closing ]
+        |> pathToSvg
 
 let writeAtomsFilled (atoms: ProjectedAtomInfo list) : string =
     atoms
