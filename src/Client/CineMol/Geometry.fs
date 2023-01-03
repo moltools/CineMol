@@ -10,19 +10,19 @@ let intersectionBetweenCircles
     (c_p2: Point2D)
     (r_p2: float)
     : (Point2D * Point2D) option =
-    /// Calculate the distance between the center of the two circles
+    // Calculate the distance between the center of the two circles
     let d = Math.Sqrt((c_p2.X - c_p1.X) ** 2.0 + (c_p2.Y - c_p1.Y) ** 2.0)
 
-    /// Non-intersecting circles
+    // Non-intersecting circles
     if d > (r_p1 + r_p2) then None
 
-    /// Coincident circles
+    // Coincident circles
     elif d = 0.0 && r_p1 = r_p2 then None
 
-    /// One circle within other circle
+    // One circle within other circle
     elif d < abs (r_p1 - r_p1) || d < 1E-5 then None
 
-    /// Two intersection points
+    // Two intersection points
     else
         let a = (r_p1 ** 2.0 - r_p2 ** 2.0 + d ** 2.0) / (2.0 * d)
         let h1 = r_p1 ** 2.0 - a ** 2.0
@@ -48,7 +48,7 @@ let sameSideOfLine (line: Point2D * Point2D) (p1: Point2D) (p2: Point2D) : bool 
     | _ -> false
 
 let clip (pov: Point3D) (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecule) : ClipPath list =
-    /// Only clip with atoms that are behind the atom of interest
+    // Only clip with atoms that are behind the atom of interest
     let distPovAtom = pov.Distance atom.Center
     let atomsForClipping =
         [ for a in mol.Atoms do
@@ -58,7 +58,7 @@ let clip (pov: Point3D) (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo
         [ for a in persMol.Atoms do
             if List.contains a.Index inds then yield a ]
 
-    /// Determine which atoms are actually clipping; store clipping line
+    // Determine which atoms are actually clipping; store clipping line
     let clippingAtoms = [|
         for persOtherAtom, otherAtom in List.zip persAtomsForClipping atomsForClipping do
             match atom.Intersects otherAtom with
@@ -66,18 +66,18 @@ let clip (pov: Point3D) (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo
                 match persAtom.Intersection persOtherAtom with
                 | IntersectionCircle (p, r, _) ->
                     if pov.Distance p < distPovAtom then
-                        /// circle is more like ellips when not looking right
-                        /// towards the front, so we adjust the radius a bit
+                        // circle is more like ellips when not looking right
+                        // towards the front, so we adjust the radius a bit
                         yield p, r * 0.8, persOtherAtom
                 | _ -> ()
             | false -> ()
     |]
 
     match clippingAtoms with
-    /// No clipping
+    // No clipping
     | cs when cs.Length = 0 -> []
 
-    /// Clipping
+    // Clipping
     | cs ->
             let intersections =
                 cs |> Array.map (fun (i_p, i_r, other) ->
@@ -108,13 +108,13 @@ let intersectionBetweenLines (l1: Point2D * Point2D) (l2: Point2D * Point2D) : P
     let a1 = calcSlope p1 p2
     let a2 = calcSlope p3 p4
     if a1 = a2 then
-        /// lines are parallel
+        // lines are parallel
         None
     else
         let c1 = p1.Y - (a1 * p1.X)
         let c2 = p3.Y - (a2 * p3.X)
         if (c1 = infinity || c1 = -infinity) || (c2 = infinity || c2 = -infinity) then
-            /// Intersection happens somewhere off-screen
+            // Intersection happens somewhere off-screen
             None
         else
             let x = (c1 - c2) / (a2 - a1)
