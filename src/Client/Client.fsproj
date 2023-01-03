@@ -7,17 +7,12 @@
     <ItemGroup>
         <None Include="index.html" />
         <None Include="paket.references" />
-        <Compile Include="CineMol\Encoding.fs" />
-        <Compile Include="CineMol\Helpers.fs" />
-        <Compile Include="CineMol\Styles.fs" />
-        <Compile Include="CineMol\Types.fs" />
-        <Compile Include="CineMol\Parsing.fs" />
-        <Compile Include="CineMol\Geometry.fs" />
-        <Compile Include="CineMol\Svg.fs" />
-        <Compile Include="CineMol\Drawing.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="App.fs" />
         <Content Include="style.scss" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include=".\CineMol\CineMol.fsproj" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Shared\Shared.fsproj" />
