@@ -47,14 +47,28 @@ let sameSideOfLine (line: Point2D * Point2D) (p1: Point2D) (p2: Point2D) : bool 
     | b1, b2 when b1 = b2 -> true
     | _ -> false
 
-let clip (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecule) : ClipPath list =
+let clip (pov: Point3D) (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecule) : ClipPath list =
+    /// Only clip with atoms that are behind the atom of interest
+    let distPovAtom = pov.Distance atom.Center
+    let atomsForClipping =
+        [ for a in mol.Atoms do
+              if distPovAtom < pov.Distance a.Center then yield a ]
+    let inds = atomsForClipping |> List.map (fun a -> a.Index)
+    let persAtomsForClipping =
+        [ for a in persMol.Atoms do
+            if List.contains a.Index inds then yield a ]
+
+    /// Determine which atoms are actually clipping; store clipping line
     let clippingAtoms = [|
-        for persOtherAtom, otherAtom in List.zip persMol.Atoms mol.Atoms do
+        for persOtherAtom, otherAtom in List.zip persAtomsForClipping atomsForClipping do
             match atom.Intersects otherAtom with
             | true ->
                 match persAtom.Intersection persOtherAtom with
-                /// TODO: check if we can actually see the sphere-sphere intersection
-                | IntersectionCircle _ -> persOtherAtom
+                | IntersectionCircle (p, r, _) ->
+                    if pov.Distance p < distPovAtom then
+                        /// circle is more like ellips when not looking right
+                        /// towards the front, so we adjust the radius a bit
+                        yield p, r * 0.8, persOtherAtom
                 | _ -> ()
             | false -> ()
     |]
@@ -66,12 +80,15 @@ let clip (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecul
     /// Clipping
     | cs ->
             let intersections =
-                cs
-                |> Array.map (fun persOtherAtom ->
+                cs |> Array.map (fun (i_p, i_r, other) ->
                     let p1: Point2D = { X = persAtom.Center.X; Y = persAtom.Center.Y }
-                    let p2: Point2D = { X = persOtherAtom.Center.X; Y = persOtherAtom.Center.Y }
-                    intersectionBetweenCircles p1 persAtom.Radius p2 persOtherAtom.Radius, p1, persAtom.Radius, p2, persOtherAtom.Radius)
-            [ for intersection, p1, _, p2, r2 in intersections do
+                    let p2: Point2D = { X = i_p.X; Y = i_p.Y }
+                    intersectionBetweenCircles p1 persAtom.Radius p2 i_r,
+                    p1, persAtom.Radius,
+                    p2, i_r,
+                    other, other.Radius)
+
+            [ for intersection, p1, r1, p2, r2, other, rOther in intersections do
                 match intersection with
                 | None -> ()
                 | Some (l1, l2) ->
@@ -79,8 +96,9 @@ let clip (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecul
                         match sameSideOfLine (l1, l2) p1 p2 with
                         | true ->
                             match p1.Distance p2 with
-                            | x when x < r2 -> ExcludeSide p1
-                            | _ -> IncludeSide p1
+                            | x when x < r1 && r1 < rOther  -> IncludeBothSides
+                            | x when x < r1 -> IncludeSide p1
+                            | _ -> ExcludeSide p1
                         | false -> IncludeSide p1
                     yield { Line = l1, l2; SelectForSide = p } ]
 

@@ -102,7 +102,7 @@ let draw
                   Radius = perspectiveAtom.Radius
                   ClipPaths =
                       match options.Depiction with
-                      | Filled -> clip perspectiveAtom perspectiveMol atom mol
+                      | Filled -> clip pov perspectiveAtom perspectiveMol atom mol
                       | _ -> []
                 })
           Bonds = perspectiveMol.Bonds }

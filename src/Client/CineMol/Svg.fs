@@ -16,32 +16,21 @@ let header ((xMin, yMin, width, height): ViewBox) =
     \n\tviewBox=\"{xMin * 1.0} {yMin * 1.0} {width * 1.0} {height * 1.0}\"\
     \n>"
 
-
-//            let constructCylinder p1 p2 =
-//                let width = 0.05 * bond.Scaling
-//                // Construct cylinder for bond line
-//                let slope = calcSlope p1 p2
-//                let perpSlope = -1.0 * (1.0 / slope)  // Opposite reciprocal to get perpendicular slope
-//                let t =  width / Math.Sqrt (1.0 + Math.Pow(perpSlope, 2.0))
-//                let sTop: Point2D = { X = round (p1.X + t); Y = round (p1.Y + (perpSlope * t)) }
-//                let sBot: Point2D = { X = round (p1.X - t); Y = round (p1.Y - (perpSlope * t)) }
-//                let eTop: Point2D = { X = round (p2.X + t); Y = round (p2.Y + (perpSlope * t)) }
-//                let eBot: Point2D = { X = round (p2.X - t); Y = round (p2.Y - (perpSlope * t)) }
-//                let sSweep, eSweep = if p1.Y > p2.Y then 1, 0 else 0, 1
-//                sTop, sBot, eTop, eBot, sSweep, eSweep
-
 // =====================================================================================================================
 // Style
 // =====================================================================================================================
 let clippingToMask (a: ProjectedAtomInfo) (c: ClipPath) : string =
     let str = floatToStr
-    let l1, l2 = c.Line
-//    let l1New: Point2D = {
-//        X = l1.X + 10.0 * (l1.FindVector l2).X
-//        Y = l1.Y + a.Radius * (l1.FindVector l2).Y }
-//    let l2New: Point2D = {
-//        X = l2.X - a.Radius * (l2.FindVector l1).X
-//        Y = l2.Y - a.Radius * (l2.FindVector l1).Y }
+    let og_l1, og_l2 = c.Line
+
+    let l1New: Point2D = {
+        X = og_l1.X - a.Radius * (og_l1.FindVector og_l2).X
+        Y = og_l1.Y - a.Radius * (og_l1.FindVector og_l2).Y }
+    let l2New: Point2D = {
+        X = og_l2.X - a.Radius * (og_l2.FindVector og_l1).X
+        Y = og_l2.Y - a.Radius * (og_l2.FindVector og_l1).Y }
+
+    let l1, l2 = l1New, l2New
 
     let width = 2.0 * a.Radius  // diameter; don't need more
     let clippingSlope = calcSlope l1 l2
@@ -57,14 +46,43 @@ let clippingToMask (a: ProjectedAtomInfo) (c: ClipPath) : string =
         match c.SelectForSide with
         | IncludeSide p ->
             match sameSideOfLine (l1, l2) p l1a with
-            | true -> l1b, l2b
-            | false -> l1a, l2a
+            | true -> Some l1b, Some l2b
+            | false -> Some l1a, Some l2a
         | ExcludeSide p ->
             match sameSideOfLine (l1, l2) p l1a with
-            | true -> l1a, l2a
-            | false -> l1b, l2b
+            | true -> Some l1a, Some l2a
+            | false -> Some l1b, Some l2b
+        | IncludeBothSides -> None, None
 
-    $"<polygon points=\"{str l1.X},{str l1.Y} {str l2.X},{str l2.Y} {str l2NewParallel.X},{str l2NewParallel.Y} {str l1NewParallel.X},{str l1NewParallel.Y}\" fill=\"black\"/>"
+    match l1NewParallel, l2NewParallel with
+    | Some l1NewParallel, Some l2NewParallel ->
+        let m = og_l1.Midpoint og_l2
+        let t =  (0.1 * og_l1.Distance og_l2) / Math.Sqrt (1.0 + Math.Pow(perpSlope, 2.0))
+        let qa: Point2D = { X = m.X + t; Y = m.Y + (perpSlope * t) }
+        let qb: Point2D = { X = m.X - t; Y = m.Y - (perpSlope * t) }
+        let q =
+            match c.SelectForSide with
+            | IncludeSide p ->
+                match sameSideOfLine (og_l1, og_l2) p qa with
+                | true -> Some qa
+                | false -> Some qb
+            | ExcludeSide p ->
+                match sameSideOfLine (og_l1, og_l2) p qa with
+                | true -> Some qb
+                | false -> Some qa
+            | IncludeBothSides -> None
+
+        match q with
+        | Some q ->
+            $"<path d=\"
+                M {str l1.X} {str l1.Y}
+                Q {str q.X} {str q.Y} {str l2.X} {str l2.Y}
+                L {str l2NewParallel.X} {str l2NewParallel.Y}
+                L {str l1NewParallel.X} {str l1NewParallel.Y}
+                Z\"
+            fill=\"black\"/>"
+        | None -> ""
+    | _ -> ""
 
 
 let writeAtomDefs (viewBox: ViewBox) (ballAndStick: bool) (atom: ProjectedAtomInfo) : string =
@@ -101,7 +119,7 @@ let writeAtomDefs (viewBox: ViewBox) (ballAndStick: bool) (atom: ProjectedAtomIn
 
         let cx = atom.Center.X |> round 3 |> str
         let cy = atom.Center.Y |> round 3 |> str
-        let r = atom.Radius |> round 3 |> str
+        let _ = atom.Radius |> round 3 |> str
 
         let x, y, w, h = viewBox
 
@@ -308,7 +326,7 @@ let writeBallAndStick (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : s
             let sBot: Point2D = { X = round (sProj.X - t); Y = round (sProj.Y - (perpSlope * t)) }
             let eTop: Point2D = { X = round (eProj.X + t); Y = round (eProj.Y + (perpSlope * t)) }
             let eBot: Point2D = { X = round (eProj.X - t); Y = round (eProj.Y - (perpSlope * t)) }
-            let sSweep, eSweep = if sProj.Y > eProj.Y then 1, 0 else 0, 1
+            let sSweep, _ = if sProj.Y > eProj.Y then 1, 0 else 0, 1
 
             match bondEnd with
             | Start ->
@@ -388,8 +406,8 @@ let writeBallAndStick (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : s
                 // TODO: use large arc flag and not sweep flag
 
 
-            let sTop1, sBot1, eTop1, eBot1, sSweep1, eSweep1 = constructCylinder aSideTop aSideBot
-            let sTop2, sBot2, eTop2, eBot2, sSweep2, eSweep2 = constructCylinder bSideTop bSideBot
+            let sTop1, sBot1, eTop1, eBot1, sSweep1, _ = constructCylinder aSideTop aSideBot
+            let sTop2, sBot2, eTop2, eBot2, sSweep2, _ = constructCylinder bSideTop bSideBot
 
             let bondEnd =
                 match bondEnd with

@@ -139,6 +139,7 @@ type ClipPath = { Line: Point2D * Point2D; SelectForSide: SelectForSide }
 and SelectForSide =
     | IncludeSide of Point2D
     | ExcludeSide of Point2D
+    | IncludeBothSides
 
 type AtomInfo =
     { Index: Index
