@@ -9,7 +9,7 @@ let intersectionBetweenCircles
     (r_p1: float)
     (c_p2: Point2D)
     (r_p2: float)
-    : Line option =
+    : (Point2D * Point2D) option =
     /// Calculate the distance between the center of the two circles
     let d = Math.Sqrt((c_p2.X - c_p1.X) ** 2.0 + (c_p2.Y - c_p1.Y) ** 2.0)
 
@@ -40,7 +40,14 @@ let intersectionBetweenCircles
 let calcSlope (p1: Point2D) (p2: Point2D) : float =
     (p2.Y - p1.Y) / (p2.X - p1.X)
 
-let clip (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecule) : CircleClipping list =
+let sameSideOfLine (line: Point2D * Point2D) (p1: Point2D) (p2: Point2D) : bool =
+    let l1, l2 = line
+    let d (p: Point2D) = (p.X - l1.X) * (l2.Y - l1.Y) - (p.Y - l1.Y) * (l2.X - l1.X)
+    match d p1 > 0.0, d p2 > 0.0 with
+    | b1, b2 when b1 = b2 -> true
+    | _ -> false
+
+let clip (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecule) : ClipPath list =
     let clippingAtoms = [|
         for persOtherAtom, otherAtom in List.zip persMol.Atoms mol.Atoms do
             match atom.Intersects otherAtom with
@@ -63,21 +70,21 @@ let clip (persAtom: AtomInfo) (persMol: Molecule) (atom: AtomInfo) (mol: Molecul
                 |> Array.map (fun persOtherAtom ->
                     let p1: Point2D = { X = persAtom.Center.X; Y = persAtom.Center.Y }
                     let p2: Point2D = { X = persOtherAtom.Center.X; Y = persOtherAtom.Center.Y }
-                    intersectionBetweenCircles p1 persAtom.Radius p2 persOtherAtom.Radius, p1, p2)
-            [ for intersection, p1, p2 in intersections do
+                    intersectionBetweenCircles p1 persAtom.Radius p2 persOtherAtom.Radius, p1, persAtom.Radius, p2, persOtherAtom.Radius)
+            [ for intersection, p1, _, p2, r2 in intersections do
                 match intersection with
                 | None -> ()
                 | Some (l1, l2) ->
-                    let d (p: Point2D) = (p.X - l1.X) * (l2.Y - l1.Y) - (p.Y - l1.Y) * (l2.X - l1.X)
-                    yield {
-                        Line = l1, l2
-                        AtomCentersPosition =
-                            match d p1 > 0.0, d p2 > 0.0 with
-                            | b1, b2 when b1 = b2 -> SameSide
-                            | _ -> OppositeSide
-                    } ]
+                    let p =
+                        match sameSideOfLine (l1, l2) p1 p2 with
+                        | true ->
+                            match p1.Distance p2 with
+                            | x when x < r2 -> ExcludeSide p1
+                            | _ -> IncludeSide p1
+                        | false -> IncludeSide p1
+                    yield { Line = l1, l2; SelectForSide = p } ]
 
-let intersectionBetweenLines (l1: Line) (l2: Line) : Point2D option =
+let intersectionBetweenLines (l1: Point2D * Point2D) (l2: Point2D * Point2D) : Point2D option =
     let p1, p2 = l1
     let p3, p4 = l2
     let a1 = calcSlope p1 p2
@@ -88,7 +95,11 @@ let intersectionBetweenLines (l1: Line) (l2: Line) : Point2D option =
     else
         let c1 = p1.Y - (a1 * p1.X)
         let c2 = p3.Y - (a2 * p3.X)
-        let x = (c1 - c2) / (a1 - a2)
-        let y = (a1 * x) + c1
-        Some { X = x; Y = y }
+        if (c1 = infinity || c1 = -infinity) || (c2 = infinity || c2 = -infinity) then
+            /// Intersection happens somewhere off-screen
+            None
+        else
+            let x = (c1 - c2) / (a2 - a1)
+            let y = (a1 * x) + c1
+            Some { X = x; Y = y }
 

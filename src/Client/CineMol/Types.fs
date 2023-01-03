@@ -135,9 +135,10 @@ type SphereSphereIntersection =
     | IntersectionPoint of Point3D
     | IntersectionCircle of Point3D * Radius * Vector3D
 
-type AtomCentersPosition = | SameSide | OppositeSide
-and CircleClipping = { Line: Line; AtomCentersPosition: AtomCentersPosition }
-and Line = Point2D * Point2D
+type ClipPath = { Line: Point2D * Point2D; SelectForSide: SelectForSide }
+and SelectForSide =
+    | IncludeSide of Point2D
+    | ExcludeSide of Point2D
 
 type AtomInfo =
     { Index: Index
@@ -197,7 +198,7 @@ type ProjectedAtomInfo =
       AtomType: AtomType
       Center: Point2D
       Radius: Radius
-      Clippings: CircleClipping list }
+      ClipPaths: ClipPath list }
 
 
 type BondInfo =
