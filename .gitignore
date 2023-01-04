@@ -1,4 +1,5 @@
 .fable/
+!./cinemol_py/fable_modules
 *.fs.js
 *.fs.js.map
 .fake/
@@ -13,7 +14,6 @@ output/
 packages/
 paket-files/
 node_modules/
-#fable_modules/
 release.cmd
 release.sh
 *.orig
