@@ -1,5 +1,5 @@
 .fable/
-!cinemol_py/fable/
+!cinemol_py/*
 *.fs.js
 *.fs.js.map
 .fake/
