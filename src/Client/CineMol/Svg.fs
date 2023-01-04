@@ -326,7 +326,8 @@ let writeBallAndStick (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : s
             let sBot: Point2D = { X = round (sProj.X - t); Y = round (sProj.Y - (perpSlope * t)) }
             let eTop: Point2D = { X = round (eProj.X + t); Y = round (eProj.Y + (perpSlope * t)) }
             let eBot: Point2D = { X = round (eProj.X - t); Y = round (eProj.Y - (perpSlope * t)) }
-            let sSweep, _ = if sProj.Y > eProj.Y then 1, 0 else 0, 1
+            // let sSweep, _ = if sProj.Y > eProj.Y then 1, 0 else 0, 1
+            let sSweep = if sProj.Y > eProj.Y then 1 else 0
 
             match bondEnd with
             | Start ->
@@ -401,13 +402,14 @@ let writeBallAndStick (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : s
                 let sBot: Point2D = { X = round (p1.X - t); Y = round (p1.Y - (perpSlope * t)) }
                 let eTop: Point2D = { X = round (p2.X + t); Y = round (p2.Y + (perpSlope * t)) }
                 let eBot: Point2D = { X = round (p2.X - t); Y = round (p2.Y - (perpSlope * t)) }
-                let sSweep, eSweep = if p1.Y > p2.Y then 1, 0 else 0, 1
-                sTop, sBot, eTop, eBot, sSweep, eSweep
+                // let sSweep, eSweep = if p1.Y > p2.Y then 1, 0 else 0, 1
+                let (sSweep: int) = if p1.Y > p2.Y then 1 else 0
+                sTop, sBot, eTop, eBot, sSweep
                 // TODO: use large arc flag and not sweep flag
 
 
-            let sTop1, sBot1, eTop1, eBot1, sSweep1, _ = constructCylinder aSideTop aSideBot
-            let sTop2, sBot2, eTop2, eBot2, sSweep2, _ = constructCylinder bSideTop bSideBot
+            let sTop1, sBot1, eTop1, eBot1, sSweep1 = constructCylinder aSideTop aSideBot
+            let sTop2, sBot2, eTop2, eBot2, sSweep2 = constructCylinder bSideTop bSideBot
 
             let bondEnd =
                 match bondEnd with

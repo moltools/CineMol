@@ -348,7 +348,7 @@ def write_ball_and_stick(atoms: FSharpList[ProjectedAtomInfo], bonds: FSharpList
             s_bot: Point2D = Point2D(round(s_proj_2.X - t), round(s_proj_2.Y - (perp_slope * t)))
             e_top: Point2D = Point2D(round(e_proj_2.X + t), round(e_proj_2.Y + (perp_slope * t)))
             e_bot: Point2D = Point2D(round(e_proj_2.X - t), round(e_proj_2.Y - (perp_slope * t)))
-            s_sweep: int = ((1, 0)) if (s_proj_2.Y > e_proj_2.Y) else ((0, 1))[0] or 0
+            s_sweep: int = (1 if (s_proj_2.Y > e_proj_2.Y) else 0) or 0
             if tupled_arg[0].tag == 1:
                 return ((((((((((((((((((((((((((((("<path \n\tclass=\"bond-" + str(bond.Index)) + "-atom-") + str(e.Index)) + "\"\n                \n\tstyle=\"\"\n                \n\td= \n\t\t\"M ") + float_to_str(s_top.X)) + " ") + float_to_str(s_top.Y)) + "\n\t\tA ") + float_to_str(width)) + " ") + float_to_str(width)) + " 0 1 ") + int_to_str(s_sweep)) + " ") + float_to_str(s_bot.X)) + " ") + float_to_str(s_bot.Y)) + "\n\t\tL ") + float_to_str(e_bot.X)) + " ") + float_to_str(e_bot.Y)) + "\n\t\tL ") + float_to_str(e_top.X)) + " ") + float_to_str(e_top.Y)) + "\n\t\tL ") + float_to_str(s_top.X)) + " ") + float_to_str(s_top.Y)) + "\"\n/>"
 
@@ -370,27 +370,26 @@ def write_ball_and_stick(atoms: FSharpList[ProjectedAtomInfo], bonds: FSharpList
             width_1: float = 0.1 * bond_1.Scaling
             perp_slope_1: float = -1.0 * divide(1.0, calc_slope(s_proj_5, e_proj_5))
             t_1: float = divide(width_1, sqrt(1.0 + pow(perp_slope_1, 2.0)))
-            pattern_input_1: Tuple[Point2D, Point2D] = (Point2D(round(s_proj_5.X + t_1), round(s_proj_5.Y + (perp_slope_1 * t_1))), Point2D(round(e_proj_5.X + t_1), round(e_proj_5.Y + (perp_slope_1 * t_1))))
-            pattern_input_2: Tuple[Point2D, Point2D] = (Point2D(round(s_proj_5.X - t_1), round(s_proj_5.Y - (perp_slope_1 * t_1))), Point2D(round(e_proj_5.X - t_1), round(e_proj_5.Y - (perp_slope_1 * t_1))))
-            def construct_cylinder(p1: Point2D, p2: Point2D, tupled_arg_1: Any=tupled_arg_1) -> Tuple[Point2D, Point2D, Point2D, Point2D, int, int]:
+            pattern_input: Tuple[Point2D, Point2D] = (Point2D(round(s_proj_5.X + t_1), round(s_proj_5.Y + (perp_slope_1 * t_1))), Point2D(round(e_proj_5.X + t_1), round(e_proj_5.Y + (perp_slope_1 * t_1))))
+            pattern_input_1: Tuple[Point2D, Point2D] = (Point2D(round(s_proj_5.X - t_1), round(s_proj_5.Y - (perp_slope_1 * t_1))), Point2D(round(e_proj_5.X - t_1), round(e_proj_5.Y - (perp_slope_1 * t_1))))
+            def construct_cylinder(p1: Point2D, p2: Point2D, tupled_arg_1: Any=tupled_arg_1) -> Tuple[Point2D, Point2D, Point2D, Point2D, int]:
                 width_2: float = 0.05 * bond_1.Scaling
                 perp_slope_2: float = -1.0 * divide(1.0, calc_slope(p1, p2))
                 t_2: float = divide(width_2, sqrt(1.0 + pow(perp_slope_2, 2.0)))
-                pattern_input_3: Tuple[int, int] = ((1, 0)) if (p1.Y > p2.Y) else ((0, 1))
-                return (Point2D(round(p1.X + t_2), round(p1.Y + (perp_slope_2 * t_2))), Point2D(round(p1.X - t_2), round(p1.Y - (perp_slope_2 * t_2))), Point2D(round(p2.X + t_2), round(p2.Y + (perp_slope_2 * t_2))), Point2D(round(p2.X - t_2), round(p2.Y - (perp_slope_2 * t_2))), pattern_input_3[0], pattern_input_3[1])
+                return (Point2D(round(p1.X + t_2), round(p1.Y + (perp_slope_2 * t_2))), Point2D(round(p1.X - t_2), round(p1.Y - (perp_slope_2 * t_2))), Point2D(round(p2.X + t_2), round(p2.Y + (perp_slope_2 * t_2))), Point2D(round(p2.X - t_2), round(p2.Y - (perp_slope_2 * t_2))), 1 if (p1.Y > p2.Y) else 0)
 
-            pattern_input_4: Tuple[Point2D, Point2D, Point2D, Point2D, int, int] = construct_cylinder(pattern_input_1[0], pattern_input_1[1])
-            s_top1: Point2D = pattern_input_4[0]
-            s_bot1: Point2D = pattern_input_4[1]
-            e_top1: Point2D = pattern_input_4[2]
-            e_bot1: Point2D = pattern_input_4[3]
-            pattern_input_5: Tuple[Point2D, Point2D, Point2D, Point2D, int, int] = construct_cylinder(pattern_input_2[0], pattern_input_2[1])
-            s_top2: Point2D = pattern_input_5[0]
-            s_bot2: Point2D = pattern_input_5[1]
-            e_top2: Point2D = pattern_input_5[2]
-            e_bot2: Point2D = pattern_input_5[3]
+            pattern_input_2: Tuple[Point2D, Point2D, Point2D, Point2D, int] = construct_cylinder(pattern_input[0], pattern_input[1])
+            s_top1: Point2D = pattern_input_2[0]
+            s_bot1: Point2D = pattern_input_2[1]
+            e_top1: Point2D = pattern_input_2[2]
+            e_bot1: Point2D = pattern_input_2[3]
+            pattern_input_3: Tuple[Point2D, Point2D, Point2D, Point2D, int] = construct_cylinder(pattern_input_1[0], pattern_input_1[1])
+            s_top2: Point2D = pattern_input_3[0]
+            s_bot2: Point2D = pattern_input_3[1]
+            e_top2: Point2D = pattern_input_3[2]
+            e_bot2: Point2D = pattern_input_3[3]
             bond_end_4: int = (e_1.Index if (tupled_arg_1[0].tag == 1) else s_1.Index) or 0
-            return join("", to_enumerable([((((((((((((((((((((((((((((("<path \n\tclass=\"bond-" + str(bond_1.Index)) + "-atom-") + str(bond_end_4)) + "\"\n                \n\tstyle=\"\"\n                \n\td= \n\t\t\"M ") + float_to_str(s_top1.X)) + " ") + float_to_str(s_top1.Y)) + "\n\t\tA ") + float_to_str(width_1)) + " ") + float_to_str(width_1)) + " 0 0 ") + int_to_str(pattern_input_4[4])) + " ") + float_to_str(s_bot1.X)) + " ") + float_to_str(s_bot1.Y)) + "\n\t\tL ") + float_to_str(e_bot1.X)) + " ") + float_to_str(e_bot1.Y)) + "\n\t\tL ") + float_to_str(e_top1.X)) + " ") + float_to_str(e_top1.Y)) + "\n\t\tL ") + float_to_str(s_top1.X)) + " ") + float_to_str(s_top1.Y)) + "\"\n/>", ((((((((((((((((((((((((((((("<path \n\tclass=\"bond-" + str(bond_1.Index)) + "-atom-") + str(bond_end_4)) + "\"\n                \n\tstyle=\"\"\n                \n\td= \n\t\t\"M ") + float_to_str(s_top2.X)) + " ") + float_to_str(s_top2.Y)) + "\n\t\tA ") + float_to_str(width_1)) + " ") + float_to_str(width_1)) + " 0 0 ") + int_to_str(pattern_input_5[4])) + " ") + float_to_str(s_bot2.X)) + " ") + float_to_str(s_bot2.Y)) + "\n\t\tL ") + float_to_str(e_bot2.X)) + " ") + float_to_str(e_bot2.Y)) + "\n\t\tL ") + float_to_str(e_top2.X)) + " ") + float_to_str(e_top2.Y)) + "\n\t\tL ") + float_to_str(s_top2.X)) + " ") + float_to_str(s_top2.Y)) + "\"\n/>"]))
+            return join("", to_enumerable([((((((((((((((((((((((((((((("<path \n\tclass=\"bond-" + str(bond_1.Index)) + "-atom-") + str(bond_end_4)) + "\"\n                \n\tstyle=\"\"\n                \n\td= \n\t\t\"M ") + float_to_str(s_top1.X)) + " ") + float_to_str(s_top1.Y)) + "\n\t\tA ") + float_to_str(width_1)) + " ") + float_to_str(width_1)) + " 0 0 ") + int_to_str(pattern_input_2[4])) + " ") + float_to_str(s_bot1.X)) + " ") + float_to_str(s_bot1.Y)) + "\n\t\tL ") + float_to_str(e_bot1.X)) + " ") + float_to_str(e_bot1.Y)) + "\n\t\tL ") + float_to_str(e_top1.X)) + " ") + float_to_str(e_top1.Y)) + "\n\t\tL ") + float_to_str(s_top1.X)) + " ") + float_to_str(s_top1.Y)) + "\"\n/>", ((((((((((((((((((((((((((((("<path \n\tclass=\"bond-" + str(bond_1.Index)) + "-atom-") + str(bond_end_4)) + "\"\n                \n\tstyle=\"\"\n                \n\td= \n\t\t\"M ") + float_to_str(s_top2.X)) + " ") + float_to_str(s_top2.Y)) + "\n\t\tA ") + float_to_str(width_1)) + " ") + float_to_str(width_1)) + " 0 0 ") + int_to_str(pattern_input_3[4])) + " ") + float_to_str(s_bot2.X)) + " ") + float_to_str(s_bot2.Y)) + "\n\t\tL ") + float_to_str(e_bot2.X)) + " ") + float_to_str(e_bot2.Y)) + "\n\t\tL ") + float_to_str(e_top2.X)) + " ") + float_to_str(e_top2.Y)) + "\n\t\tL ") + float_to_str(s_top2.X)) + " ") + float_to_str(s_top2.Y)) + "\"\n/>"]))
 
         return join("", map_1(mapping_1, [(BondEnd(0), s_proj_4, Point2D__Midpoint_591E284C(s_proj_4, e_proj_4)), (BondEnd(1), Point2D__Midpoint_591E284C(s_proj_4, e_proj_4), e_proj_4)], None))
 
