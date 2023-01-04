@@ -41,7 +41,7 @@ def UnexpectedCharToEncode__Equals_229D3F39(this: Exception, obj: Exception) -> 
 
 
 
-def _expr3() -> TypeInfo:
+def _expr2() -> TypeInfo:
     return union_type("Client.CineMol.Encoding.Encoding", [], Encoding, lambda: [[]])
 
 
@@ -56,7 +56,7 @@ class Encoding(Union):
         return ["ISO_8859_1"]
 
 
-Encoding_reflection = _expr3
+Encoding_reflection = _expr2
 
 def Encoding__GetEncoding_244C7CD6(x: Encoding, c: str) -> uint8:
     (pattern_matching_result,) = (None,)
