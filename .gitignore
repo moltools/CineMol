@@ -13,7 +13,7 @@ output/
 packages/
 paket-files/
 node_modules/
-fable_modules/
+#fable_modules/
 release.cmd
 release.sh
 *.orig
