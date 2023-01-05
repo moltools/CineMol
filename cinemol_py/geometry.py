@@ -56,13 +56,13 @@ def same_side_of_line(line_: Point2D, line__1: Point2D, p1: Point2D, p2: Point2D
 
 def clip(pov: Point3D, pers_atom: AtomInfo, pers_mol: Molecule, atom: AtomInfo, mol: Molecule) -> FSharpList[ClipPath]:
     dist_pov_atom: float = Point3D__Distance_591E286D(pov, atom.Center)
-    def _arrow43(__unit: None=None, pov: Point3D=pov, pers_atom: AtomInfo=pers_atom, pers_mol: Molecule=pers_mol, atom: AtomInfo=atom, mol: Molecule=mol) -> IEnumerable_1[AtomInfo]:
-        def _arrow42(a: AtomInfo) -> IEnumerable_1[AtomInfo]:
+    def _arrow29(__unit: None=None, pov: Point3D=pov, pers_atom: AtomInfo=pers_atom, pers_mol: Molecule=pers_mol, atom: AtomInfo=atom, mol: Molecule=mol) -> IEnumerable_1[AtomInfo]:
+        def _arrow28(a: AtomInfo) -> IEnumerable_1[AtomInfo]:
             return singleton(a) if (dist_pov_atom < Point3D__Distance_591E286D(pov, a.Center)) else empty()
 
-        return collect(_arrow42, mol.Atoms)
+        return collect(_arrow28, mol.Atoms)
 
-    atoms_for_clipping: FSharpList[AtomInfo] = to_list(delay(_arrow43))
+    atoms_for_clipping: FSharpList[AtomInfo] = to_list(delay(_arrow29))
     def mapping(a_1: AtomInfo, pov: Point3D=pov, pers_atom: AtomInfo=pers_atom, pers_mol: Molecule=pers_mol, atom: AtomInfo=atom, mol: Molecule=mol) -> int:
         return a_1.Index
 

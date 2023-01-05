@@ -109,6 +109,8 @@ let parseSdf (sdf: string) : Molecule[] =
                     End = e
                     BondType = bondType
                     Scaling = 1.0
+                    StartColor = None
+                    EndColor = None
                 }
                 bondCount <- bondCount + 1
                 let revBond: BondInfo = {
@@ -117,6 +119,8 @@ let parseSdf (sdf: string) : Molecule[] =
                     End = s
                     BondType = bondType
                     Scaling = 1.0
+                    StartColor = None
+                    EndColor = None
                 }
                 bonds <- bonds @ [ bond; revBond ]
             | _ -> ()

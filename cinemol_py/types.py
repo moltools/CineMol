@@ -1,12 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from math import (cos, sin, pow, inf, acos)
-from typing import (Any, List, Tuple, Callable)
+from typing import (Any, List, Tuple, Callable, Optional)
 from .fable_modules.fable_library.double import (sqrt, divide)
 from .fable_modules.fable_library.list import FSharpList
-from .fable_modules.fable_library.reflection import (TypeInfo, float64_type, record_type, union_type, tuple_type, int32_type, list_type)
+from .fable_modules.fable_library.reflection import (TypeInfo, float64_type, record_type, union_type, tuple_type, int32_type, option_type, list_type)
 from .fable_modules.fable_library.types import (Record, Array, Union)
-from .styles import (AtomType, AtomType_reflection)
+from .styles import (Color, AtomType, AtomType_reflection, Color_reflection)
 
 def _expr6() -> TypeInfo:
     return record_type("Client.CineMol.Types.Zoom", [], Zoom, lambda: [("Ratio", float64_type)])
@@ -284,7 +284,7 @@ class SelectForSide(Union):
 SelectForSide_reflection = _expr18
 
 def _expr19() -> TypeInfo:
-    return record_type("Client.CineMol.Types.AtomInfo", [], AtomInfo, lambda: [("Index", int32_type), ("AtomType", AtomType_reflection()), ("Center", Point3D_reflection()), ("Radius", float64_type)])
+    return record_type("Client.CineMol.Types.AtomInfo", [], AtomInfo, lambda: [("Index", int32_type), ("AtomType", AtomType_reflection()), ("Center", Point3D_reflection()), ("Radius", float64_type), ("Color", option_type(Color_reflection()))])
 
 
 @dataclass(eq = False, repr = False)
@@ -293,11 +293,12 @@ class AtomInfo(Record):
     AtomType: AtomType
     Center: Point3D
     Radius: float
+    Color: Optional[Color]
 
 AtomInfo_reflection = _expr19
 
 def AtomInfo__Rotate(x: AtomInfo, axis: Axis, rad: float) -> AtomInfo:
-    return AtomInfo(x.Index, x.AtomType, Point3D__Rotate(x.Center, axis, rad), x.Radius)
+    return AtomInfo(x.Index, x.AtomType, Point3D__Rotate(x.Center, axis, rad), x.Radius, x.Color)
 
 
 def AtomInfo__Intersects_Z6467FD91(this: AtomInfo, other: AtomInfo) -> bool:
@@ -344,7 +345,7 @@ def AtomInfo__Intersection_Z6467FD91(this: AtomInfo, other: AtomInfo) -> SphereS
 
 
 def _expr21() -> TypeInfo:
-    return record_type("Client.CineMol.Types.ProjectedAtomInfo", [], ProjectedAtomInfo, lambda: [("Index", int32_type), ("AtomType", AtomType_reflection()), ("Center", Point2D_reflection()), ("Radius", float64_type), ("ClipPaths", list_type(ClipPath_reflection()))])
+    return record_type("Client.CineMol.Types.ProjectedAtomInfo", [], ProjectedAtomInfo, lambda: [("Index", int32_type), ("AtomType", AtomType_reflection()), ("Center", Point2D_reflection()), ("Radius", float64_type), ("ClipPaths", list_type(ClipPath_reflection())), ("Color", option_type(Color_reflection()))])
 
 
 @dataclass(eq = False, repr = False)
@@ -354,11 +355,12 @@ class ProjectedAtomInfo(Record):
     Center: Point2D
     Radius: float
     ClipPaths: FSharpList[ClipPath]
+    Color: Optional[Color]
 
 ProjectedAtomInfo_reflection = _expr21
 
 def _expr22() -> TypeInfo:
-    return record_type("Client.CineMol.Types.BondInfo", [], BondInfo, lambda: [("Index", int32_type), ("Start", int32_type), ("End", int32_type), ("BondType", BondType_reflection()), ("Scaling", float64_type)])
+    return record_type("Client.CineMol.Types.BondInfo", [], BondInfo, lambda: [("Index", int32_type), ("Start", int32_type), ("End", int32_type), ("BondType", BondType_reflection()), ("Scaling", float64_type), ("StartColor", option_type(Color_reflection())), ("EndColor", option_type(Color_reflection()))])
 
 
 @dataclass(eq = False, repr = False)
@@ -368,6 +370,8 @@ class BondInfo(Record):
     End: int
     BondType: BondType
     Scaling: float
+    StartColor: Optional[Color]
+    EndColor: Optional[Color]
 
 BondInfo_reflection = _expr22
 
@@ -389,7 +393,7 @@ class BondType(Union):
 BondType_reflection = _expr23
 
 def create_atom(index: int, atom_type: AtomType, c: Point3D, r: float) -> AtomInfo:
-    return AtomInfo(index, atom_type, c, r)
+    return AtomInfo(index, atom_type, c, r, None)
 
 
 def _expr24() -> TypeInfo:

@@ -11,7 +11,12 @@ def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sdf", required=True, type=str)
     parser.add_argument("--hs", action="store_true")
-    parser.add_argument("--depiction", choices=[0, 1, 2], default=1)
+    parser.add_argument("--depiction", type=int, choices=[0, 1, 2], default=1)
+
+    parser.add_argument("--xrot", type=float, default=0.0)
+    parser.add_argument("--yrot", type=float, default=0.0)
+    parser.add_argument("--zrot", type=float, default=0.0)
+
     return parser.parse_args()
 
 
@@ -22,8 +27,9 @@ def main() -> None:
     view_box = None 
     options = drawing.DrawOptions_get_init()
     options.Depiction = types.Depiction(args.depiction)
+
     options.ShowHydrogenAtoms = args.hs 
-    rotation = types.Rotation(0.0, 0.0, 0.0)
+    rotation = types.Rotation(args.xrot, args.yrot, args.zrot)
     zoom = types.Zoom(1.0)
 
     # atoms = empty()

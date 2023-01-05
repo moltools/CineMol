@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import (Any, Callable, Tuple, Optional)
 from .fable_modules.fable_library.double import divide
-from .fable_modules.fable_library.list import (FSharpList, filter, map, max, sort_by, empty, zip)
+from .fable_modules.fable_library.list import (FSharpList, filter, map, max, sort_by, empty, zip, append, singleton)
 from .fable_modules.fable_library.reflection import (TypeInfo, bool_type, record_type)
 from .fable_modules.fable_library.types import Record
 from .fable_modules.fable_library.util import (equals, compare_primitives)
@@ -43,10 +43,10 @@ def rotate_atoms(axis: Axis, rads: float, atoms: FSharpList[AtomInfo]) -> FSharp
 
 def change_distance_to_atoms(ratio: float, mol: Molecule) -> Molecule:
     def transform_atom(a: AtomInfo, ratio: float=ratio, mol: Molecule=mol) -> AtomInfo:
-        return AtomInfo(a.Index, a.AtomType, Point3D(a.Center.X * ratio, a.Center.Y * ratio, a.Center.Z * ratio), a.Radius * ratio)
+        return AtomInfo(a.Index, a.AtomType, Point3D(a.Center.X * ratio, a.Center.Y * ratio, a.Center.Z * ratio), a.Radius * ratio, a.Color)
 
     def transform_bond(b: BondInfo, ratio: float=ratio, mol: Molecule=mol) -> BondInfo:
-        return BondInfo(b.Index, b.Start, b.End, b.BondType, b.Scaling * ratio)
+        return BondInfo(b.Index, b.Start, b.End, b.BondType, b.Scaling * ratio, b.StartColor, b.EndColor)
 
     def _arrow58(a_1: AtomInfo, ratio: float=ratio, mol: Molecule=mol) -> AtomInfo:
         return transform_atom(a_1)
@@ -74,8 +74,12 @@ def draw(view_box: Optional[Tuple[float, float, float, float]], options: DrawOpt
     view_box_1: Tuple[float, float, float, float] = view_box if (view_box is not None) else ((-offset_view_box, -offset_view_box, offset_view_box * 2.0, offset_view_box * 2.0))
     focal_length: float = offset_view_box
     pov: Point3D = Point3D(1E-05, 1E-05, focal_length)
+    
+    
     dist_pov_origin: float = Point3D__Distance_591E286D(pov, origin)
     mol_2: Molecule = Molecule(filter_atoms(AtomType(0), mol_1.Atoms) if (options.ShowHydrogenAtoms == False) else mol_1.Atoms, mol_1.Bonds)
+    
+    
     def projection(atom: AtomInfo, view_box: Any=view_box, options: DrawOptions=options, rotation: Rotation=rotation, zoom: Zoom=zoom, mol: Molecule=mol) -> float:
         return -1.0 * Point3D__Distance_591E286D(atom.Center, pov)
 
@@ -83,11 +87,24 @@ def draw(view_box: Optional[Tuple[float, float, float, float]], options: DrawOpt
         @property
         def Compare(self) -> Callable[[float, float], int]:
             return compare_primitives
+    
+    # added code snippet to sort atoms; wasn't compiled correctly by fable-py
+    sorted_atoms = []
+    for a in mol_2.Atoms:
+        dist = -1.0 * Point3D__Distance_591E286D(a.Center, pov)
+        sorted_atoms.append((dist, a))
+    sorted_atoms = sorted(sorted_atoms, key=lambda x: x[0])
+    sorted_atoms = [a for _, a in sorted_atoms]
+    atoms = empty()
+    for a in sorted_atoms:
+        atoms = append(atoms, singleton(a))
 
-    mol_3: Molecule = Molecule(sort_by(projection, mol_2.Atoms, ObjectExpr61()), mol_2.Bonds)
+    # mol_3: Molecule = Molecule(sort_by(projection, mol_2.Atoms, ObjectExpr61()), mol_2.Bonds)
+    mol_3: Molecule = Molecule(atoms, mol_2.Bonds)
+    
     perspective_mol: Molecule = change_distance_to_atoms(zoom.Ratio, mol_3)
     def mapping_1(atom_1: AtomInfo, view_box: Any=view_box, options: DrawOptions=options, rotation: Rotation=rotation, zoom: Zoom=zoom, mol: Molecule=mol) -> AtomInfo:
-        return AtomInfo(atom_1.Index, atom_1.AtomType, atom_1.Center, divide(dist_pov_origin, Point3D__Distance_591E286D(pov, atom_1.Center)) * atom_1.Radius)
+        return AtomInfo(atom_1.Index, atom_1.AtomType, atom_1.Center, divide(dist_pov_origin, Point3D__Distance_591E286D(pov, atom_1.Center)) * atom_1.Radius, atom_1.Color)
 
     perspective_mol_1: Molecule = Molecule(map(mapping_1, perspective_mol.Atoms), perspective_mol.Bonds)
     camera_forward: Vector3D = Vector3D(-pov.X, -pov.Y, -pov.Z)
@@ -97,7 +114,7 @@ def draw(view_box: Optional[Tuple[float, float, float, float]], options: DrawOpt
         return project_1(camera_perpendicular, camera_horizon, camera_forward, pov, focal_length, p)
 
     def set_perspective_atom(atom_2: AtomInfo, view_box: Any=view_box, options: DrawOptions=options, rotation: Rotation=rotation, zoom: Zoom=zoom, mol: Molecule=mol) -> AtomInfo:
-        return AtomInfo(atom_2.Index, atom_2.AtomType, project(atom_2.Center), atom_2.Radius)
+        return AtomInfo(atom_2.Index, atom_2.AtomType, project(atom_2.Center), atom_2.Radius, atom_2.Color)
 
     def mapping_2(atom_3: AtomInfo, view_box: Any=view_box, options: DrawOptions=options, rotation: Rotation=rotation, zoom: Zoom=zoom, mol: Molecule=mol) -> AtomInfo:
         return set_perspective_atom(atom_3)
@@ -105,7 +122,7 @@ def draw(view_box: Optional[Tuple[float, float, float, float]], options: DrawOpt
     perspective_mol_2: Molecule = Molecule(map(mapping_2, perspective_mol_1.Atoms), perspective_mol_1.Bonds)
     def mapping_3(tupled_arg: Tuple[AtomInfo, AtomInfo], view_box: Any=view_box, options: DrawOptions=options, rotation: Rotation=rotation, zoom: Zoom=zoom, mol: Molecule=mol) -> ProjectedAtomInfo:
         perspective_atom: AtomInfo = tupled_arg[0]
-        return ProjectedAtomInfo(perspective_atom.Index, perspective_atom.AtomType, Point2D(perspective_atom.Center.X, perspective_atom.Center.Y), perspective_atom.Radius, clip(pov, perspective_atom, perspective_mol_2, tupled_arg[1], mol_3) if (options.Depiction.tag == 0) else empty())
+        return ProjectedAtomInfo(perspective_atom.Index, perspective_atom.AtomType, Point2D(perspective_atom.Center.X, perspective_atom.Center.Y), perspective_atom.Radius, clip(pov, perspective_atom, perspective_mol_2, tupled_arg[1], mol_3) if (options.Depiction.tag == 0) else empty(), perspective_atom.Color)
 
     return (write_svg(view_box_1[0], view_box_1[1], view_box_1[2], view_box_1[3], options.Depiction, ProjectedMolecule(map(mapping_3, zip(perspective_mol_2.Atoms, mol_3.Atoms)), perspective_mol_2.Bonds)), view_box_1)
 

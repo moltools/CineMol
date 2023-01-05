@@ -86,11 +86,17 @@ let clippingToMask (a: ProjectedAtomInfo) (c: ClipPath) : string =
 
 
 let writeAtomDefs (viewBox: ViewBox) (ballAndStick: bool) (atom: ProjectedAtomInfo) : string =
-    let r1, g1, b1 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[0]
-    let r2, g2, b2 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[1]
-    let r3, g3, b3 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[2]
-    let r4, g4, b4 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[3]
-    let r5, g5, b5 = (getAtomColor CPK atom.AtomType).Diffuse atomColorGradient.[4]
+    let (r1, g1, b1), (r2, g2, b2), (r3, g3, b3), (r4, g4, b4), (r5, g5, b5) =
+        let color =
+            match atom.Color with
+            | None -> getAtomColor CPK atom.AtomType
+            | Some c -> c
+        color.Diffuse atomColorGradient.[0],
+        color.Diffuse atomColorGradient.[1],
+        color.Diffuse atomColorGradient.[2],
+        color.Diffuse atomColorGradient.[3],
+        color.Diffuse atomColorGradient.[4]
+
     match ballAndStick with
     | true ->
         $"\n<radialGradient\
@@ -174,8 +180,18 @@ let writeBondDefs (atoms: ProjectedAtomInfo list) (bond: BondInfo) : string =
 
     match findAtom atoms bond.Start, findAtom atoms bond.End with
     | Some s, Some e ->
-        let r3s, g3s, b3s = (getAtomColor CPK s.AtomType).Diffuse atomColorGradient.[2]
-        let r3e, g3e, b3e = (getAtomColor CPK e.AtomType).Diffuse atomColorGradient.[2]
+        let startColor =
+            match bond.StartColor with
+            | None -> getAtomColor CPK s.AtomType
+            | Some c -> c
+
+        let endColor =
+            match bond.EndColor with
+            | None -> getAtomColor CPK e.AtomType
+            | Some c -> c
+
+        let r3s, g3s, b3s = startColor.Diffuse atomColorGradient.[2]
+        let r3e, g3e, b3e = endColor.Diffuse atomColorGradient.[2]
         $"\n<linearGradient\
         \n\tid=\"linear-gradient-{bond.Index}-atom-{s.Index}\"\
         \n\tx1=\"{floatToStr s.Center.X}\"\
@@ -237,7 +253,12 @@ let writeAtomsWire (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : stri
     let mutable drawnAtoms = []
 
     let drawAtom (atom: ProjectedAtomInfo) : string =
-        let r, g, b = (getAtomColor CPK atom.AtomType).RGB
+        let color =
+            match atom.Color with
+            | Some c -> c
+            | None -> getAtomColor CPK atom.AtomType
+
+        let r, g, b = color.RGB
         $"<circle\
         \n\tclass=\"atom-{atom.Index}\"\
         \n\tstyle=\"fill:rgb({intToStr r},{intToStr g},{intToStr b})\"
@@ -248,7 +269,7 @@ let writeAtomsWire (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : stri
 
     [
         for startAtom in atoms do
-            yield drawAtom startAtom
+//            yield drawAtom startAtom
             drawnAtoms <- drawnAtoms @ [ startAtom.Index ]
             match findBonds bonds startAtom.Index with
             | [] -> ()
@@ -258,9 +279,20 @@ let writeAtomsWire (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : stri
                         match findAtom atoms atomBond.End with
                         | Some endAtom ->
                             let s, e = startAtom, endAtom
+
+                            let startColor =
+                                match s.Color with
+                                | None -> getAtomColor CPK s.AtomType
+                                | Some c -> c
+
+                            let endColor =
+                                match e.Color with
+                                | None -> getAtomColor CPK e.AtomType
+                                | Some c -> c
+
                             let m = s.Center.Midpoint e.Center
-                            let sR, sG, sB = (getAtomColor CPK s.AtomType).RGB
-                            let eR, eG, eB = (getAtomColor CPK e.AtomType).RGB
+                            let sR, sG, sB = startColor.RGB
+                            let eR, eG, eB = endColor.RGB
                             yield
                                 $"<line\
                                 \n\tx1=\"{s.Center.X}\"\
@@ -406,7 +438,6 @@ let writeBallAndStick (atoms: ProjectedAtomInfo list) (bonds: BondInfo list) : s
                 let (sSweep: int) = if p1.Y > p2.Y then 1 else 0
                 sTop, sBot, eTop, eBot, sSweep
                 // TODO: use large arc flag and not sweep flag
-
 
             let sTop1, sBot1, eTop1, eBot1, sSweep1 = constructCylinder aSideTop aSideBot
             let sTop2, sBot2, eTop2, eBot2, sSweep2 = constructCylinder bSideTop bSideBot

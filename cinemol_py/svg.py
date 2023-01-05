@@ -12,7 +12,7 @@ from .fable_modules.fable_library.types import (Array, Union, to_string)
 from .fable_modules.fable_library.util import (number_hash, IEnumerable_1, to_enumerable)
 from .geometry import (calc_slope, same_side_of_line)
 from .helpers import (float_to_str, round as round_1, int_to_str)
-from .styles import (Color__Diffuse_5E38073B, atom_color_gradient, get_atom_color, AtomColorStyle)
+from .styles import (Color, get_atom_color, AtomColorStyle, Color__Diffuse_5E38073B, atom_color_gradient)
 from .types import (ProjectedAtomInfo, ClipPath, Point2D, Point2D__FindVector_591E284C, SelectForSide, Point2D__Midpoint_591E284C, Point2D__Distance_591E284C, BondInfo, BondType, Depiction, ProjectedMolecule)
 
 def header(_arg1_: float, _arg1__1: float, _arg1__2: float, _arg1__3: float) -> str:
@@ -95,26 +95,26 @@ def clipping_to_mask(a: ProjectedAtomInfo, c: ClipPath) -> str:
 
 def write_atom_defs(view_box_: float, view_box__1: float, view_box__2: float, view_box__3: float, ball_and_stick: bool, atom: ProjectedAtomInfo) -> str:
     view_box: Tuple[float, float, float, float] = (view_box_, view_box__1, view_box__2, view_box__3)
-    pattern_input: Tuple[float, float, float] = Color__Diffuse_5E38073B(get_atom_color(AtomColorStyle(0), atom.AtomType), atom_color_gradient[0])
-    r1: float = pattern_input[0]
-    g1: float = pattern_input[1]
-    b1: float = pattern_input[2]
-    pattern_input_1: Tuple[float, float, float] = Color__Diffuse_5E38073B(get_atom_color(AtomColorStyle(0), atom.AtomType), atom_color_gradient[1])
-    r2: float = pattern_input_1[0]
-    g2: float = pattern_input_1[1]
-    b2: float = pattern_input_1[2]
-    pattern_input_2: Tuple[float, float, float] = Color__Diffuse_5E38073B(get_atom_color(AtomColorStyle(0), atom.AtomType), atom_color_gradient[2])
-    r3: float = pattern_input_2[0]
-    g3: float = pattern_input_2[1]
-    b3: float = pattern_input_2[2]
-    pattern_input_3: Tuple[float, float, float] = Color__Diffuse_5E38073B(get_atom_color(AtomColorStyle(0), atom.AtomType), atom_color_gradient[3])
-    r4: float = pattern_input_3[0]
-    g4: float = pattern_input_3[1]
-    b4: float = pattern_input_3[2]
-    pattern_input_4: Tuple[float, float, float] = Color__Diffuse_5E38073B(get_atom_color(AtomColorStyle(0), atom.AtomType), atom_color_gradient[4])
-    r5: float = pattern_input_4[0]
-    g5: float = pattern_input_4[1]
-    b5: float = pattern_input_4[2]
+    pattern_input: Tuple[Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float]]
+    color: Color
+    match_value: Optional[Color] = atom.Color
+    color = match_value if (match_value is not None) else get_atom_color(AtomColorStyle(0), atom.AtomType)
+    pattern_input = (Color__Diffuse_5E38073B(color, atom_color_gradient[0]), Color__Diffuse_5E38073B(color, atom_color_gradient[1]), Color__Diffuse_5E38073B(color, atom_color_gradient[2]), Color__Diffuse_5E38073B(color, atom_color_gradient[3]), Color__Diffuse_5E38073B(color, atom_color_gradient[4]))
+    r5: float = pattern_input[4][0]
+    r4: float = pattern_input[3][0]
+    r3: float = pattern_input[2][0]
+    r2: float = pattern_input[1][0]
+    r1: float = pattern_input[0][0]
+    g5: float = pattern_input[4][1]
+    g4: float = pattern_input[3][1]
+    g3: float = pattern_input[2][1]
+    g2: float = pattern_input[1][1]
+    g1: float = pattern_input[0][1]
+    b5: float = pattern_input[4][2]
+    b4: float = pattern_input[3][2]
+    b3: float = pattern_input[2][2]
+    b2: float = pattern_input[1][2]
+    b1: float = pattern_input[0][2]
     if ball_and_stick:
         return ((((((((((((((((((((((((((((((((((((((((((((((((((("\n<radialGradient\n\tid=\"radial-gradient-" + str(atom.Index)) + "\"\n\tcx=\"") + float_to_str(atom.Center.X)) + "\"\n\tcy=\"") + float_to_str(atom.Center.Y)) + "\"\n\tfx=\"") + float_to_str(atom.Center.X)) + "\"\n\tfy=\"") + float_to_str(atom.Center.Y)) + "\"\n\tr=\"") + float_to_str(divide(atom.Radius, 2.0) + 0.4)) + "\"\n\tgradientTransform=\"matrix(1, 0, 0, 1, 0, 0)\"\n\tgradientUnits=\"userSpaceOnUse\"\n>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[0])) + "\" stop-color=\"rgb(") + float_to_str(r1)) + ",") + float_to_str(g1)) + ",") + float_to_str(b1)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[1])) + "\" stop-color=\"rgb(") + float_to_str(r2)) + ",") + float_to_str(g2)) + ",") + float_to_str(b2)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[2])) + "\" stop-color=\"rgb(") + float_to_str(r3)) + ",") + float_to_str(g3)) + ",") + float_to_str(b3)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[3])) + "\" stop-color=\"rgb(") + float_to_str(r4)) + ",") + float_to_str(g4)) + ",") + float_to_str(b4)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[4])) + "\" stop-color=\"rgb(") + float_to_str(r5)) + ",") + float_to_str(g5)) + ",") + float_to_str(b5)) + ")\"/>\n</radialGradient>"
 
@@ -125,8 +125,8 @@ def write_atom_defs(view_box_: float, view_box__1: float, view_box__2: float, vi
         cx: str = str_1(round_1(3, atom.Center.X))
         cy: str = str_1(round_1(3, atom.Center.Y))
         str_1(round_1(3, atom.Radius))
-        def mapping(c: ClipPath, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, ball_and_stick: bool=ball_and_stick, atom: ProjectedAtomInfo=atom) -> str:
-            return clipping_to_mask(atom, c)
+        def mapping(c_1: ClipPath, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, ball_and_stick: bool=ball_and_stick, atom: ProjectedAtomInfo=atom) -> str:
+            return clipping_to_mask(atom, c_1)
 
         masks: str = join(" ", map(mapping, atom.ClipPaths))
         return (((((((((((((((((((((((((((((((((((((((((((((((((((("\n<radialGradient\n\tid=\"radial-gradient-" + str(atom.Index)) + "\"\n\tcx=\"") + cx) + "\"\n\tcy=\"") + cy) + "\"\n\tfx=\"") + cx) + "\"\n\tfy=\"") + cy) + "\"\n\tr=\"") + float_to_str(atom.Radius + 0.8)) + "\"\n\tgradientTransform=\"matrix(1, 0, 0, 1, 0, 0)\"\n\tgradientUnits=\"userSpaceOnUse\"\n>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[0])) + "\" stop-color=\"rgb(") + float_to_str(r1)) + ",") + float_to_str(g1)) + ",") + float_to_str(b1)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[1])) + "\" stop-color=\"rgb(") + float_to_str(r2)) + ",") + float_to_str(g2)) + ",") + float_to_str(b2)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[2])) + "\" stop-color=\"rgb(") + float_to_str(r3)) + ",") + float_to_str(g3)) + ",") + float_to_str(b3)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[3])) + "\" stop-color=\"rgb(") + float_to_str(r4)) + ",") + float_to_str(g4)) + ",") + float_to_str(b4)) + ")\"/>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[4])) + "\" stop-color=\"rgb(") + float_to_str(r5)) + ",") + float_to_str(g5)) + ",") + float_to_str(b5)) + ")\"/>\n</radialGradient>") + (((((((((((("<mask id=\"mask-" + str(atom.Index)) + "\">\n        <rect id=\"bg\" x=\"") + str_1(view_box[0])) + "\" y=\"") + str_1(view_box[1])) + "\" width=\"") + str_1(view_box[2])) + "\" height=\"") + str_1(view_box[3])) + "\" fill=\"white\"/>\n        ") + masks) + "\n        </mask>")
@@ -185,8 +185,14 @@ def write_bond_defs(atoms: FSharpList[ProjectedAtomInfo], bond: BondInfo) -> str
         pattern_matching_result = 1
 
     if pattern_matching_result == 0:
-        pattern_input: Tuple[float, float, float] = Color__Diffuse_5E38073B(get_atom_color(AtomColorStyle(0), s.AtomType), atom_color_gradient[2])
-        pattern_input_1: Tuple[float, float, float] = Color__Diffuse_5E38073B(get_atom_color(AtomColorStyle(0), e.AtomType), atom_color_gradient[2])
+        start_color: Color
+        match_value_1: Optional[Color] = bond.StartColor
+        start_color = match_value_1 if (match_value_1 is not None) else get_atom_color(AtomColorStyle(0), s.AtomType)
+        end_color: Color
+        match_value_2: Optional[Color] = bond.EndColor
+        end_color = match_value_2 if (match_value_2 is not None) else get_atom_color(AtomColorStyle(0), e.AtomType)
+        pattern_input: Tuple[float, float, float] = Color__Diffuse_5E38073B(start_color, atom_color_gradient[2])
+        pattern_input_1: Tuple[float, float, float] = Color__Diffuse_5E38073B(end_color, atom_color_gradient[2])
         return ((((((((((((((((((((((((((((((((((((((("\n<linearGradient\n\tid=\"linear-gradient-" + str(bond.Index)) + "-atom-") + str(s.Index)) + "\"\n\tx1=\"") + float_to_str(s.Center.X)) + "\"\n\ty1=\"") + float_to_str(s.Center.Y)) + "\"\n\tx2=\"") + float_to_str(e.Center.X)) + "\"\n\ty2=\"") + float_to_str(e.Center.Y)) + "\"\n\tgradientUnits=\"userSpaceOnUse\"\n>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[2])) + "\" stop-color=\"rgb(") + float_to_str(pattern_input[0])) + ",") + float_to_str(pattern_input[1])) + ",") + float_to_str(pattern_input[2])) + ")\"/>\n</linearGradient>\n        \n<linearGradient\n\tid=\"linear-gradient-") + str(bond.Index)) + "-atom-") + str(e.Index)) + "\"\n\tx1=\"") + float_to_str(s.Center.X)) + "\"\n\ty1=\"") + float_to_str(s.Center.Y)) + "\"\n\tx2=\"") + float_to_str(e.Center.X)) + "\"\n\ty2=\"") + float_to_str(e.Center.Y)) + "\"\n\tgradientUnits=\"userSpaceOnUse\"\n>\n<stop offset=\"") + float_to_str(1.0 - atom_color_gradient[2])) + "\" stop-color=\"rgb(") + float_to_str(pattern_input_1[0])) + ",") + float_to_str(pattern_input_1[1])) + ",") + float_to_str(pattern_input_1[2])) + ")\"/>\n</linearGradient>"
 
     elif pattern_matching_result == 1:
@@ -247,65 +253,76 @@ def write_atoms_wire(atoms: FSharpList[ProjectedAtomInfo], bonds: FSharpList[Bon
 
     drawn_atoms: FSharpList[int] = empty()
     def draw_atom(atom: ProjectedAtomInfo, atoms: Any=atoms, bonds: Any=bonds) -> str:
-        pattern_input: Tuple[int, int, int] = get_atom_color(AtomColorStyle(0), atom.AtomType).RGB
-        return ((((((((((((("<circle\n\tclass=\"atom-" + str(atom.Index)) + "\"\n\tstyle=\"fill:rgb(") + int_to_str(pattern_input[0])) + ",") + int_to_str(pattern_input[1])) + ",") + int_to_str(pattern_input[2])) + ")\"\n        \n\tcx=\"") + float_to_str(atom.Center.X)) + "\"\n\tcy=\"") + float_to_str(atom.Center.Y)) + "\"\n\tr=\"") + float_to_str(0.05)) + "\"\n/>"
+        def _arrow62(__unit: None=None, atom: ProjectedAtomInfo=atom) -> Color:
+            match_value: Optional[Color] = atom.Color
+            return get_atom_color(AtomColorStyle(0), atom.AtomType) if (match_value is None) else match_value
 
-    def _arrow68(__unit: None=None, atoms: Any=atoms, bonds: Any=bonds) -> IEnumerable_1[str]:
-        def _arrow67(start_atom: ProjectedAtomInfo) -> IEnumerable_1[str]:
-            def _arrow66(__unit: None=None) -> IEnumerable_1[str]:
+        pattern_input: Tuple[int, int, int] = _arrow62().RGB
+        # return ((((((((((((("<circle\n\tclass=\"atom-" + str(atom.Index)) + "\"\n\tstyle=\"fill:rgb(") + int_to_str(pattern_input[0])) + ",") + int_to_str(pattern_input[1])) + ",") + int_to_str(pattern_input[2])) + ")\"\n        \n\tcx=\"") + float_to_str(atom.Center.X)) + "\"\n\tcy=\"") + float_to_str(atom.Center.Y)) + "\"\n\tr=\"") + float_to_str(0.05)) + "\"\n/>"
+        return ""
+
+    def _arrow69(__unit: None=None, atoms: Any=atoms, bonds: Any=bonds) -> IEnumerable_1[str]:
+        def _arrow68(start_atom: ProjectedAtomInfo) -> IEnumerable_1[str]:
+            def _arrow67(__unit: None=None) -> IEnumerable_1[str]:
                 nonlocal drawn_atoms
                 drawn_atoms = append_1(drawn_atoms, singleton_1(start_atom.Index))
-                match_value: FSharpList[BondInfo] = find_bonds(bonds, start_atom.Index)
-                if is_empty(match_value):
+                match_value_1: FSharpList[BondInfo] = find_bonds(bonds, start_atom.Index)
+                if is_empty(match_value_1):
                     return empty_1()
 
                 else: 
-                    def _arrow65(atom_bond: BondInfo) -> IEnumerable_1[str]:
-                        class ObjectExpr63:
+                    def _arrow66(atom_bond: BondInfo) -> IEnumerable_1[str]:
+                        class ObjectExpr64:
                             @property
                             def Equals(self) -> Callable[[int, int], bool]:
-                                def _arrow62(x_1: int, y: int) -> bool:
+                                def _arrow63(x_1: int, y: int) -> bool:
                                     return x_1 == y
 
-                                return _arrow62
+                                return _arrow63
 
                             @property
                             def GetHashCode(self) -> Callable[[int], int]:
                                 return number_hash
 
-                        if not contains(atom_bond.End, drawn_atoms, ObjectExpr63()):
-                            match_value_1: Optional[ProjectedAtomInfo] = find_atom(atoms, atom_bond.End)
-                            if match_value_1 is None:
+                        if not contains(atom_bond.End, drawn_atoms, ObjectExpr64()):
+                            match_value_2: Optional[ProjectedAtomInfo] = find_atom(atoms, atom_bond.End)
+                            if match_value_2 is None:
                                 return empty_1()
 
                             else: 
-                                pattern_input_1: Tuple[ProjectedAtomInfo, ProjectedAtomInfo] = (start_atom, match_value_1)
+                                pattern_input_1: Tuple[ProjectedAtomInfo, ProjectedAtomInfo] = (start_atom, match_value_2)
                                 s: ProjectedAtomInfo = pattern_input_1[0]
                                 e: ProjectedAtomInfo = pattern_input_1[1]
+                                start_color: Color
+                                match_value_3: Optional[Color] = s.Color
+                                start_color = match_value_3 if (match_value_3 is not None) else get_atom_color(AtomColorStyle(0), s.AtomType)
+                                end_color: Color
+                                match_value_4: Optional[Color] = e.Color
+                                end_color = match_value_4 if (match_value_4 is not None) else get_atom_color(AtomColorStyle(0), e.AtomType)
                                 m: Point2D = Point2D__Midpoint_591E284C(s.Center, e.Center)
-                                pattern_input_2: Tuple[int, int, int] = get_atom_color(AtomColorStyle(0), s.AtomType).RGB
-                                pattern_input_3: Tuple[int, int, int] = get_atom_color(AtomColorStyle(0), e.AtomType).RGB
-                                def _arrow64(__unit: None=None) -> IEnumerable_1[str]:
+                                pattern_input_2: Tuple[int, int, int] = start_color.RGB
+                                pattern_input_3: Tuple[int, int, int] = end_color.RGB
+                                def _arrow65(__unit: None=None) -> IEnumerable_1[str]:
                                     return singleton(((((((((((((("<line\n\tx1=\"" + str(m.X)) + "\"\n\tx2=\"") + str(e.Center.X)) + "\"\n\ty1=\"") + str(m.Y)) + "\"\n\ty2=\"") + str(e.Center.Y)) + "\"\n\tstyle=\"stroke:rgb(") + int_to_str(pattern_input_3[0])) + ",") + int_to_str(pattern_input_3[1])) + ",") + int_to_str(pattern_input_3[2])) + ");stroke-width:0.1\"/>")
 
-                                return append(singleton(((((((((((((("<line\n\tx1=\"" + str(s.Center.X)) + "\"\n\tx2=\"") + str(m.X)) + "\"\n\ty1=\"") + str(s.Center.Y)) + "\"\n\ty2=\"") + str(m.Y)) + "\"\n\tstyle=\"stroke:rgb(") + int_to_str(pattern_input_2[0])) + ",") + int_to_str(pattern_input_2[1])) + ",") + int_to_str(pattern_input_2[2])) + ");stroke-width:0.1\"/>"), delay(_arrow64))
+                                return append(singleton(((((((((((((("<line\n\tx1=\"" + str(s.Center.X)) + "\"\n\tx2=\"") + str(m.X)) + "\"\n\ty1=\"") + str(s.Center.Y)) + "\"\n\ty2=\"") + str(m.Y)) + "\"\n\tstyle=\"stroke:rgb(") + int_to_str(pattern_input_2[0])) + ",") + int_to_str(pattern_input_2[1])) + ",") + int_to_str(pattern_input_2[2])) + ");stroke-width:0.1\"/>"), delay(_arrow65))
 
 
                         else: 
                             return empty_1()
 
 
-                    return collect(_arrow65, match_value)
+                    return collect(_arrow66, match_value_1)
 
 
-            return append(singleton(draw_atom(start_atom)), delay(_arrow66))
+            return append(singleton(draw_atom(start_atom)), delay(_arrow67))
 
-        return collect(_arrow67, atoms)
+        return collect(_arrow68, atoms)
 
-    return join("", to_list(delay(_arrow68)))
+    return join("", to_list(delay(_arrow69)))
 
 
-def _expr69() -> TypeInfo:
+def _expr70() -> TypeInfo:
     return union_type("Client.CineMol.Svg.BondEnd", [], BondEnd, lambda: [[], []])
 
 
@@ -320,7 +337,7 @@ class BondEnd(Union):
         return ["Start", "End"]
 
 
-BondEnd_reflection = _expr69
+BondEnd_reflection = _expr70
 
 def write_ball_and_stick(atoms: FSharpList[ProjectedAtomInfo], bonds: FSharpList[BondInfo]) -> str:
     def round(f: float, atoms: Any=atoms, bonds: Any=bonds) -> float:
@@ -419,9 +436,9 @@ def write_ball_and_stick(atoms: FSharpList[ProjectedAtomInfo], bonds: FSharpList
         return filter(predicate, l_1)
 
     drawn_atoms: FSharpList[int] = empty()
-    def _arrow75(__unit: None=None, atoms: Any=atoms, bonds: Any=bonds) -> IEnumerable_1[str]:
-        def _arrow74(start_atom: ProjectedAtomInfo) -> IEnumerable_1[str]:
-            def _arrow73(__unit: None=None) -> IEnumerable_1[str]:
+    def _arrow76(__unit: None=None, atoms: Any=atoms, bonds: Any=bonds) -> IEnumerable_1[str]:
+        def _arrow75(start_atom: ProjectedAtomInfo) -> IEnumerable_1[str]:
+            def _arrow74(__unit: None=None) -> IEnumerable_1[str]:
                 nonlocal drawn_atoms
                 drawn_atoms = append_1(drawn_atoms, singleton_1(start_atom.Index))
                 match_value: FSharpList[BondInfo] = find_bonds(bonds, start_atom.Index)
@@ -429,20 +446,20 @@ def write_ball_and_stick(atoms: FSharpList[ProjectedAtomInfo], bonds: FSharpList
                     return empty_1()
 
                 else: 
-                    def _arrow72(atom_bond: BondInfo) -> IEnumerable_1[str]:
-                        class ObjectExpr71:
+                    def _arrow73(atom_bond: BondInfo) -> IEnumerable_1[str]:
+                        class ObjectExpr72:
                             @property
                             def Equals(self) -> Callable[[int, int], bool]:
-                                def _arrow70(x_1: int, y: int) -> bool:
+                                def _arrow71(x_1: int, y: int) -> bool:
                                     return x_1 == y
 
-                                return _arrow70
+                                return _arrow71
 
                             @property
                             def GetHashCode(self) -> Callable[[int], int]:
                                 return number_hash
 
-                        if not contains(atom_bond.End, drawn_atoms, ObjectExpr71()):
+                        if not contains(atom_bond.End, drawn_atoms, ObjectExpr72()):
                             match_value_1: Optional[ProjectedAtomInfo] = find_atom(atoms, atom_bond.End)
                             if match_value_1 is None:
                                 return empty_1()
@@ -465,14 +482,14 @@ def write_ball_and_stick(atoms: FSharpList[ProjectedAtomInfo], bonds: FSharpList
                             return empty_1()
 
 
-                    return collect(_arrow72, match_value)
+                    return collect(_arrow73, match_value)
 
 
-            return append(singleton(draw_atom(start_atom)), delay(_arrow73))
+            return append(singleton(draw_atom(start_atom)), delay(_arrow74))
 
-        return collect(_arrow74, atoms)
+        return collect(_arrow75, atoms)
 
-    return join("", to_list(delay(_arrow75)))
+    return join("", to_list(delay(_arrow76)))
 
 
 def add(s: str, sb: Any) -> Any:
@@ -486,57 +503,57 @@ def stringify(sb: Any) -> str:
 def write_svg(view_box_: float, view_box__1: float, view_box__2: float, view_box__3: float, depiction: Depiction, mol: ProjectedMolecule) -> str:
     view_box: Tuple[float, float, float, float] = (view_box_, view_box__1, view_box__2, view_box__3)
     if depiction.tag == 1:
-        def _arrow79(__unit: None=None, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, depiction: Depiction=depiction, mol: ProjectedMolecule=mol) -> Any:
-            def _arrow78(__unit: None=None) -> Any:
+        def _arrow80(__unit: None=None, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, depiction: Depiction=depiction, mol: ProjectedMolecule=mol) -> Any:
+            def _arrow79(__unit: None=None) -> Any:
                 sb_15: Any
-                def _arrow77(__unit: None=None) -> Any:
+                def _arrow78(__unit: None=None) -> Any:
                     sb_12: Any
-                    def _arrow76(__unit: None=None) -> Any:
+                    def _arrow77(__unit: None=None) -> Any:
                         sb_9: Any = StringBuilder__ctor()
                         return add(header(view_box[0], view_box[1], view_box[2], view_box[3]), sb_9)
 
-                    sb_11: Any = add("\n<defs>\n<style>", _arrow76())
+                    sb_11: Any = add("\n<defs>\n<style>", _arrow77())
                     sb_12 = add(write_atoms_style(mol.Atoms), sb_11)
                     return add(write_bonds_style(mol.Bonds), sb_12)
 
-                sb_14: Any = add("\n</style>", _arrow77())
+                sb_14: Any = add("\n</style>", _arrow78())
                 sb_15 = add(write_atoms_defs(view_box[0], view_box[1], view_box[2], view_box[3], mol.Atoms, True), sb_14)
                 return add(write_bonds_defs(mol.Atoms, mol.Bonds), sb_15)
 
-            sb_17: Any = add("\n</defs>", _arrow78())
+            sb_17: Any = add("\n</defs>", _arrow79())
             return add(write_ball_and_stick(mol.Atoms, mol.Bonds), sb_17)
 
-        return stringify(add("\n</svg>", _arrow79()))
+        return stringify(add("\n</svg>", _arrow80()))
 
     elif depiction.tag == 2:
-        def _arrow81(__unit: None=None, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, depiction: Depiction=depiction, mol: ProjectedMolecule=mol) -> Any:
-            def _arrow80(__unit: None=None) -> Any:
+        def _arrow82(__unit: None=None, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, depiction: Depiction=depiction, mol: ProjectedMolecule=mol) -> Any:
+            def _arrow81(__unit: None=None) -> Any:
                 sb_20: Any = StringBuilder__ctor()
                 return add(header(view_box[0], view_box[1], view_box[2], view_box[3]), sb_20)
 
-            sb_24: Any = add("\n</defs>", add("\n</style>", add("\n<defs>\n<style>", _arrow80())))
+            sb_24: Any = add("\n</defs>", add("\n</style>", add("\n<defs>\n<style>", _arrow81())))
             return add(write_atoms_wire(mol.Atoms, mol.Bonds), sb_24)
 
-        return stringify(add("\n</svg>", _arrow81()))
+        return stringify(add("\n</svg>", _arrow82()))
 
     else: 
-        def _arrow85(__unit: None=None, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, depiction: Depiction=depiction, mol: ProjectedMolecule=mol) -> Any:
-            def _arrow84(__unit: None=None) -> Any:
-                def _arrow83(__unit: None=None) -> Any:
-                    def _arrow82(__unit: None=None) -> Any:
+        def _arrow86(__unit: None=None, view_box_: float=view_box_, view_box__1: float=view_box__1, view_box__2: float=view_box__2, view_box__3: float=view_box__3, depiction: Depiction=depiction, mol: ProjectedMolecule=mol) -> Any:
+            def _arrow85(__unit: None=None) -> Any:
+                def _arrow84(__unit: None=None) -> Any:
+                    def _arrow83(__unit: None=None) -> Any:
                         sb: Any = StringBuilder__ctor()
                         return add(header(view_box[0], view_box[1], view_box[2], view_box[3]), sb)
 
-                    sb_2: Any = add("\n<defs>\n<style>", _arrow82())
+                    sb_2: Any = add("\n<defs>\n<style>", _arrow83())
                     return add(write_atoms_style(mol.Atoms), sb_2)
 
-                sb_4: Any = add("\n</style>", _arrow83())
+                sb_4: Any = add("\n</style>", _arrow84())
                 return add(write_atoms_defs(view_box[0], view_box[1], view_box[2], view_box[3], mol.Atoms, False), sb_4)
 
-            sb_6: Any = add("\n</defs>", _arrow84())
+            sb_6: Any = add("\n</defs>", _arrow85())
             return add(write_atoms_filled(mol.Atoms), sb_6)
 
-        return stringify(add("\n</svg>", _arrow85()))
+        return stringify(add("\n</svg>", _arrow86()))
 
 
 

@@ -11,7 +11,7 @@ def float_to_str(f: float) -> str:
 
 
 def int_to_str(d: int) -> str:
-    return int32_to_string(d)
+    return str(d)
 
 
 def abs_1(f: float) -> float:

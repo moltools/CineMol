@@ -67,7 +67,6 @@ let draw
     // Sort drawing order point cloud based on distance point to POV
     let mol = { mol with Atoms = mol.Atoms |> List.sortBy (fun atom -> atom.Center.Distance pov |> (*) -1.0) }
 
-
     // Apply zoom based on supplied scroll
     let perspectiveMol = changeDistanceToAtoms zoom.Ratio mol
 
@@ -104,6 +103,7 @@ let draw
                       match options.Depiction with
                       | Filled -> clip pov perspectiveAtom perspectiveMol atom mol
                       | _ -> []
+                  Color = perspectiveAtom.Color
                 })
           Bonds = perspectiveMol.Bonds }
 

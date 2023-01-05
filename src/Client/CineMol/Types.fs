@@ -135,6 +135,10 @@ type SphereSphereIntersection =
     | IntersectionPoint of Point3D
     | IntersectionCircle of Point3D * Radius * Vector3D
 
+// todo: include hex
+//type Color =
+//    | Rgb of int * int * int
+
 type ClipPath = { Line: Point2D * Point2D; SelectForSide: SelectForSide }
 and SelectForSide =
     | IncludeSide of Point2D
@@ -145,7 +149,8 @@ type AtomInfo =
     { Index: Index
       AtomType: AtomType
       Center: Point3D
-      Radius: Radius }
+      Radius: Radius
+      Color: Color option }
     with
     member x.Rotate (axis: Axis) (rad: float) : AtomInfo =
         { x with Center = x.Center.Rotate axis rad }
@@ -199,7 +204,8 @@ type ProjectedAtomInfo =
       AtomType: AtomType
       Center: Point2D
       Radius: Radius
-      ClipPaths: ClipPath list }
+      ClipPaths: ClipPath list
+      Color: Color option }
 
 
 type BondInfo =
@@ -207,11 +213,13 @@ type BondInfo =
       Start: Index
       End: Index
       BondType: BondType
-      Scaling: float }
+      Scaling: float
+      StartColor: Color option
+      EndColor: Color option }
 and BondType = | Single | Double | Triple | Aromatic | Unknown
 
 let createAtom (index: int) (atomType: AtomType) (c: Point3D) (r: Radius) : AtomInfo =
-    { Index = index; AtomType = atomType; Center = c; Radius = r }
+    { Index = index; AtomType = atomType; Center = c; Radius = r; Color = None }
 
 type Molecule = { Atoms: AtomInfo list; Bonds: BondInfo list }
 type ProjectedMolecule = { Atoms: ProjectedAtomInfo list; Bonds: BondInfo list }

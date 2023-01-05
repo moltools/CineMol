@@ -55,70 +55,70 @@ d_cap: str = ("(" + d) + ")"
 
 w_cap: str = "(\\w+)"
 
-def _arrow32(__unit: None=None) -> FSharpList[str]:
-    def _arrow29(__unit: None=None) -> IEnumerable_1[str]:
-        def _arrow28(match_value: int) -> IEnumerable_1[str]:
+def _arrow34(__unit: None=None) -> FSharpList[str]:
+    def _arrow31(__unit: None=None) -> IEnumerable_1[str]:
+        def _arrow30(match_value: int) -> IEnumerable_1[str]:
             return singleton_1(s + d)
 
-        return collect(_arrow28, to_list(range_big_int(0, 1, 11)))
+        return collect(_arrow30, to_list(range_big_int(0, 1, 11)))
 
-    list_6: FSharpList[str] = append(singleton(s + w_cap), append(to_list(delay(_arrow29)), singleton("$")))
-    def _arrow31(__unit: None=None) -> IEnumerable_1[str]:
-        def _arrow30(match_value_1: int) -> IEnumerable_1[str]:
+    list_6: FSharpList[str] = append(singleton(s + w_cap), append(to_list(delay(_arrow31)), singleton("$")))
+    def _arrow33(__unit: None=None) -> IEnumerable_1[str]:
+        def _arrow32(match_value_1: int) -> IEnumerable_1[str]:
             return singleton_1(s + d_cap)
 
-        return collect(_arrow30, to_list(range_big_int(0, 1, 2)))
+        return collect(_arrow32, to_list(range_big_int(0, 1, 2)))
 
-    return append(to_list(delay(_arrow31)), list_6)
+    return append(to_list(delay(_arrow33)), list_6)
 
 
-atom_line: str = join("", append(singleton("^"), _arrow32()))
+atom_line: str = join("", append(singleton("^"), _arrow34()))
 
 def _007CAtomLine_007C__007C(line: str) -> Optional[FSharpList[str]]:
     m: Any = match(line, atom_line)
     if m is not None:
-        def _arrow34(__unit: None=None, line: str=line) -> IEnumerable_1[str]:
-            def _arrow33(g: Any) -> str:
+        def _arrow36(__unit: None=None, line: str=line) -> IEnumerable_1[str]:
+            def _arrow35(g: Any) -> str:
                 return g or ""
 
-            return map(_arrow33, groups(m))
+            return map(_arrow35, groups(m))
 
-        return tail(to_list(delay(_arrow34)))
+        return tail(to_list(delay(_arrow36)))
 
     else: 
         return None
 
 
 
-def _arrow39(__unit: None=None) -> FSharpList[str]:
-    def _arrow36(__unit: None=None) -> IEnumerable_1[str]:
-        def _arrow35(match_value: int) -> IEnumerable_1[str]:
+def _arrow41(__unit: None=None) -> FSharpList[str]:
+    def _arrow38(__unit: None=None) -> IEnumerable_1[str]:
+        def _arrow37(match_value: int) -> IEnumerable_1[str]:
             return singleton_1(s + d)
 
-        return collect(_arrow35, to_list(range_big_int(0, 1, 3)))
+        return collect(_arrow37, to_list(range_big_int(0, 1, 3)))
 
-    list_4: FSharpList[str] = append(to_list(delay(_arrow36)), singleton("$"))
-    def _arrow38(__unit: None=None) -> IEnumerable_1[str]:
-        def _arrow37(match_value_1: int) -> IEnumerable_1[str]:
+    list_4: FSharpList[str] = append(to_list(delay(_arrow38)), singleton("$"))
+    def _arrow40(__unit: None=None) -> IEnumerable_1[str]:
+        def _arrow39(match_value_1: int) -> IEnumerable_1[str]:
             return singleton_1(s + d_cap)
 
-        return collect(_arrow37, to_list(range_big_int(0, 1, 2)))
+        return collect(_arrow39, to_list(range_big_int(0, 1, 2)))
 
-    return append(to_list(delay(_arrow38)), list_4)
+    return append(to_list(delay(_arrow40)), list_4)
 
 
-bond_line: str = join("", append(singleton("^"), _arrow39()))
+bond_line: str = join("", append(singleton("^"), _arrow41()))
 
 def _007CBondLine_007C__007C(line: str) -> Optional[FSharpList[str]]:
     m: Any = match(line, bond_line)
     if m is not None:
-        def _arrow41(__unit: None=None, line: str=line) -> IEnumerable_1[str]:
-            def _arrow40(g: Any) -> str:
+        def _arrow43(__unit: None=None, line: str=line) -> IEnumerable_1[str]:
+            def _arrow42(g: Any) -> str:
                 return g or ""
 
-            return map(_arrow40, groups(m))
+            return map(_arrow42, groups(m))
 
-        return tail(to_list(delay(_arrow41)))
+        return tail(to_list(delay(_arrow43)))
 
     else: 
         return None
@@ -627,9 +627,9 @@ def parse_sdf(sdf: str) -> Array[Molecule]:
                     s_2: int = try_cast_to_int(s_1) or 0
                     e_1: int = try_cast_to_int(e) or 0
                     bond_count = (bond_count + 1) or 0
-                    bond: BondInfo = BondInfo(bond_count, s_2, e_1, bond_type_1, 1.0)
+                    bond: BondInfo = BondInfo(bond_count, s_2, e_1, bond_type_1, 1.0, None, None)
                     bond_count = (bond_count + 1) or 0
-                    rev_bond: BondInfo = BondInfo(bond_count, e_1, s_2, bond_type_1, 1.0)
+                    rev_bond: BondInfo = BondInfo(bond_count, e_1, s_2, bond_type_1, 1.0, None, None)
                     bonds = append(bonds, of_array([bond, rev_bond]))
                     return empty_1()
 
