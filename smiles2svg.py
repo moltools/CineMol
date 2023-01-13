@@ -4,6 +4,9 @@ import argparse
 from rdkit import Chem 
 from rdkit.Chem import AllChem 
 
+import dash
+from dash import dcc
+
 from cinemol_py.fable_modules.fable_library.list import (
     append, 
     singleton, 
@@ -19,18 +22,12 @@ import cinemol_py.parsing as parsing
 import cinemol_py.styles as styles 
 import cinemol_py.types as types 
 import cinemol_py.drawing as drawing
+import cinemol_py.encoding as encoding
 
 
 def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--smiles", type=str, required=True)
-    parser.add_argument("--hs", action="store_true")
-    parser.add_argument("--depiction", type=int, choices=[0, 1, 2], default=1)
-
-    parser.add_argument("--xrot", type=float, default=0.0)
-    parser.add_argument("--yrot", type=float, default=0.0)
-    parser.add_argument("--zrot", type=float, default=0.0)
-
     return parser.parse_args()
 
 
@@ -40,7 +37,7 @@ def parse_smiles(smiles: str):
     mol = Chem.MolFromSmiles(smiles)
 
     mol = Chem.AddHs(mol)
-    AllChem.EmbedMolecule(mol)
+    AllChem.EmbedMolecule(mol, useRandomCoords=True)
     AllChem.UFFOptimizeMolecule(mol)
 
     atoms = empty()
@@ -83,17 +80,33 @@ def parse_smiles(smiles: str):
 def main() -> None:
     args = cli()
     mol = parse_smiles(args.smiles)
-
     view_box = None 
     options = drawing.DrawOptions_get_init()
-    options.Depiction = types.Depiction(args.depiction)
+    options.Depiction = types.Depiction(2)
+    options.ShowHydrogenAtoms = True
 
-    options.ShowHydrogenAtoms = args.hs 
-    rotation = types.Rotation(args.xrot, args.yrot, args.zrot)
-    zoom = types.Zoom(1.0)
+    app = dash.Dash()
+    app.layout = dash.html.Div([
+        dash.html.Div(id="image-output-container"),
+        dcc.Slider(0, 90, marks=None, value=0, id="x_rotation"),
+        dcc.Slider(0, 90, marks=None, value=0, id="y_rotation")
+    ])
 
-    svg, _ = drawing.draw(view_box, options, rotation, zoom, mol)
-    print(svg)
+    @app.callback(
+        dash.Output("image-output-container", "children"), 
+        [
+            dash.Input("x_rotation", "value"),
+            dash.Input("y_rotation", "value")
+        ]
+    )
+    def update_image(x_rotation: int, y_rotation: int):
+        rotation = types.Rotation(x_rotation, y_rotation, 0)
+        zoom = types.Zoom(1.0)
+        svg, _ = drawing.draw(view_box, options, rotation, zoom, mol)
+        encoded = encoding.to_base64string(svg)
+        return dash.html.Img(id="image", src=f"data:image/svg+xml;base64,{encoded}")
+
+    app.run_server(port=8050, host="127.0.0.1", debug=True)
 
     exit(0)
 
