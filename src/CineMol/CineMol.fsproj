@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Types.fs" />
-    <Compile Include="Geometry.fs" />
+    <Compile Include="Clipping.fs" />
+    <Compile Include="Projection.fs" />
   </ItemGroup>
 </Project>

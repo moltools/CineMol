@@ -23,8 +23,7 @@ module Style =
         with
         member this.ToHex =
             let (Color (r, g, b)) = this
-            sprintf "#%02x%02x%02x" <| r, g, b
-
+            sprintf $"#{r:x2}{g:x2}{b:x2}"
 
 module Geometry =
 
@@ -82,6 +81,7 @@ module Geometry =
         member this.Distance other = ((this - other).Pow 2.0).Sum |> Math.Sqrt
         member this.Midpoint other = (this + other).Div 2.0
         member this.FindVector other = other - this
+        member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
 
     /// <summary>
     /// Point3D resembles a point in three-dimensional Euclidean space.
@@ -127,11 +127,94 @@ module Geometry =
     /// Definition for a line.
     /// </summary>
     type Line = Line of Point2D * Point2D
+        with
+
+        /// Calculate slope of line.
+        member this.Slope =
+            let (Line (a, b)) = this
+            a.Slope b
+
+        /// Calculate intercept of line with Y-axis.
+        member this.Intercept =
+            let (Line (a, b)) = this
+            a.Y - (a.Slope b * a.X)
+
+        /// Check if two 2D points are on the same side of this line.
+        member this.SameSideOfLine p1 p2 =
+            let (Line (l1, l2)) = this
+            let d (p: Point2D) = (p.X - l1.X) * (l2.Y - l1.Y) - (p.Y - l1.Y) * (l2.X - l1.X)
+            if (d p1 > 0.0) = (d p2 > 0.0) then true else false
+
+        /// Calculate if two lines intersect.
+        member this.IntersectionWith (other: Line) =
+            let aThis, aOther = this.Slope, other.Slope
+            let cThis, cOther = this.Intercept, other.Intercept
+
+            /// Compare slopes of the two lines and determine type of intersection.
+            match aThis = aOther with
+
+            /// Lines run parellel to each other.
+            | true -> None
+
+            /// Lines intersect.
+            | false ->
+                if (cThis = infinity || cThis = -infinity) || (cOther = infinity || cOther = -infinity) then
+                    /// Lines are near-parallel. Interpret as non-intersecting.
+                    None
+                else
+                    /// Lines intersect.
+                    let x = (cThis - cOther) / (aOther - aThis)
+                    Some { X = x; Y = (aThis * x) + cThis }
 
     /// <summary>
-    /// Definition for a circle.
+    /// Definition for a circle in two-dimensional Euclidean space.
     /// </summary>
-    type Circle = Circle of Point2D * Radius
+    type Circle2D = Circle2D of Point2D * Radius
+        with
+
+        /// Checks if two circles have two intersection points.
+        /// We interpret touching circles as non-intersecting.
+        member this.IntersectsWith other =
+            let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
+            if pThis.Distance pOther < (rThis + rOther) then true else false
+
+        /// Calculates the intersection points of two circles.
+        /// We interpret touching circles as non-intersecting.
+        member this.IntersectionWith other =
+            let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
+
+            /// Calculate the distance between the center of two circles and determine
+            /// the type of intersection.
+            match pThis.Distance pOther with
+
+            /// No intersection
+            | dist when dist > (rThis + rOther) -> None
+
+            // Circles are touching.
+            | dist when dist = (rThis + rOther) -> None
+
+            /// Coincident circles.
+            | dist when dist < 1E-5 && rThis = rOther -> None
+
+            /// One circle inside other circle.
+            | dist when dist < abs (rThis - rOther) -> None
+
+            /// Circles are intersecting (i.e., have two itnersection points).
+            | dist ->
+                let a = (rThis ** 2.0 - rOther ** 2.0 + dist ** 2.0) / (2.0 * dist)
+                let h = rThis ** 2.0 - a ** 2.0 |> Math.Sqrt
+                let x2 = pThis.X + a * (pOther.X - pThis.X) / dist
+                let y2 = pThis.Y + a * (pOther.Y - pThis.Y) / dist
+                let x3 = x2 + h * (pOther.Y - pThis.Y) / dist
+                let y3 = y2 - h * (pOther.X - pThis.X) / dist
+                let x4 = x2 - h * (pOther.Y - pThis.Y) / dist
+                let y4 = y2 + h * (pOther.X - pThis.X) / dist
+                Some ({ X = x3; Y = y3 }, { X = x4; Y = y4 })
+
+    /// <summary>
+    /// Definition of a circle in three-dimensdional Euclidean space.
+    /// </summary>
+    type Circle3D = Circle3D of Point3D * Radius * Vector3D
 
     /// <summary>
     /// Definition for a quadrangle.
@@ -142,6 +225,20 @@ module Geometry =
     /// Definition for a sphere.
     /// </summary>
     type Sphere = Sphere of Point3D * Radius
+        with
+
+        /// Checks if two spheres have an intersection circle.
+        /// We interpret touching sphers as non-intersecting.
+        member this.IntersectsWith other =
+            let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
+            if pThis.Distance pOther <= (rThis + rOther) then true else false
+
+        /// Calculates the intersection circle of two spheres.
+        /// We interpret touching sphers as non-intersecting.
+        member this.IntersectionWith other =
+            // TODO: finish function
+            Circle3D ({ X = 0.0; Y = 0.0; Z = 0.0 }, Radius 0.0, { X = 0.0; Y = 0.0; Z = 0.0 })
+
 
     /// <summary>
     /// Definition for a cylinder.
@@ -189,7 +286,7 @@ module Chem =
     /// Euclidean space.
     /// </summary>
     type Atom =
-        | Atom2D of AtomInfo * Circle
+        | Atom2D of AtomInfo * Circle2D
         | Atom3D of AtomInfo * Sphere
 
     /// <summary>
@@ -222,7 +319,7 @@ module Svg =
     /// </summary>
     type Shape =
         | Line of Line
-        | Circle of Circle
+        | Circle of Circle2D
         | Quadrangle of Quadrangle
 
     /// <summary>
