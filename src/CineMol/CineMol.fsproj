@@ -5,8 +5,11 @@
     <RootNamespace>CineMol</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Helpers.fs" />
+    <Compile Include="Encoding.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Clipping.fs" />
     <Compile Include="Projection.fs" />
+    <Compile Include="Style.fs" />
   </ItemGroup>
 </Project>

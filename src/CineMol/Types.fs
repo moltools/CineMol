@@ -1,6 +1,5 @@
 ﻿namespace CineMol.Types
 
-
 module Fundamentals =
 
     /// <summary>
@@ -13,8 +12,9 @@ module Fundamentals =
     /// </summary>
     type Radius = Radius of float
 
-
 module Style =
+
+    open CineMol.Helpers
 
     /// <summary>
     /// Color describes a color in RGB int values or Hex string.
@@ -24,6 +24,14 @@ module Style =
         member this.ToHex =
             let (Color (r, g, b)) = this
             sprintf $"#{r:x2}{g:x2}{b:x2}"
+
+        member this.Diffuse alpha =
+            let alpha = clamp 0.0 1.0 alpha
+            let (Color (r, g, b)) = this
+            let diffuseChannel c = (float c) * alpha |> int
+            ( diffuseChannel r,
+              diffuseChannel g,
+              diffuseChannel b ) |> Color
 
 module Geometry =
 
@@ -237,6 +245,46 @@ module Geometry =
         /// We interpret touching sphers as non-intersecting.
         member this.IntersectionWith other =
             // TODO: finish function
+            
+//    member this.Intersection (other: AtomInfo) : SphereSphereIntersection =
+//        let dist = this.Center.Distance other.Center
+//
+//        match dist with
+//        | d when d >= (this.Radius + other.Radius) || (d = 0.0 && this.Radius = other.Radius)
+//            -> NoIntersection
+//
+//        | d when (d + this.Radius) < other.Radius
+//            -> Eclipsed
+//
+//        | _ ->
+//            // Intersection plane
+//            let A = 2.0 * (other.Center.X - this.Center.X)
+//            let B = 2.0 * (other.Center.Y - this.Center.Y)
+//            let C = 2.0 * (other.Center.Z - this.Center.Z)
+//            let D = this.Center.X ** 2.0 - other.Center.X ** 2.0 + this.Center.Y ** 2.0 - other.Center.Y ** 2.0 +
+//                    this.Center.Z ** 2.0 - other.Center.Z ** 2.0 - this.Radius ** 2.0 + other.Radius ** 2.0
+//
+//            // Intersection center
+//            let t = (this.Center.X * A + this.Center.Y * B + this.Center.Z * C + D) /
+//                    (A * (this.Center.X - other.Center.X) + B * (this.Center.Y - other.Center.Y) + C * (this.Center.Z - other.Center.Z))
+//            let x = this.Center.X + t * (other.Center.X - this.Center.X)
+//            let y = this.Center.Y + t * (other.Center.Y - this.Center.Y)
+//            let z = this.Center.Z + t * (other.Center.Z - this.Center.Z)
+//            let intersectionCenter: Point3D = { X = x; Y = y; Z = z }
+//
+//            // Intersection
+//            let x = (this.Radius ** 2.0 + dist ** 2.0 - other.Radius ** 2.0) / (2.0 * this.Radius * dist)
+//            if x < 1.0 then
+//                let alpha = Math.Acos(x)
+//                let R = this.Radius * Math.Sin alpha
+//                match R with
+//                | 0.0 -> IntersectionPoint intersectionCenter
+//                | _ ->
+//                    let v = this.Center.FindVector other.Center
+//                    IntersectionCircle (intersectionCenter, R, v)
+//            else
+//                NoIntersection
+            
             Circle3D ({ X = 0.0; Y = 0.0; Z = 0.0 }, Radius 0.0, { X = 0.0; Y = 0.0; Z = 0.0 })
 
 
@@ -244,7 +292,6 @@ module Geometry =
     /// Definition for a cylinder.
     /// </summary>
     type Cylinder = Cylinder of Line * Radius
-
 
 module Chem =
 
@@ -262,7 +309,7 @@ module Chem =
         | K  | Ca | Sc | Ti | V  | Cr | Mn | Fe | Co | Ni | Cu | Zn | Ga | Ge | As | Se | Br | Kr
         | Rb | Sr | Y  | Zr | Nb | Mo | Tc | Ru | Rh | Pd | Ag | Cd | In | Sn | Sb | Te | I  | Xe
         | Cs | Ba | Lu | Hf | Ta | W  | Re | Os | Ir | Pt | Au | Hg | Tl | Pb | Bi | Po | At | Rn
-        | Fr | Ra | Lr | Rf | Db | Sg | Bh | Hs | Mt | Ds | Rg | Cn | Nh | Fl | Mc | Lv | Ts | Og
+        | Fr | Ra 
 
     /// <summary>
     /// AtomInfo records all information on the atom identity and styling.
@@ -290,13 +337,19 @@ module Chem =
         | Atom3D of AtomInfo * Sphere
 
     /// <summary>
-    /// Bond describes a bond in two-dimensional or three-dimensional
-    /// Euclidean space.
+    /// Bond describes a bond between two Atoms in two-dimensional or
+    /// three-dimensional Euclidean space.
     /// </summary>
     type Bond =
         | Bond2D of BondInfo * Line
         | Bond3D of BondInfo * Cylinder
 
+    /// <summary>
+    /// Molecule describes a molecule, which contains of Atoms and Bonds.
+    /// </summary>
+    type Molecule =
+        { Atoms: Atom list
+          Bonds: Bond list }
 
 module Svg =
 
