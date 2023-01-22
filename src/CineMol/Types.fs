@@ -1,5 +1,7 @@
 ﻿namespace CineMol.Types
 
+open System
+
 module Fundamentals =
 
     /// <summary>
@@ -32,10 +34,13 @@ module Style =
             ( diffuseChannel r,
               diffuseChannel g,
               diffuseChannel b ) |> Color
+            
+    /// <summary>
+    /// Molecule style depictions to draw as SVG.
+    /// </summary>
+    type Depiction = | SpaceFilling | BallAndStick | WireFrame
 
 module Geometry =
-
-    open System
 
     open Fundamentals
 
@@ -46,6 +51,8 @@ module Geometry =
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X;  Y = p1.Y + p2.Y }
         static member (-) (p1, p2) = { X = p1.X - p2.X; Y = p1.Y - p2.Y }
+        static member (*) (p1, p2) = { X = p1.X * p2.X; Y = p1.Y * p2.Y }
+        member this.Add v = { X = this.X + v; Y = this.Y + v }
         member this.Mul v = { X = this.X * v; Y = this.Y * v }
         member this.Div v = { X = this.X / v; Y = this.Y / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v }
@@ -62,6 +69,8 @@ module Geometry =
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
         static member (-) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
+        static member (*) (p1, p2) = { X = p1.X * p2.X; Y = p1.Y * p2.Y; Z = p1.Z * p2.Z  }        
+        member this.Add v = { X = this.X + v; Y = this.Y + v; Z = this.Z + v }
         member this.Mul v = { X = this.X * v; Y = this.Y * v; Z = this.Z * v }
         member this.Div v = { X = this.X / v; Y = this.Y / v; Z = this.Z / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v; Z = this.Z ** v }
@@ -74,6 +83,7 @@ module Geometry =
             { X = this.Y * other.Z - this.Z * other.Y
               Y = this.Z * other.X - this.X * other.Z
               Z = this.X * other.Y - this.Y * other.X }
+        member this.ProjectVector (other: Vector3D) = (other.Dot this) / other.Mag
 
     /// <summary>
     /// Point2D resembles a point in two-dimensional Euclidean space.
@@ -82,11 +92,13 @@ module Geometry =
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y }
         static member (-) (p1, p2) = { X = p1.X - p2.X; Y = p1.Y - p2.Y }
+        static member (*) (p1, p2) = { X = p1.X * p2.X; Y = p1.Y * p2.Y }
+        member this.Add v = { X = this.X + v; Y = this.Y + v }
         member this.Mul v = { X = this.X * v; Y = this.X * v }
         member this.Div v = { X = this.X / v; Y = this.Y / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v }
-        member this.Sum = this.X + this.Y
-        member this.Distance other = ((this - other).Pow 2.0).Sum |> Math.Sqrt
+        member this.Sum () = this.X + this.Y
+        member this.Distance other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
         member this.Midpoint other = (this + other).Div 2.0
         member this.FindVector other = other - this
         member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
@@ -98,15 +110,18 @@ module Geometry =
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
         static member (-) (p1, p2) = { X = p1.X - p2.X; Y = p1.Y - p2.Y; Z = p1.Z - p2.Z }
-        member this.Mul v = { X = this.X ** v; Y = this.Y ** v; Z = this.Z ** v }
+        static member (*) (p1, p2) = { X = p1.X * p2.X; Y = p1.Y * p2.Y; Z = p1.Z * p2.Z }
+        member this.Add v = { X = this.X + v; Y = this.Y + v; Z = this.Z + v }
+        member this.Mul v = { X = this.X * v; Y = this.Y * v; Z = this.Z * v }
         member this.Div v = { X = this.X / v; Y = this.Y / v; Z = this.Z / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v; Z = this.Z ** v }
-        member this.Sum = this.X + this.Y + this.Z
-        member this.Distance other = ((this - other).Pow 2.0).Sum |> Math.Sqrt
+        member this.Sum () = this.X + this.Y + this.Z
+        member this.Distance other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
         member this.Midpoint other = (this + other).Div 2.0
-        member this.FindVector other = other - this
+        member this.FindVector other = (other - this).ToVector3D()
         member p.Rotate (axis: Axis) rad = axis.RotationMatrix(p, rad)
         member this.ToPoint2D () = { X = this.X; Y = this.Y }
+        member this.ToVector3D () : Vector3D = { X = this.X; Y = this.Y; Z = this.Z }
 
     /// <summary>
     /// Axis describes a plane in a three-dimensional Euclidean space.
@@ -195,10 +210,10 @@ module Geometry =
             /// the type of intersection.
             match pThis.Distance pOther with
 
-            /// No intersection
+            /// No intersection.
             | dist when dist > (rThis + rOther) -> None
 
-            // Circles are touching.
+            /// Circles are touching.
             | dist when dist = (rThis + rOther) -> None
 
             /// Coincident circles.
@@ -207,7 +222,7 @@ module Geometry =
             /// One circle inside other circle.
             | dist when dist < abs (rThis - rOther) -> None
 
-            /// Circles are intersecting (i.e., have two itnersection points).
+            /// Circles are intersecting (i.e., have two intersection points).
             | dist ->
                 let a = (rThis ** 2.0 - rOther ** 2.0 + dist ** 2.0) / (2.0 * dist)
                 let h = rThis ** 2.0 - a ** 2.0 |> Math.Sqrt
@@ -244,49 +259,43 @@ module Geometry =
         /// Calculates the intersection circle of two spheres.
         /// We interpret touching sphers as non-intersecting.
         member this.IntersectionWith other =
-            // TODO: finish function
+            let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
             
-//    member this.Intersection (other: AtomInfo) : SphereSphereIntersection =
-//        let dist = this.Center.Distance other.Center
-//
-//        match dist with
-//        | d when d >= (this.Radius + other.Radius) || (d = 0.0 && this.Radius = other.Radius)
-//            -> NoIntersection
-//
-//        | d when (d + this.Radius) < other.Radius
-//            -> Eclipsed
-//
-//        | _ ->
-//            // Intersection plane
-//            let A = 2.0 * (other.Center.X - this.Center.X)
-//            let B = 2.0 * (other.Center.Y - this.Center.Y)
-//            let C = 2.0 * (other.Center.Z - this.Center.Z)
-//            let D = this.Center.X ** 2.0 - other.Center.X ** 2.0 + this.Center.Y ** 2.0 - other.Center.Y ** 2.0 +
-//                    this.Center.Z ** 2.0 - other.Center.Z ** 2.0 - this.Radius ** 2.0 + other.Radius ** 2.0
-//
-//            // Intersection center
-//            let t = (this.Center.X * A + this.Center.Y * B + this.Center.Z * C + D) /
-//                    (A * (this.Center.X - other.Center.X) + B * (this.Center.Y - other.Center.Y) + C * (this.Center.Z - other.Center.Z))
-//            let x = this.Center.X + t * (other.Center.X - this.Center.X)
-//            let y = this.Center.Y + t * (other.Center.Y - this.Center.Y)
-//            let z = this.Center.Z + t * (other.Center.Z - this.Center.Z)
-//            let intersectionCenter: Point3D = { X = x; Y = y; Z = z }
-//
-//            // Intersection
-//            let x = (this.Radius ** 2.0 + dist ** 2.0 - other.Radius ** 2.0) / (2.0 * this.Radius * dist)
-//            if x < 1.0 then
-//                let alpha = Math.Acos(x)
-//                let R = this.Radius * Math.Sin alpha
-//                match R with
-//                | 0.0 -> IntersectionPoint intersectionCenter
-//                | _ ->
-//                    let v = this.Center.FindVector other.Center
-//                    IntersectionCircle (intersectionCenter, R, v)
-//            else
-//                NoIntersection
+            /// Calculate the distance between the center of two spheres and determine
+            /// the type of intersection.
+            match pThis.Distance pOther with
             
-            Circle3D ({ X = 0.0; Y = 0.0; Z = 0.0 }, Radius 0.0, { X = 0.0; Y = 0.0; Z = 0.0 })
-
+            /// No intersection.
+            | dist when dist >= rThis + rOther || (dist = 0.0 && rThis = rOther) -> None
+            
+            /// This sphere is inside other sphere.
+            | dist when dist + rThis < rOther -> None
+            
+            /// Spheres are intersecting (i.e, there is an intersection circle in
+            /// three-dimensional Euclidean space).
+            | dist ->
+                /// Intersection plane.
+                let a = (pOther - pThis).Mul 2.0
+                let b = (pThis.Pow 2.0 - pOther.Pow 2.0).Sum()
+                
+                /// Intersection center.
+                let t = (pThis * a).Sum() + b / (a * (pThis - pOther)).Sum()
+                let intersectionCenter = (pThis.Add t)  * (pOther - pThis)
+                        
+                /// Calculate intersection.
+                let x = (rThis ** 2.0 + dist ** 2.0 - rOther ** 2.0) / (2.0 * rThis * dist)
+                
+                /// Calculate radius of intersection circle.
+                match rThis * Math.Sin (Math.Acos(x)) with
+                | 0.0 ->
+                    /// Radius of intersection circle is zero. This and other sphere
+                    /// are not intersecting but touching.
+                    None
+                    
+                | intersectionCircleRadius ->
+                    /// Radius of intersection circle is non-zero. There is an intersection circle.
+                    let intersectionCircleNorm = pThis.FindVector pOther
+                    Circle3D (intersectionCenter, Radius intersectionCircleRadius, intersectionCircleNorm) |> Some 
 
     /// <summary>
     /// Definition for a cylinder.
@@ -347,24 +356,25 @@ module Chem =
     /// <summary>
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
     /// </summary>
-    type Molecule =
-        { Atoms: Atom list
-          Bonds: Bond list }
+    type Molecule = { Atoms: Atom list; Bonds: Bond list }
 
 module Svg =
-
+    
+    open Fundamentals
     open Geometry
+    
+    /// <summary>
+    /// Point-of-view camera to draw SVG from.
+    /// </summary>
+    type Camera = { Perpendicular: Vector3D; Horizon: Vector3D; Forward: Vector3D }
 
     /// <summary>
     /// ViewBox defines the boundaries of the SVG viewbox.
     /// </summary>
     type ViewBox = { MinX: float; MinY: float; Width: float; Height: float }
-
-    /// <summary>
-    /// Definition is a collection of supported SVG definition embeddings.
-    /// SVG definitions are elements that can be reused in inside an SVG image.
-    /// </summary>
-    type Definition = | RadialGradient | LinearGradient
+        with
+        override this.ToString () =
+            $"viewBox=\"{this.MinX} {this.MinY} {this.Width} {this.Height}\""
 
     /// <summary>
     /// Shape is a collection of supported shapes to draw in
@@ -372,18 +382,61 @@ module Svg =
     /// </summary>
     type Shape =
         | Line of Line
+        | Cylinder of Cylinder 
         | Circle of Circle2D
         | Quadrangle of Quadrangle
+        with
+        override this.ToString () =
+            match this with
+            
+            /// Draw line.
+            | Line (Geometry.Line (a, b)) ->
+                /// TODO 
+                raise <| NotImplementedException()
+                
+            /// Draw cylinder.
+            | Cylinder (Geometry.Cylinder (Geometry.Line (a, b), Radius r)) ->
+                /// TODO 
+                raise <| NotImplementedException()
+                
+            /// Draw circle.
+            | Circle (Geometry.Circle2D (p, Radius r)) ->
+                /// TODO
+                raise <| NotImplementedException()
+            
+            /// Draw quadrangle.
+            | Quadrangle (Geometry.Quadrangle (a, b, c, d)) ->
+                /// TODO
+                raise <| NotImplementedException()
 
     /// <summary>
     /// Header describes the SVG ID and the SVG viewbox.
     /// </summary>
-    type Header = Header of ID: string * ViewBox
+    type Header = Header of version: float * encoding: string 
+        with
+        override this.ToString () =
+            let (Header (version, encoding)) = this 
+            $"<?xml version=\"{version}\" encoding=\"{encoding}\">"
 
     /// <summary>
     /// SVG encapsulates all individual elements in the SVG image.
     /// </summary>
-    type SVG =
-        { Header: Header
-          Definitions: Definition list
-          Objects: Shape list }
+    type SVG = { Header: Header; ID: string; ViewBox: ViewBox; Objects: Shape list }
+        with
+        override this.ToString () =            
+            /// Concatenate definitions, objects, and header strings. 
+            this.Header.ToString() + this.Body() 
+            
+        member this.Body() =
+            let id = $"id=\"{this.ID}\""
+            let xmlns = "xmlns=\"http://www.w3.org/2000/svg\""
+            let viewBox = this.ViewBox.ToString()
+            
+            /// Convert all objects to a single string.
+            let objs =
+                this.Objects
+                |> List.map (fun x -> x.ToString())
+                |> String.concat " "
+            
+            $"<svg {id} {xmlns} {viewBox}>{objs}<\svg>"
+            

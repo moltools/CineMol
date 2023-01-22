@@ -1,8 +1,8 @@
 module CineMol.Style
 
-open CineMol.Types.Fundamentals
-open CineMol.Types.Style 
-open CineMol.Types.Chem
+open Types.Fundamentals
+open Types.Style 
+open Types.Chem
 
 type AtomColorStyle =
     
@@ -54,6 +54,4 @@ type AtomRadius =
         | Tl -> 196.0 | Pb -> 202.0 | Bi -> 207.0 | Po -> 197.0 | At -> 202.0 | Rn -> 220.0
         | Fr -> 348.0 | Ra -> 283.0
         |> Radius
-        
-// TODO: how to normalize atom radii im pm to viewer? Perhaps based on average single CC bond length?
         

@@ -11,5 +11,6 @@
     <Compile Include="Clipping.fs" />
     <Compile Include="Projection.fs" />
     <Compile Include="Style.fs" />
+    <Compile Include="Drawing.fs" />
   </ItemGroup>
 </Project>

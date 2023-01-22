@@ -12,7 +12,6 @@ let round (digits: int) (v: float) = Math.Round(v, digits)
 /// </summary>
 let abs (v: float) = Math.Sqrt(v ** 2.0)
 
-
 /// <summary>
 /// Clamp a floating point value between two other floating point values.
 /// </summary>
