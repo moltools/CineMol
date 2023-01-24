@@ -1,3 +1,0 @@
-module CineMol.Drawing
-
-/// TODO 

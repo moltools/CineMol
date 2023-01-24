@@ -408,6 +408,10 @@ module Svg =
             | Quadrangle (Geometry.Quadrangle (a, b, c, d)) ->
                 /// TODO
                 raise <| NotImplementedException()
+                
+        member this.Clip (other: Shape) =
+            /// TODO
+            raise <| NotImplementedException()
 
     /// <summary>
     /// Header describes the SVG ID and the SVG viewbox.
@@ -438,5 +442,4 @@ module Svg =
                 |> List.map (fun x -> x.ToString())
                 |> String.concat " "
             
-            $"<svg {id} {xmlns} {viewBox}>{objs}<\svg>"
-            
+            $"<svg {id} {xmlns} {viewBox}>{objs}<\svg>"      

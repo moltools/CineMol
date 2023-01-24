@@ -24,4 +24,3 @@ let perspectiveProjection focalLength p =
 /// </summary>
 let project camera pov focalLength p =
     p |> physicalProjection camera pov |> perspectiveProjection focalLength
-    

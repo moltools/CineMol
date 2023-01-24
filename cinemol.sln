@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9B10553B-A4A
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "CineMol", "src\CineMol\CineMol.fsproj", "{0D7596DE-F7B7-4226-B34F-BA67463A0A69}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{62631BD0-9CAC-463C-BFEC-A6BA7FC49D0E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "CineMol.Tests", "tests\CineMol.Tests\CineMol.Tests.fsproj", "{C75D06E5-8FBD-4FD7-9B3A-B5FF80B90B5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +24,13 @@ Global
 		{0D7596DE-F7B7-4226-B34F-BA67463A0A69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D7596DE-F7B7-4226-B34F-BA67463A0A69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D7596DE-F7B7-4226-B34F-BA67463A0A69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C75D06E5-8FBD-4FD7-9B3A-B5FF80B90B5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C75D06E5-8FBD-4FD7-9B3A-B5FF80B90B5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C75D06E5-8FBD-4FD7-9B3A-B5FF80B90B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C75D06E5-8FBD-4FD7-9B3A-B5FF80B90B5C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0D7596DE-F7B7-4226-B34F-BA67463A0A69} = {9B10553B-A4A9-4908-A0A9-1EC0B070955F}
+		{C75D06E5-8FBD-4FD7-9B3A-B5FF80B90B5C} = {62631BD0-9CAC-463C-BFEC-A6BA7FC49D0E}
 	EndGlobalSection
 EndGlobal
