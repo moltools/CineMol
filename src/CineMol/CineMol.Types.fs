@@ -4,23 +4,17 @@ open System
 
 module Fundamentals =
 
-    /// <summary>
     /// Index indicates the indexation number of an object.
-    /// </summary>
     type Index = Index of int
 
-    /// <summary>
     /// Radius defines the radius of a circle or sphere.
-    /// </summary>
     type Radius = Radius of float
 
 module Style =
 
     open CineMol.Helpers
 
-    /// <summary>
     /// Color describes a color in RGB int values or Hex string.
-    /// </summary>
     type Color = Color of int * int * int
         with
         member this.ToHex =
@@ -35,18 +29,14 @@ module Style =
               diffuseChannel g,
               diffuseChannel b ) |> Color
             
-    /// <summary>
     /// Molecule style depictions to draw as SVG.
-    /// </summary>
     type Depiction = | SpaceFilling | BallAndStick | WireFrame
 
 module Geometry =
 
     open Fundamentals
 
-    /// <summary>
     /// Vector2D resembles a vector in two-dimensional Euclidean space.
-    /// </summary>
     type Vector2D = { X: float; Y: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X;  Y = p1.Y + p2.Y }
@@ -62,9 +52,7 @@ module Geometry =
         member this.SumOfSquares = (this.Pow 2.0).Sum
         member this.Norm = this.Mul (if this.Mag = 0.0 then infinity else 1.0 / this.Mag)
 
-    /// <summary>
     /// Vector3D resembles a vector in three-dimensional Euclidean space.
-    /// </summary>
     type Vector3D = { X: float; Y: float; Z: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
@@ -85,9 +73,7 @@ module Geometry =
               Z = this.X * other.Y - this.Y * other.X }
         member this.ProjectVector (other: Vector3D) = (other.Dot this) / other.Mag
 
-    /// <summary>
     /// Point2D resembles a point in two-dimensional Euclidean space.
-    /// </summary>
     type Point2D = { X: float; Y: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y }
@@ -103,9 +89,7 @@ module Geometry =
         member this.FindVector other = other - this
         member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
 
-    /// <summary>
     /// Point3D resembles a point in three-dimensional Euclidean space.
-    /// </summary>
     type Point3D = { X: float; Y: float; Z: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
@@ -123,9 +107,7 @@ module Geometry =
         member this.ToPoint2D () = { X = this.X; Y = this.Y }
         member this.ToVector3D () : Vector3D = { X = this.X; Y = this.Y; Z = this.Z }
 
-    /// <summary>
     /// Axis describes a plane in a three-dimensional Euclidean space.
-    /// </summary>
     and Axis = | X | Y | Z
         with
         member this.RotationMatrix =
@@ -146,9 +128,7 @@ module Geometry =
                       Y = p.X * Math.Sin(rad) + p.Y * Math.Cos(rad)
                       Z = p.Z })
 
-    /// <summary>
     /// Definition for a line.
-    /// </summary>
     type Line = Line of Point2D * Point2D
         with
 
@@ -189,9 +169,7 @@ module Geometry =
                     let x = (cThis - cOther) / (aOther - aThis)
                     Some { X = x; Y = (aThis * x) + cThis }
 
-    /// <summary>
     /// Definition for a circle in two-dimensional Euclidean space.
-    /// </summary>
     type Circle2D = Circle2D of Point2D * Radius
         with
 
@@ -234,19 +212,13 @@ module Geometry =
                 let y4 = y2 + h * (pOther.X - pThis.X) / dist
                 Some ({ X = x3; Y = y3 }, { X = x4; Y = y4 })
 
-    /// <summary>
     /// Definition of a circle in three-dimensdional Euclidean space.
-    /// </summary>
     type Circle3D = Circle3D of Point3D * Radius * Vector3D
 
-    /// <summary>
     /// Definition for a quadrangle.
-    /// </summary>
     type Quadrangle = Quadrangle of Point2D * Point2D * Point2D * Point2D
 
-    /// <summary>
     /// Definition for a sphere.
-    /// </summary>
     type Sphere = Sphere of Point3D * Radius
         with
 
@@ -297,9 +269,7 @@ module Geometry =
                     let intersectionCircleNorm = pThis.FindVector pOther
                     Circle3D (intersectionCenter, Radius intersectionCircleRadius, intersectionCircleNorm) |> Some 
 
-    /// <summary>
     /// Definition for a cylinder.
-    /// </summary>
     type Cylinder = Cylinder of Line * Radius
 
 module Chem =
@@ -308,9 +278,7 @@ module Chem =
     open Style
     open Geometry
 
-    /// <summary>
     /// AtomType describes the atomic number of an atom.
-    /// </summary>
     type AtomType =
         | H                                                                                  | He
         | Li | Be                                                   | B  | C  | N  | O  | F  | Ne
@@ -318,44 +286,62 @@ module Chem =
         | K  | Ca | Sc | Ti | V  | Cr | Mn | Fe | Co | Ni | Cu | Zn | Ga | Ge | As | Se | Br | Kr
         | Rb | Sr | Y  | Zr | Nb | Mo | Tc | Ru | Rh | Pd | Ag | Cd | In | Sn | Sb | Te | I  | Xe
         | Cs | Ba | Lu | Hf | Ta | W  | Re | Os | Ir | Pt | Au | Hg | Tl | Pb | Bi | Po | At | Rn
-        | Fr | Ra 
-
-    /// <summary>
+        | Fr | Ra
+        with
+        static member FromString (atomString: string) =
+            match atomString with
+            | "H"  -> Some H  | "He" -> Some He | "Li" -> Some Li | "Be" -> Some Be | "B"  -> Some B 
+            | "C"  -> Some C  | "N"  -> Some N  | "O"  -> Some O  | "F"  -> Some F  | "Ne" -> Some Ne
+            | "Na" -> Some Na | "Mg" -> Some Mg | "Al" -> Some Al | "Si" -> Some Si | "P"  -> Some P
+            | "S"  -> Some S  | "Cl" -> Some Cl | "Ar" -> Some Ar | "K"  -> Some K  | "Ca" -> Some Ca
+            | "Sc" -> Some Sc | "Ti" -> Some Ti | "V"  -> Some V  | "Cr" -> Some Cr | "Mn" -> Some Mn
+            | "Fe" -> Some Fe | "Co" -> Some Co | "Ni" -> Some Ni | "Cu" -> Some Cu | "Zn" -> Some Zn
+            | "Ga" -> Some Ga | "Ge" -> Some Ge | "As" -> Some As | "Se" -> Some Se | "Br" -> Some Br
+            | "Kr" -> Some Kr | "Rb" -> Some Rb | "Sr" -> Some Sr | "Y"  -> Some Y  | "Zr" -> Some Zr
+            | "Nb" -> Some Nb | "Mo" -> Some Mo | "Tc" -> Some Tc | "Ru" -> Some Ru | "Rh" -> Some Rh
+            | "Pd" -> Some Pd | "Ag" -> Some Ag | "Cd" -> Some Cd | "In" -> Some In | "Sn" -> Some Sn
+            | "Sb" -> Some Sb | "Te" -> Some Te | "I"  -> Some I  | "Xe" -> Some Xe | "Cs" -> Some Cs
+            | "Ba" -> Some Ba | "Lu" -> Some Lu | "Hf" -> Some Hf | "Ta" -> Some Ta | "W"  -> Some W
+            | "Re" -> Some Re | "Os" -> Some Os | "Ir" -> Some Ir | "Pt" -> Some Pt | "Au" -> Some Au
+            | "Hg" -> Some Hg | "Tl" -> Some Tl | "Pb" -> Some Pb | "Bi" -> Some Bi | "Po" -> Some Po
+            | "At" -> Some At | "Rn" -> Some Rn | "Fr" -> Some Fr | "Ra" -> Some Ra | _    -> None 
+ 
     /// AtomInfo records all information on the atom identity and styling.
-    /// </summary>
     type AtomInfo =
         { Index: Index
           Type: AtomType
-          Color: Color option }
+          Color: Color }
 
-    /// <summary>
+    /// BondType describes the type of bond between two atoms.
+    type BondType = | Single | Double | Triple | Aromatic
+        with 
+        static member FromString (bondString: string) =
+            match bondString with
+            | "1" | "SINGLE"   | "Single"   -> Some Single
+            | "2" | "DOUBLE"   | "Double"   -> Some Double
+            | "3" | "TRIPLE"   | "Triple"   -> Some Triple
+            | "4" | "AROMATIC" | "Aromatic" -> Some Aromatic
+            | _                             -> None 
+    
     /// BondInfo records all information on the bond identity and styling.
-    /// </summary>
     type BondInfo =
         { Index: Index
-          BeginAtom: Index
-          EndAtom: Index
+          BeginAtomIndex: Index
+          EndAtomIndex: Index
+          Type: BondType 
           Color: Color option }
 
-    /// <summary>
     /// Atom describes an atom in two-dimensional or three-dimensional
     /// Euclidean space.
-    /// </summary>
     type Atom =
-        | Atom2D of AtomInfo * Circle2D
-        | Atom3D of AtomInfo * Sphere
+        | Atom2D of AtomInfo * Point2D * Radius 
+        | Atom3D of AtomInfo * Point3D * Radius 
 
-    /// <summary>
     /// Bond describes a bond between two Atoms in two-dimensional or
     /// three-dimensional Euclidean space.
-    /// </summary>
-    type Bond =
-        | Bond2D of BondInfo * Line
-        | Bond3D of BondInfo * Cylinder
+    type Bond = Bond of BondInfo  
 
-    /// <summary>
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
-    /// </summary>
     type Molecule = { Atoms: Atom list; Bonds: Bond list }
 
 module Svg =
@@ -363,23 +349,17 @@ module Svg =
     open Fundamentals
     open Geometry
     
-    /// <summary>
     /// Point-of-view camera to draw SVG from.
-    /// </summary>
     type Camera = { Perpendicular: Vector3D; Horizon: Vector3D; Forward: Vector3D }
 
-    /// <summary>
     /// ViewBox defines the boundaries of the SVG viewbox.
-    /// </summary>
     type ViewBox = { MinX: float; MinY: float; Width: float; Height: float }
         with
         override this.ToString () =
             $"viewBox=\"{this.MinX} {this.MinY} {this.Width} {this.Height}\""
 
-    /// <summary>
     /// Shape is a collection of supported shapes to draw in
     /// two-dimensional Euclidean space as SVG XML objects.
-    /// </summary>
     type Shape =
         | Line of Line
         | Cylinder of Cylinder 
@@ -413,18 +393,14 @@ module Svg =
             /// TODO
             raise <| NotImplementedException()
 
-    /// <summary>
     /// Header describes the SVG ID and the SVG viewbox.
-    /// </summary>
     type Header = Header of version: float * encoding: string 
         with
         override this.ToString () =
             let (Header (version, encoding)) = this 
             $"<?xml version=\"{version}\" encoding=\"{encoding}\">"
 
-    /// <summary>
     /// SVG encapsulates all individual elements in the SVG image.
-    /// </summary>
     type SVG = { Header: Header; ID: string; ViewBox: ViewBox; Objects: Shape list }
         with
         override this.ToString () =            

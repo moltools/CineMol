@@ -1,4 +1,4 @@
-module CineMol.Style.Tests
+module CineMol.Tests.Style
 
 open FsUnit
 open NUnit.Framework

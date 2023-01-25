@@ -11,5 +11,6 @@
         <Compile Include="CineMol.Projection.fs" />
         <Compile Include="CineMol.Style.fs" />
         <Compile Include="CineMol.Drawing.fs" />
+        <Compile Include="CineMol.Parsing.fs" />
     </ItemGroup>
 </Project>

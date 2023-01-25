@@ -1,8 +1,8 @@
-module CineMol.Tests.Helpers
+module CineMol.Tests.Parsing
 
 open FsUnit
 open NUnit.Framework
-open CineMol.Helpers
+open CineMol.Parsing
     
 [<TestFixture>]
 type LinterTests () =

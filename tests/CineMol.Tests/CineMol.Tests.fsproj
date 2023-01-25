@@ -17,6 +17,7 @@
         <Compile Include="CineMol.Tests.Projection.fs" />
         <Compile Include="CineMol.Tests.Style.fs" />
         <Compile Include="CineMol.Tests.Drawing.fs" />
+        <Compile Include="CineMol.Tests.Parsing.fs" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\src\CineMol\CineMol.fsproj" />

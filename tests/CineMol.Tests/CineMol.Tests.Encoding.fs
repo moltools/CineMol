@@ -1,4 +1,4 @@
-module CineMol.Encoding.Tests
+module CineMol.Tests.Encoding
 
 open FsUnit
 open NUnit.Framework
