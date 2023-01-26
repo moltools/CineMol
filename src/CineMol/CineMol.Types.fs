@@ -57,15 +57,15 @@ module Geometry =
         member this.Div v = { X = this.X / v; Y = this.Y / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v }
         member this.Dot other = this.X * other.X + this.Y + other.Y
-        member this.Mag = this.SumOfSquares |> Math.Sqrt
-        member this.Sum = this.X + this.Y
-        member this.SumOfSquares = (this.Pow 2.0).Sum
-        member this.Norm = this.Mul (if this.Mag = 0.0 then infinity else 1.0 / this.Mag)
+        member this.Mag () = this.SumOfSquares |> Math.Sqrt
+        member this.Sum () = this.X + this.Y
+        member this.SumOfSquares = (this.Pow 2.0).Sum()
+        member this.Norm = this.Mul (if this.Mag() = 0.0 then infinity else 1.0 / this.Mag())
     
     /// <summary>
     /// Vector3D resembles a vector in three-dimensional Euclidean space.
     /// </summary>
-    type Vector3D = { X: float; Y: float; Z: float }
+    and Vector3D = { X: float; Y: float; Z: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
         static member (-) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
@@ -75,20 +75,21 @@ module Geometry =
         member this.Div v = { X = this.X / v; Y = this.Y / v; Z = this.Z / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v; Z = this.Z ** v }
         member this.Dot other = this.X * other.X + this.Y * other.Y + this.Z * other.Z
-        member this.Mag = this.SumOfSquares |> Math.Sqrt
-        member this.Sum = this.X + this.Y + this.Z
-        member this.SumOfSquares = (this.Pow 2.0).Sum
-        member this.Norm = this.Mul (if this.Mag = 0.0 then infinity else 1.0 / this.Mag)
+        member this.Mag () = this.SumOfSquares |> Math.Sqrt
+        member this.Sum () = this.X + this.Y + this.Z
+        member this.SumOfSquares = (this.Pow 2.0).Sum()
+        member this.Norm = this.Mul (if this.Mag() = 0.0 then infinity else 1.0 / this.Mag())
         member this.Cross other =
             { X = this.Y * other.Z - this.Z * other.Y
               Y = this.Z * other.X - this.X * other.Z
               Z = this.X * other.Y - this.Y * other.X }
-        member this.ProjectVector (other: Vector3D) = (other.Dot this) / other.Mag
+        member this.ProjectVector (other: Vector3D) = (other.Dot this) / other.Mag()
+        member this.ToPoint3D () : Point3D = { X = this.X; Y = this.Y; Z = this.Z }
     
     /// <summary>
     /// Point2D resembles a point in two-dimensional Euclidean space.
     /// </summary>
-    type Point2D = { X: float; Y: float }
+    and Point2D = { X: float; Y: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y }
         static member (-) (p1, p2) = { X = p1.X - p2.X; Y = p1.Y - p2.Y }
@@ -106,7 +107,7 @@ module Geometry =
     /// <summary>
     /// Point3D resembles a point in three-dimensional Euclidean space.
     /// </summary>
-    type Point3D = { X: float; Y: float; Z: float }
+    and Point3D = { X: float; Y: float; Z: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
         static member (-) (p1, p2) = { X = p1.X - p2.X; Y = p1.Y - p2.Y; Z = p1.Z - p2.Z }
@@ -149,35 +150,35 @@ module Geometry =
     /// <summary>
     /// Definition for a line.
     /// </summary>
-    type Line = Line of Point2D * Point2D
+    type Line2D = Line2D of Point2D * Point2D
         with
         
         /// <summary>
         /// Calculate slope of line.
         /// </summary>
         member this.Slope =
-            let (Line (a, b)) = this
+            let (Line2D (a, b)) = this
             a.Slope b
         
         /// <summary>
         /// Calculate intercept of line with Y-axis.
         /// </summary>
         member this.Intercept =
-            let (Line (a, b)) = this
+            let (Line2D (a, b)) = this
             a.Y - (a.Slope b * a.X)
         
         /// <summary>
         /// Check if two 2D points are on the same side of this line.
         /// </summary>
         member this.SameSideOfLine p1 p2 =
-            let (Line (l1, l2)) = this
+            let (Line2D (l1, l2)) = this
             let d (p: Point2D) = (p.X - l1.X) * (l2.Y - l1.Y) - (p.Y - l1.Y) * (l2.X - l1.X)
             (d p1 > 0.0) = (d p2 > 0.0)
         
         /// <summary>
         /// Calculate if two lines intersect.
         /// </summary>
-        member this.IntersectionWith (other: Line) =
+        member this.IntersectionWithLine (other: Line2D) =
             let aThis, aOther = this.Slope, other.Slope
             let cThis, cOther = this.Intercept, other.Intercept
 
@@ -196,24 +197,50 @@ module Geometry =
                     // Lines intersect.
                     let x = (cThis - cOther) / (aOther - aThis)
                     Some { X = x; Y = (aThis * x) + cThis }
+
+    and Line3D = Line3D of Point3D * Point3D
+        with
+        
+        /// <summary>
+        /// Calculates the intersection points of a line with a sphere. We interpret tangent line as non-intersecting.
+        /// </summary>
+        member line.IntersectionWithSphere (sphere: Sphere) =
+            let Line3D (aPoint, bPoint), Sphere (cPoint, Radius cRadius) = line, sphere
+                
+            let v = aPoint.FindVector bPoint
+            let A = (v.Pow 2.0).Sum()
+            let B = 2.0 * ((aPoint * v.ToPoint3D()).Sum() - (cPoint * v.ToPoint3D()).Sum())
+            let C = (aPoint.Pow 2.0).Sum() + (cPoint.Pow 2.0).Sum() - ((aPoint * cPoint).Mul 2.0).Sum() - (cRadius ** 2.0)
+            
+            // Calculate discriminant.
+            let D = B * B - 4.0 * A * C 
+            
+            // Negative discriminant indicates no intersection and a zero discriminant indicates a tangent line.
+            if D <= 0.0 then None
+            else
+                let t1 = (-B - Math.Sqrt D) / (2.0 * A)
+                let t2 = (-B + Math.Sqrt D) / (2.0 * A)
+                let p1 = (aPoint.Mul (1.0 - t1)) + (bPoint.Mul t1)
+                let p2 = (aPoint.Mul (1.0 - t2)) + (bPoint.Mul t2)
+                Some (p1, p2)
     
     /// <summary>
     /// Definition for a circle in two-dimensional Euclidean space.
     /// </summary>
-    type Circle2D = Circle2D of Point2D * Radius
+    and Circle2D = Circle2D of Point2D * Radius
         with
         
         /// <summary>
         /// Checks if two circles have two intersection points. We interpret touching circles as non-intersecting.
         /// </summary>
-        member this.IntersectsWith other =
+        member this.IntersectsWithCircle other =
             let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
             pThis.Distance pOther < (rThis + rOther)
         
         /// <summary>
         /// Calculates the intersection points of two circles. We interpret touching circles as non-intersecting.
         /// </summary>
-        member this.IntersectionWith other =
+        member this.IntersectionWithCircle other =
             let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
             
             // Calculate the distance between the center of two circles and determine the type of intersection.
@@ -246,30 +273,30 @@ module Geometry =
     /// <summary>
     /// Definition of a circle in three-dimensional Euclidean space.
     /// </summary>
-    type Circle3D = Circle3D of Point3D * Radius * Vector3D
+    and Circle3D = Circle3D of Point3D * Radius * Vector3D
     
     /// <summary>
     /// Definition for a quadrangle.
     /// </summary>
-    type Quadrangle = Quadrangle of Point2D * Point2D * Point2D * Point2D
+    and Quadrangle = Quadrangle of Point2D * Point2D * Point2D * Point2D
     
     /// <summary>
     /// Definition for a sphere.
     /// </summary>
-    type Sphere = Sphere of Point3D * Radius
+    and Sphere = Sphere of Point3D * Radius
         with
         
         /// <summary>
         /// Checks if two spheres have an intersection circle. We interpret touching spheres as non-intersecting.
         /// </summary>
-        member this.IntersectsWith other =
+        member this.IntersectsWithSphere other =
             let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
             pThis.Distance pOther <= (rThis + rOther)
 
         /// <summary>
         /// Calculates the intersection circle of two spheres. We interpret touching spheres as non-intersecting.
         /// </summary>
-        member this.IntersectionWith other =
+        member this.IntersectionWithSphere other =
             let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
             
             // Calculate the distance between the center of two spheres and determine the type of intersection.
@@ -278,8 +305,8 @@ module Geometry =
             // No intersection.
             | dist when dist >= rThis + rOther || (dist = 0.0 && rThis = rOther) -> None
             
-            // This sphere is inside other sphere.
-            | dist when dist + rThis < rOther -> None
+            // This sphere is inside other sphere or vica versa.
+            | dist when dist + rThis < rOther || dist + rOther < rThis -> None
             
             // Spheres are intersecting (i.e, there is an intersection circle in three-dimensional Euclidean space).
             | dist ->
@@ -306,10 +333,15 @@ module Geometry =
                     let intersectionCircleNorm = pThis.FindVector pOther
                     Circle3D (intersectionCenter, Radius intersectionCircleRadius, intersectionCircleNorm) |> Some 
 
+        /// <summary>
+        /// Calculates the intersection points of a sphere with a line. We interpret tangent line as non-intersecting.
+        /// </summary>
+        member this.IntersectionWithLine (line: Line3D) = line.IntersectionWithSphere this 
+    
     /// <summary>
     /// Definition for a cylinder.
     /// </summary>
-    type Cylinder = Cylinder of Line * Radius
+    and Cylinder = Cylinder of Line2D * Radius
 
 module Chem =
 
@@ -417,7 +449,7 @@ module Svg =
     /// Shape is a collection of supported shapes to draw in two-dimensional Euclidean space as SVG XML objects.
     /// </summary>
     type Shape =
-        | Line of Line
+        | Line of Line2D
         | Cylinder of Cylinder 
         | Circle of Circle2D
         | Quadrangle of Quadrangle
@@ -426,12 +458,12 @@ module Svg =
             match this with
             
             // Draw line.
-            | Line (Geometry.Line (a, b)) ->
+            | Line (Geometry.Line2D (a, b)) ->
                 // TODO 
                 raise <| NotImplementedException()
                 
             // Draw cylinder.
-            | Cylinder (Geometry.Cylinder (Geometry.Line (a, b), Radius r)) ->
+            | Cylinder (Geometry.Cylinder (Geometry.Line2D (a, b), Radius r)) ->
                 // TODO 
                 raise <| NotImplementedException()
                 
