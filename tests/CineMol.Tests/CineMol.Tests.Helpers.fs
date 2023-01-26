@@ -1,6 +1,5 @@
 module CineMol.Tests.Helpers
 
-open FsUnit
 open NUnit.Framework
 open CineMol.Helpers
     

@@ -6,5 +6,5 @@ open Types.Svg
 
 /// Driver code for creating SVG for molecule.
 let draw (mol: Molecule) =
-    /// TODO
+    // TODO
     raise <| NotImplementedException()

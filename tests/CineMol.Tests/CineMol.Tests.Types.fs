@@ -1,6 +1,5 @@
 module CineMol.Tests.Types
 
-open FsUnit
 open NUnit.Framework
 open CineMol.Types
     

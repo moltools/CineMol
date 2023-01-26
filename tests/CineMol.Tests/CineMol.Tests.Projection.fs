@@ -1,6 +1,5 @@
 module CineMol.Tests.Projection
 
-open FsUnit
 open NUnit.Framework
 open CineMol.Projection
     

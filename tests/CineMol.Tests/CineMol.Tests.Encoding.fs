@@ -1,6 +1,5 @@
 module CineMol.Tests.Encoding
 
-open FsUnit
 open NUnit.Framework
 open CineMol.Encoding
     

@@ -3,23 +3,29 @@
 open System
 
 module Fundamentals =
-
+    
+    /// <summary>
     /// Index indicates the indexation number of an object.
+    /// </summary>
     type Index = Index of int
-
+    
+    /// <summary>
     /// Radius defines the radius of a circle or sphere.
+    /// </summary>
     type Radius = Radius of float
 
 module Style =
 
     open CineMol.Helpers
-
+    
+    /// <summary>
     /// Color describes a color in RGB int values or Hex string.
+    /// </summary>
     type Color = Color of int * int * int
         with
         member this.ToHex =
             let (Color (r, g, b)) = this
-            sprintf $"#{r:x2}{g:x2}{b:x2}"
+            $"#{r:x2}{g:x2}{b:x2}"
 
         member this.Diffuse alpha =
             let alpha = clamp 0.0 1.0 alpha
@@ -28,15 +34,19 @@ module Style =
             ( diffuseChannel r,
               diffuseChannel g,
               diffuseChannel b ) |> Color
-            
+    
+    /// <summary>    
     /// Molecule style depictions to draw as SVG.
+    /// </summary>
     type Depiction = | SpaceFilling | BallAndStick | WireFrame
 
 module Geometry =
 
     open Fundamentals
-
+    
+    /// <summary>
     /// Vector2D resembles a vector in two-dimensional Euclidean space.
+    /// </summary>
     type Vector2D = { X: float; Y: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X;  Y = p1.Y + p2.Y }
@@ -51,8 +61,10 @@ module Geometry =
         member this.Sum = this.X + this.Y
         member this.SumOfSquares = (this.Pow 2.0).Sum
         member this.Norm = this.Mul (if this.Mag = 0.0 then infinity else 1.0 / this.Mag)
-
+    
+    /// <summary>
     /// Vector3D resembles a vector in three-dimensional Euclidean space.
+    /// </summary>
     type Vector3D = { X: float; Y: float; Z: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
@@ -72,8 +84,10 @@ module Geometry =
               Y = this.Z * other.X - this.X * other.Z
               Z = this.X * other.Y - this.Y * other.X }
         member this.ProjectVector (other: Vector3D) = (other.Dot this) / other.Mag
-
+    
+    /// <summary>
     /// Point2D resembles a point in two-dimensional Euclidean space.
+    /// </summary>
     type Point2D = { X: float; Y: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y }
@@ -89,7 +103,9 @@ module Geometry =
         member this.FindVector other = other - this
         member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
 
+    /// <summary>
     /// Point3D resembles a point in three-dimensional Euclidean space.
+    /// </summary>
     type Point3D = { X: float; Y: float; Z: float }
         with
         static member (+) (p1, p2) = { X = p1.X + p2.X; Y = p1.Y + p2.Y; Z = p1.Z + p2.Z }
@@ -106,8 +122,10 @@ module Geometry =
         member p.Rotate (axis: Axis) rad = axis.RotationMatrix(p, rad)
         member this.ToPoint2D () = { X = this.X; Y = this.Y }
         member this.ToVector3D () : Vector3D = { X = this.X; Y = this.Y; Z = this.Z }
-
+    
+    /// <summary>
     /// Axis describes a plane in a three-dimensional Euclidean space.
+    /// </summary>
     and Axis = | X | Y | Z
         with
         member this.RotationMatrix =
@@ -128,79 +146,92 @@ module Geometry =
                       Y = p.X * Math.Sin(rad) + p.Y * Math.Cos(rad)
                       Z = p.Z })
 
+    /// <summary>
     /// Definition for a line.
+    /// </summary>
     type Line = Line of Point2D * Point2D
         with
-
+        
+        /// <summary>
         /// Calculate slope of line.
+        /// </summary>
         member this.Slope =
             let (Line (a, b)) = this
             a.Slope b
-
+        
+        /// <summary>
         /// Calculate intercept of line with Y-axis.
+        /// </summary>
         member this.Intercept =
             let (Line (a, b)) = this
             a.Y - (a.Slope b * a.X)
-
+        
+        /// <summary>
         /// Check if two 2D points are on the same side of this line.
+        /// </summary>
         member this.SameSideOfLine p1 p2 =
             let (Line (l1, l2)) = this
             let d (p: Point2D) = (p.X - l1.X) * (l2.Y - l1.Y) - (p.Y - l1.Y) * (l2.X - l1.X)
             if (d p1 > 0.0) = (d p2 > 0.0) then true else false
-
+        
+        /// <summary>
         /// Calculate if two lines intersect.
+        /// </summary>
         member this.IntersectionWith (other: Line) =
             let aThis, aOther = this.Slope, other.Slope
             let cThis, cOther = this.Intercept, other.Intercept
 
-            /// Compare slopes of the two lines and determine type of intersection.
+            // Compare slopes of the two lines and determine type of intersection.
             match aThis = aOther with
 
-            /// Lines run parellel to each other.
+            // Lines run parallel to each other.
             | true -> None
 
-            /// Lines intersect.
+            // Lines intersect.
             | false ->
                 if (cThis = infinity || cThis = -infinity) || (cOther = infinity || cOther = -infinity) then
-                    /// Lines are near-parallel. Interpret as non-intersecting.
+                    // Lines are near-parallel. Interpret as non-intersecting.
                     None
                 else
-                    /// Lines intersect.
+                    // Lines intersect.
                     let x = (cThis - cOther) / (aOther - aThis)
                     Some { X = x; Y = (aThis * x) + cThis }
-
+    
+    /// <summary>
     /// Definition for a circle in two-dimensional Euclidean space.
+    /// </summary>
     type Circle2D = Circle2D of Point2D * Radius
         with
-
-        /// Checks if two circles have two intersection points.
-        /// We interpret touching circles as non-intersecting.
+        
+        /// <summary>
+        /// Checks if two circles have two intersection points. We interpret touching circles as non-intersecting.
+        /// </summary>
         member this.IntersectsWith other =
             let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
             if pThis.Distance pOther < (rThis + rOther) then true else false
-
-        /// Calculates the intersection points of two circles.
-        /// We interpret touching circles as non-intersecting.
+        
+        /// <summary>
+        /// Calculates the intersection points of two circles. We interpret touching circles as non-intersecting.
+        /// </summary>
         member this.IntersectionWith other =
             let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
-
-            /// Calculate the distance between the center of two circles and determine
-            /// the type of intersection.
+            
+            // Calculate the distance between the center of two circles and determine the type of intersection.
             match pThis.Distance pOther with
 
-            /// No intersection.
+            // No intersection.
             | dist when dist > (rThis + rOther) -> None
 
-            /// Circles are touching.
+            // Circles are touching.
             | dist when dist = (rThis + rOther) -> None
 
-            /// Coincident circles.
+            // Coincident circles.
             | dist when dist < 1E-5 && rThis = rOther -> None
 
-            /// One circle inside other circle.
+            // One circle inside other circle.
             | dist when dist < abs (rThis - rOther) -> None
 
-            /// Circles are intersecting (i.e., have two intersection points).
+            // Circles are intersecting (i.e., have two intersection points).
             | dist ->
                 let a = (rThis ** 2.0 - rOther ** 2.0 + dist ** 2.0) / (2.0 * dist)
                 let h = rThis ** 2.0 - a ** 2.0 |> Math.Sqrt
@@ -211,40 +242,46 @@ module Geometry =
                 let x4 = x2 - h * (pOther.Y - pThis.Y) / dist
                 let y4 = y2 + h * (pOther.X - pThis.X) / dist
                 Some ({ X = x3; Y = y3 }, { X = x4; Y = y4 })
-
-    /// Definition of a circle in three-dimensdional Euclidean space.
+    
+    /// <summary>
+    /// Definition of a circle in three-dimensional Euclidean space.
+    /// </summary>
     type Circle3D = Circle3D of Point3D * Radius * Vector3D
-
+    
+    /// <summary>
     /// Definition for a quadrangle.
+    /// </summary>
     type Quadrangle = Quadrangle of Point2D * Point2D * Point2D * Point2D
-
+    
+    /// <summary>
     /// Definition for a sphere.
+    /// </summary>
     type Sphere = Sphere of Point3D * Radius
         with
-
-        /// Checks if two spheres have an intersection circle.
-        /// We interpret touching sphers as non-intersecting.
+        
+        /// <summary>
+        /// Checks if two spheres have an intersection circle. We interpret touching spheres as non-intersecting.
+        /// </summary>
         member this.IntersectsWith other =
             let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
-            if pThis.Distance pOther <= (rThis + rOther) then true else false
+            pThis.Distance pOther <= (rThis + rOther)
 
-        /// Calculates the intersection circle of two spheres.
-        /// We interpret touching sphers as non-intersecting.
+        /// <summary>
+        /// Calculates the intersection circle of two spheres. We interpret touching spheres as non-intersecting.
+        /// </summary>
         member this.IntersectionWith other =
             let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
             
-            /// Calculate the distance between the center of two spheres and determine
-            /// the type of intersection.
+            // Calculate the distance between the center of two spheres and determine the type of intersection.
             match pThis.Distance pOther with
             
-            /// No intersection.
+            // No intersection.
             | dist when dist >= rThis + rOther || (dist = 0.0 && rThis = rOther) -> None
             
-            /// This sphere is inside other sphere.
+            // This sphere is inside other sphere.
             | dist when dist + rThis < rOther -> None
             
-            /// Spheres are intersecting (i.e, there is an intersection circle in
-            /// three-dimensional Euclidean space).
+            // Spheres are intersecting (i.e, there is an intersection circle in three-dimensional Euclidean space).
             | dist ->
                 /// Intersection plane.
                 let a = (pOther - pThis).Mul 2.0
@@ -257,19 +294,21 @@ module Geometry =
                 /// Calculate intersection.
                 let x = (rThis ** 2.0 + dist ** 2.0 - rOther ** 2.0) / (2.0 * rThis * dist)
                 
-                /// Calculate radius of intersection circle.
+                // Calculate radius of intersection circle.
                 match rThis * Math.Sin (Math.Acos(x)) with
                 | 0.0 ->
-                    /// Radius of intersection circle is zero. This and other sphere
-                    /// are not intersecting but touching.
+                    // Radius of intersection circle is zero. This and other sphere
+                    // are not intersecting but touching.
                     None
                     
                 | intersectionCircleRadius ->
-                    /// Radius of intersection circle is non-zero. There is an intersection circle.
+                    // Radius of intersection circle is non-zero. There is an intersection circle.
                     let intersectionCircleNorm = pThis.FindVector pOther
                     Circle3D (intersectionCenter, Radius intersectionCircleRadius, intersectionCircleNorm) |> Some 
 
+    /// <summary>
     /// Definition for a cylinder.
+    /// </summary>
     type Cylinder = Cylinder of Line * Radius
 
 module Chem =
@@ -277,8 +316,10 @@ module Chem =
     open Fundamentals
     open Style
     open Geometry
-
+    
+    /// <summary>
     /// AtomType describes the atomic number of an atom.
+    /// </summary>
     type AtomType =
         | H                                                                                  | He
         | Li | Be                                                   | B  | C  | N  | O  | F  | Ne
@@ -305,14 +346,18 @@ module Chem =
             | "Re" -> Some Re | "Os" -> Some Os | "Ir" -> Some Ir | "Pt" -> Some Pt | "Au" -> Some Au
             | "Hg" -> Some Hg | "Tl" -> Some Tl | "Pb" -> Some Pb | "Bi" -> Some Bi | "Po" -> Some Po
             | "At" -> Some At | "Rn" -> Some Rn | "Fr" -> Some Fr | "Ra" -> Some Ra | _    -> None 
- 
+    
+    /// <summary>
     /// AtomInfo records all information on the atom identity and styling.
+    /// </summary>
     type AtomInfo =
         { Index: Index
           Type: AtomType
           Color: Color }
-
+    
+    /// <summary>
     /// BondType describes the type of bond between two atoms.
+    /// </summary>
     type BondType = | Single | Double | Triple | Aromatic
         with 
         static member FromString (bondString: string) =
@@ -323,25 +368,31 @@ module Chem =
             | "4" | "AROMATIC" | "Aromatic" -> Some Aromatic
             | _                             -> None 
     
+    /// <summary>
     /// BondInfo records all information on the bond identity and styling.
+    /// </summary>
     type BondInfo =
         { Index: Index
           BeginAtomIndex: Index
           EndAtomIndex: Index
           Type: BondType 
           Color: Color option }
-
-    /// Atom describes an atom in two-dimensional or three-dimensional
-    /// Euclidean space.
+    
+    /// <summary>
+    /// Atom describes an atom in two-dimensional or three-dimensional Euclidean space.
+    /// </summary>
     type Atom =
         | Atom2D of AtomInfo * Point2D * Radius 
-        | Atom3D of AtomInfo * Point3D * Radius 
-
-    /// Bond describes a bond between two Atoms in two-dimensional or
-    /// three-dimensional Euclidean space.
+        | Atom3D of AtomInfo * Point3D * Radius     
+    
+    /// <summary>
+    /// Bond describes a bond between two Atoms in two-dimensional or three-dimensional Euclidean space.
+    /// </summary>
     type Bond = Bond of BondInfo  
-
+    
+    /// <summary>
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
+    /// </summary>
     type Molecule = { Atoms: Atom list; Bonds: Bond list }
 
 module Svg =
@@ -349,17 +400,22 @@ module Svg =
     open Fundamentals
     open Geometry
     
+    /// <summary>
     /// Point-of-view camera to draw SVG from.
+    /// </summary>
     type Camera = { Perpendicular: Vector3D; Horizon: Vector3D; Forward: Vector3D }
-
-    /// ViewBox defines the boundaries of the SVG viewbox.
+    
+    /// <summary>
+    /// ViewBox defines the boundaries of the SVG view box.
+    /// </summary>
     type ViewBox = { MinX: float; MinY: float; Width: float; Height: float }
         with
         override this.ToString () =
             $"viewBox=\"{this.MinX} {this.MinY} {this.Width} {this.Height}\""
-
-    /// Shape is a collection of supported shapes to draw in
-    /// two-dimensional Euclidean space as SVG XML objects.
+    
+    /// <summary>
+    /// Shape is a collection of supported shapes to draw in two-dimensional Euclidean space as SVG XML objects.
+    /// </summary>
     type Shape =
         | Line of Line
         | Cylinder of Cylinder 
@@ -369,42 +425,46 @@ module Svg =
         override this.ToString () =
             match this with
             
-            /// Draw line.
+            // Draw line.
             | Line (Geometry.Line (a, b)) ->
-                /// TODO 
+                // TODO 
                 raise <| NotImplementedException()
                 
-            /// Draw cylinder.
+            // Draw cylinder.
             | Cylinder (Geometry.Cylinder (Geometry.Line (a, b), Radius r)) ->
-                /// TODO 
+                // TODO 
                 raise <| NotImplementedException()
                 
-            /// Draw circle.
+            // Draw circle.
             | Circle (Geometry.Circle2D (p, Radius r)) ->
-                /// TODO
+                // TODO
                 raise <| NotImplementedException()
             
-            /// Draw quadrangle.
+            // Draw quadrangle.
             | Quadrangle (Geometry.Quadrangle (a, b, c, d)) ->
-                /// TODO
+                // TODO
                 raise <| NotImplementedException()
                 
         member this.Clip (other: Shape) =
-            /// TODO
+            // TODO
             raise <| NotImplementedException()
-
+    
+    /// <summary>
     /// Header describes the SVG ID and the SVG viewbox.
+    /// </summary>
     type Header = Header of version: float * encoding: string 
         with
         override this.ToString () =
             let (Header (version, encoding)) = this 
             $"<?xml version=\"{version}\" encoding=\"{encoding}\">"
-
+    
+    /// <summary>
     /// SVG encapsulates all individual elements in the SVG image.
+    /// </summary>
     type SVG = { Header: Header; ID: string; ViewBox: ViewBox; Objects: Shape list }
         with
         override this.ToString () =            
-            /// Concatenate definitions, objects, and header strings. 
+            // Concatenate definitions, objects, and header strings. 
             this.Header.ToString() + this.Body() 
             
         member this.Body() =
@@ -412,7 +472,7 @@ module Svg =
             let xmlns = "xmlns=\"http://www.w3.org/2000/svg\""
             let viewBox = this.ViewBox.ToString()
             
-            /// Convert all objects to a single string.
+            // Convert all objects to a single string.
             let objs =
                 this.Objects
                 |> List.map (fun x -> x.ToString())

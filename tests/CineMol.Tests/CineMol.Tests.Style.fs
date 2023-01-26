@@ -1,6 +1,5 @@
 module CineMol.Tests.Style
 
-open FsUnit
 open NUnit.Framework
 open CineMol.Style 
     

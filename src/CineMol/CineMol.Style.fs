@@ -6,8 +6,8 @@ open Types.Chem
 
 type AtomColorStyle =
     
-    /// Corey-Pauling-Koltun coloring convention for atoms.
-    /// Source: https://en.wikipedia.org/wiki/CPK_coloring  
+    // Corey-Pauling-Koltun coloring convention for atoms.
+    // Source: https://en.wikipedia.org/wiki/CPK_coloring  
     | CPK
     
     with
@@ -33,8 +33,8 @@ type AtomColorStyle =
         
 type AtomRadius =
     
-    /// Atomic radii (van der Waals) in pm from PubChem.
-    /// Source: https://pubchem.ncbi.nlm.nih.gov/periodic-table/#property=AtomicRadius 
+    // Atomic radii (van der Waals) in pm from PubChem.
+    // Source: https://pubchem.ncbi.nlm.nih.gov/periodic-table/#property=AtomicRadius 
     | PubChem
     
     with
