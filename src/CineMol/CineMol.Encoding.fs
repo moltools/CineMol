@@ -3,10 +3,10 @@ module CineMol.Encoding
 type Encoding = | ISO_8859_1
     with
     member this.EncodeChar c =
-        /// Pick encoding type.
+        // Pick encoding type.
         match this with
 
-        /// Base64 encode character according to ISO 8859-1.
+        // Base64 encode character according to ISO 8859-1.
         | ISO_8859_1 ->
             match c with
             | '\t'  | '\n'  | ' '  -> Some 32uy

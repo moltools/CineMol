@@ -7,19 +7,25 @@ open Types.Fundamentals
 open Types.Geometry
 open Types.Chem
 
+/// <summary>
 /// Supported file types for parsing molecule structures from.
+/// </summary>
 exception ParserError of string 
 
+/// <summary>
 /// Supported file types for parsing molecule structures from.
+/// </summary>
 type FileType = | Sdf
-    
-/// Parse input file containing molecule structures. 
+
+/// <summary>
+/// Parse input file containing molecule structures.
+/// </summary> 
 type FileParser = FileParser of FileType 
     with
     member this.Parse (fileContent: string) : Molecule list option =
         match (match this with | FileParser fileType -> fileType) with
         
-        /// Parse molecules from SDF file.
+        // Parse molecules from SDF file.
         | Sdf ->
             /// Defines regex for whitespace.
             let s = @"\s{1,}"
@@ -74,13 +80,13 @@ type FileParser = FileParser of FileType
                 for line in fileContent.Split [| '\n' |] do
                     match line with
                     
-                    /// Molecule structure delimiter.
+                    // Molecule structure delimiter.
                     | line when line.Contains("$$$$") = true ->
                         yield { Atoms = atoms; Bonds = bonds }
                         atoms <- []
                         bonds <- []
                     
-                    /// Atom line.
+                    // Atom line.
                     | AtomLine [ x; y; z; atomSymbol ] ->
                         match
                             tryCast float x,
@@ -89,7 +95,7 @@ type FileParser = FileParser of FileType
                             AtomType.FromString atomSymbol
                             with
                         
-                        /// Able to cast all data to appropriate types.
+                        // Able to cast all data to appropriate types.
                         | Some x, Some y, Some z, Some atomType ->
                             let atomInfo =
                                 { Index = atoms.Length + 1 |> Index
@@ -101,12 +107,12 @@ type FileParser = FileParser of FileType
 
                             atoms <- atoms @ [ Atom3D (atomInfo, atomCenter, atomRadius) ]
                         
-                        /// Unable to cast all data to appropriate types.
+                        // Unable to cast all data to appropriate types.
                         | _ ->
                             $"Unable to parse atom line: '{line}'"
                             |> ParserError |> raise 
                     
-                    /// Bond line.
+                    // Bond line.
                     | BondLine [ s_idx; e_idx; bondType ] ->
                         match
                             tryCast int s_idx,
@@ -114,7 +120,7 @@ type FileParser = FileParser of FileType
                             BondType.FromString bondType
                             with
                         
-                        /// Able to cast all data to appropriate types.
+                        // Able to cast all data to appropriate types.
                         | Some s_idx, Some e_idx, Some bondType ->
                             let bondInfo =
                                 { Index = bonds.Length + 1 |> Index
@@ -125,12 +131,12 @@ type FileParser = FileParser of FileType
                             
                             bonds <- bonds @ [ Bond bondInfo ]   
                         
-                        /// Unable to cast all data to appropriate types.
+                        // Unable to cast all data to appropriate types.
                         | _ ->
                             $"Unable to parse bond line: '{line}'"
                             |> ParserError |> raise 
                     
-                    /// Skip other lines.
+                    // Skip other lines.
                     | _ -> ()
                     
             ]            
