@@ -1,14 +1,13 @@
 module CineMol.Tests.Parsing
 
-open FsUnit
 open NUnit.Framework
 open CineMol.Parsing
     
 [<TestFixture>]
-type LinterTests () =
+type CineMolTests () =
     
     [<Test>]
-    member _.``Test parsing water molecule from correct string in SDF format.`` () =
+    member _.``Test parsing water molecule from correct string in SDF format`` () =
         let src = """CT1000292221
 
 

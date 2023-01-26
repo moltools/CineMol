@@ -1,13 +1,11 @@
 module CineMol.Tests.Helpers
 
-open FsUnit
 open NUnit.Framework
 open CineMol.Helpers
     
-[<TestFixture>]
-type LinterTests () =
-    
-    [<Test>]
-    member _.``Dummy test`` () =
-        /// TODO
-        Assert.True(true)
+//[<TestFixture>]
+//type CineMolTests () =
+//    
+//    [<Test>]
+//    member _.``Dummy test`` () =
+//        Assert.True(true)

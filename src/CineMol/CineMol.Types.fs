@@ -146,7 +146,7 @@ module Geometry =
         member this.SameSideOfLine p1 p2 =
             let (Line (l1, l2)) = this
             let d (p: Point2D) = (p.X - l1.X) * (l2.Y - l1.Y) - (p.Y - l1.Y) * (l2.X - l1.X)
-            if (d p1 > 0.0) = (d p2 > 0.0) then true else false
+            (d p1 > 0.0) = (d p2 > 0.0)
 
         /// Calculate if two lines intersect.
         member this.IntersectionWith (other: Line) =
@@ -177,7 +177,7 @@ module Geometry =
         /// We interpret touching circles as non-intersecting.
         member this.IntersectsWith other =
             let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
-            if pThis.Distance pOther < (rThis + rOther) then true else false
+            pThis.Distance pOther < (rThis + rOther)
 
         /// Calculates the intersection points of two circles.
         /// We interpret touching circles as non-intersecting.
