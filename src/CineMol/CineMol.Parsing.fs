@@ -59,21 +59,18 @@ type FileParser = FileParser of FileType
             /// Active pattern for matching and parsing atom line in input file.
             let (|AtomLine|_|) (line: string) : string list option =
                 let m = Regex.Match(line, atomLine)
-                if m.Success then
-                    Some(List.tail [ for g in m.Groups -> g.Value ])
-                else
-                    None
+                if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ])
+                else None
             
             /// Constructs regex for matching and parsing bond line in input file.
             let (|BondLine|_|) (line: string) : string list option =
                 let m = Regex.Match(line, bondLine)
-                if m.Success then
-                    Some(List.tail [ for g in m.Groups -> g.Value ])
-                else
-                    None
+                if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ])
+                else None
             
             /// Parse input file.
-            let mutable atoms: Atom list = []
+            let mutable count = 0
+            let mutable atoms: Atom3D list = []
             let mutable bonds: Bond list = []
             
             [
@@ -82,7 +79,9 @@ type FileParser = FileParser of FileType
                     
                     // Molecule structure delimiter.
                     | line when line.Contains("$$$$") = true ->
-                        yield { Atoms = atoms; Bonds = bonds }
+                        yield { ID = $"model_{count + 1}"; Atoms = atoms; Bonds = bonds }
+                        
+                        count <- count + 1
                         atoms <- []
                         bonds <- []
                     

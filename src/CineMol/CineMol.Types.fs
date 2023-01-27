@@ -99,11 +99,11 @@ module Geometry =
         member this.Div v = { X = this.X / v; Y = this.Y / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v }
         member this.Sum () = this.X + this.Y
-        member this.Distance other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
+        member this.Dist other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
         member this.Midpoint other = (this + other).Div 2.0
         member this.FindVector other = other - this
         member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
-
+        
     /// <summary>
     /// Point3D resembles a point in three-dimensional Euclidean space.
     /// </summary>
@@ -117,10 +117,23 @@ module Geometry =
         member this.Div v = { X = this.X / v; Y = this.Y / v; Z = this.Z / v }
         member this.Pow v = { X = this.X ** v; Y = this.Y ** v; Z = this.Z ** v }
         member this.Sum () = this.X + this.Y + this.Z
-        member this.Distance other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
+        member this.Dist other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
         member this.Midpoint other = (this + other).Div 2.0
         member this.FindVector other = (other - this).ToVector3D()
-        member p.Rotate (axis: Axis) rad = axis.RotationMatrix(p, rad)
+        member p.Rotate axis rad =
+            match axis with
+            | X ->
+               { X = p.X
+                 Y = p.Y * Math.Cos(rad) - p.Z * Math.Sin(rad)
+                 Z = p.Y * Math.Sin(rad) + p.Z * Math.Cos(rad) }
+            | Y ->
+               { X = p.X * Math.Cos(rad) + p.Z * Math.Sin(rad)
+                 Y = p.Y
+                 Z = p.Z * Math.Cos(rad) - p.X * Math.Sin(rad) }
+            | Z ->
+               { X = p.X * Math.Cos(rad) - p.Y * Math.Sin(rad)
+                 Y = p.X * Math.Sin(rad) + p.Y * Math.Cos(rad)
+                 Z = p.Z }
         member this.ToPoint2D () = { X = this.X; Y = this.Y }
         member this.ToVector3D () : Vector3D = { X = this.X; Y = this.Y; Z = this.Z }
     
@@ -129,23 +142,7 @@ module Geometry =
     /// </summary>
     and Axis = | X | Y | Z
         with
-        member this.RotationMatrix =
-            match this with
-            | X ->
-                (fun (p: Point3D, rad: float) ->
-                    { X = p.X
-                      Y = p.Y * Math.Cos(rad) - p.Z * Math.Sin(rad)
-                      Z = p.Y * Math.Sin(rad) + p.Z * Math.Cos(rad) })
-            | Y ->
-                (fun (p: Point3D, rad: float) ->
-                    { X = p.X * Math.Cos(rad) + p.Z * Math.Sin(rad)
-                      Y = p.Y
-                      Z = p.Z * Math.Cos(rad) - p.X * Math.Sin(rad) })
-            | Z ->
-                (fun (p: Point3D, rad: float) ->
-                    { X = p.X * Math.Cos(rad) - p.Y * Math.Sin(rad)
-                      Y = p.X * Math.Sin(rad) + p.Y * Math.Cos(rad)
-                      Z = p.Z })
+        static member Origin () = { X = 0.0; Y = 0.0; Z = 0.0 }
 
     /// <summary>
     /// Definition for a line.
@@ -235,7 +232,7 @@ module Geometry =
         /// </summary>
         member this.IntersectsWithCircle other =
             let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
-            pThis.Distance pOther < (rThis + rOther)
+            pThis.Dist pOther < (rThis + rOther)
         
         /// <summary>
         /// Calculates the intersection points of two circles. We interpret touching circles as non-intersecting.
@@ -244,7 +241,7 @@ module Geometry =
             let Circle2D (pThis, Radius rThis), Circle2D (pOther, Radius rOther) = this, other
             
             // Calculate the distance between the center of two circles and determine the type of intersection.
-            match pThis.Distance pOther with
+            match pThis.Dist pOther with
 
             // No intersection.
             | dist when dist > (rThis + rOther) -> None
@@ -291,7 +288,7 @@ module Geometry =
         /// </summary>
         member this.IntersectsWithSphere other =
             let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
-            pThis.Distance pOther <= (rThis + rOther)
+            pThis.Dist pOther <= (rThis + rOther)
 
         /// <summary>
         /// Calculates the intersection circle of two spheres. We interpret touching spheres as non-intersecting.
@@ -300,7 +297,7 @@ module Geometry =
             let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
             
             // Calculate the distance between the center of two spheres and determine the type of intersection.
-            match pThis.Distance pOther with
+            match pThis.Dist pOther with
             
             // No intersection.
             | dist when dist >= rThis + rOther || (dist = 0.0 && rThis = rOther) -> None
@@ -411,11 +408,14 @@ module Chem =
           Color: Color option }
     
     /// <summary>
-    /// Atom describes an atom in two-dimensional or three-dimensional Euclidean space.
+    /// Atom2D describes an atom in two-dimensional Euclidean space.
     /// </summary>
-    type Atom =
-        | Atom2D of AtomInfo * Point2D * Radius 
-        | Atom3D of AtomInfo * Point3D * Radius     
+    type Atom2D = Atom2D of AtomInfo * Point2D * Radius
+    
+    /// <summary>
+    /// Atom3D describes an atom in three-dimensional Euclidean space.
+    /// </summary>
+    type Atom3D = Atom3D of AtomInfo * Point3D * Radius     
     
     /// <summary>
     /// Bond describes a bond between two Atoms in two-dimensional or three-dimensional Euclidean space.
@@ -425,7 +425,7 @@ module Chem =
     /// <summary>
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
     /// </summary>
-    type Molecule = { Atoms: Atom list; Bonds: Bond list }
+    type Molecule = { ID: string; Atoms: Atom3D list; Bonds: Bond list }
 
 module Svg =
     
@@ -436,6 +436,13 @@ module Svg =
     /// Point-of-view camera to draw SVG from.
     /// </summary>
     type Camera = { Perpendicular: Vector3D; Horizon: Vector3D; Forward: Vector3D }
+        with
+        static member New (pov: Point3D) =
+            let forward = (pov.Mul -1.0).ToVector3D()
+            let perpendicular: Vector3D = { X = forward.Y; Y = -forward.X; Z = 0.0 }
+            { Forward = forward
+              Perpendicular = perpendicular
+              Horizon = forward.Cross perpendicular }
     
     /// <summary>
     /// ViewBox defines the boundaries of the SVG view box.
@@ -458,17 +465,17 @@ module Svg =
             match this with
             
             // Draw line.
-            | Line (Geometry.Line2D (a, b)) ->
+            | Line (Line2D (a, b)) ->
                 // TODO 
                 raise <| NotImplementedException()
                 
             // Draw cylinder.
-            | Cylinder (Geometry.Cylinder (Geometry.Line2D (a, b), Radius r)) ->
+            | Cylinder (Geometry.Cylinder (Line2D (a, b), Radius r)) ->
                 // TODO 
                 raise <| NotImplementedException()
                 
             // Draw circle.
-            | Circle (Geometry.Circle2D (p, Radius r)) ->
+            | Circle (Circle2D (p, Radius r)) ->
                 // TODO
                 raise <| NotImplementedException()
             
@@ -486,6 +493,7 @@ module Svg =
     /// </summary>
     type Header = Header of version: float * encoding: string 
         with
+        static member New () = Header (1.0, "UTF-8")
         override this.ToString () =
             let (Header (version, encoding)) = this 
             $"<?xml version=\"{version}\" encoding=\"{encoding}\">"
@@ -510,4 +518,24 @@ module Svg =
                 |> List.map (fun x -> x.ToString())
                 |> String.concat " "
             
-            $"<svg {id} {xmlns} {viewBox}>{objs}<\svg>"      
+            $"<svg {id} {xmlns} {viewBox}>{objs}<\svg>"
+            
+module Drawing =
+    
+    open Svg
+    
+    /// <summary>
+    /// Model styles.
+    /// </summary>
+    type ModelStyle = | SpaceFilling | BallAndStick | WireFrame
+    
+    /// <summary>
+    /// Drawing options.
+    /// </summary>
+    type DrawingOptions =
+        { ViewBox: ViewBox option
+          Style: ModelStyle }
+        with
+        static member New () =
+            { ViewBox = None
+              Style = SpaceFilling }
