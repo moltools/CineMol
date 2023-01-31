@@ -1,33 +1,33 @@
 html, body { margin: 0; overflow: hidden; }
 
-.viewer { overflow: hidden; height: 100vh; width: 100vw; }
+.app { overflow: hidden; height: 100vh; width: 100vw; }
 
 .sidebar {
     height: 100%;
     float: left;
-    background-color: darkgrey;
+    background-color: lightgrey;
+    justify-content: center;
+    align-items: center;
     &.expanded { width: 200px; }
     &.collapsed { width: 50px; }
+    .collapse-button { cursor: pointer; text-align: center; }
 }
 
 .sidebar-button {
-    border-style: solid;
-    border-color: black;
     border-radius: 0;
-    margin: 2px 4px 2px 4px;
+    justify-content: left;
     &.expanded {
-        width: 192px;
-        &:hover {
-            border-style: solid;
-            border-color: black;
-            background-color: #306EB5;
-            color: black;
-        }
+        width: 200px;
+        &:hover { background-color: lightgrey; color: black; }
     }
     &.collapsed {
-        width: 42px;
+        width: 50px;
         &:hover { @extend .sidebar-button, .expanded, :hover; }
     }
 }
+
+.viewer { }
+
+.file-input { cursor: pointer; }
 
 .fas { color: black; }

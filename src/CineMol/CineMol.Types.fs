@@ -39,11 +39,6 @@ module Style =
             ( diffuseChannel r,
               diffuseChannel g,
               diffuseChannel b ) |> Color
-    
-    /// <summary>    
-    /// Molecule style depictions to draw as SVG.
-    /// </summary>
-    type Depiction = | SpaceFilling | BallAndStick | WireFrame
 
 module Geometry =
 
