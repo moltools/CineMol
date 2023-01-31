@@ -1,1 +1,33 @@
 html, body { margin: 0; overflow: hidden; }
+
+.viewer { overflow: hidden; height: 100vh; width: 100vw; }
+
+.sidebar {
+    height: 100%;
+    float: left;
+    background-color: darkgrey;
+    &.expanded { width: 200px; }
+    &.collapsed { width: 50px; }
+}
+
+.sidebar-button {
+    border-style: solid;
+    border-color: black;
+    border-radius: 0;
+    margin: 2px 4px 2px 4px;
+    &.expanded {
+        width: 192px;
+        &:hover {
+            border-style: solid;
+            border-color: black;
+            background-color: #306EB5;
+            color: black;
+        }
+    }
+    &.collapsed {
+        width: 42px;
+        &:hover { @extend .sidebar-button, .expanded, :hover; }
+    }
+}
+
+.fas { color: black; }

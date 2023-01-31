@@ -13,6 +13,11 @@ module Fundamentals =
     /// Radius defines the radius of a circle or sphere.
     /// </summary>
     type Radius = Radius of float
+    
+    /// <summary>
+    /// Width defines the width of a line.
+    /// </summary>
+    type Width = Width of float 
 
 module Style =
 
@@ -458,7 +463,6 @@ module Svg =
     /// </summary>
     type Shape =
         | Line of Index * Color * Line2D * Width
-        | Cylinder of Index * Color * Cylinder 
         | Circle of Index * Color * Circle2D
         | Quadrangle of Index * Color * Quadrangle
         with
@@ -467,12 +471,7 @@ module Svg =
             
             // Draw line.
             | Line (Index index, Color (red, green, blue), Line2D (a, b), Width width) ->
-                $"<line x1=\"\" x2=\"\" y1=\"\" y2=\"\" style=\"stroke:rgb({},{},{}); stroke-width:{width}\" />"
-                
-            // Draw cylinder.
-            | Cylinder (Index index, Color (red, green, blue), Geometry.Cylinder (Line2D (a, b), Radius r)) ->
-                // TODO 
-                raise <| NotImplementedException()
+                $"<line class=\"{index}\" x1=\"{a.X}\" x2=\"{b.X}\" y1=\"{a.Y}\" y2=\"{b.Y}\" style=\"stroke:rgb({red},{green},{blue}); stroke-width:{width}\" />"
                 
             // Draw circle.
             | Circle (Index index, Color (red, green, blue), Circle2D (p, Radius r)) ->
@@ -480,8 +479,7 @@ module Svg =
             
             // Draw quadrangle.
             | Quadrangle (Index index, Color (red, green, blue), Geometry.Quadrangle (a, b, c, d)) ->
-                // TODO
-                raise <| NotImplementedException()
+                $"<path class=\"{index}\" style=\"fill:rgb({red},{green},{blue})\" d=\"M {a.X} {a.Y} L {b.X} {b.Y} L {c.X} {c.Y} L {d.X} {d.Y} L {a.X} {a.Y}\" />"
                 
         member this.Clip (other: Shape) =
             // TODO
