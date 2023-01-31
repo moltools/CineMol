@@ -425,7 +425,7 @@ module Chem =
     /// <summary>
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
     /// </summary>
-    type Molecule = { ID: string; Atoms: Atom3D list; Bonds: Bond list }
+    type Molecule = { Atoms: Atom3D list; Bonds: Bond list }
 
 module Svg =
     

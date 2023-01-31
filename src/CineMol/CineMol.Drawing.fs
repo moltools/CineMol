@@ -70,4 +70,4 @@ let draw (mol: Molecule) (options: DrawingOptions option) =
     
     let objs = []
     
-    { Header = Header.New(); ID = mol.ID; ViewBox = viewBox; Objects = objs }
+    { Header = Header.New(); ID = "Layer_1"; ViewBox = viewBox; Objects = objs }

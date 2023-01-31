@@ -79,7 +79,7 @@ type FileParser = FileParser of FileType
                     
                     // Molecule structure delimiter.
                     | line when line.Contains("$$$$") = true ->
-                        yield { ID = $"model_{count + 1}"; Atoms = atoms; Bonds = bonds }
+                        yield { Atoms = atoms; Bonds = bonds }
                         
                         count <- count + 1
                         atoms <- []
