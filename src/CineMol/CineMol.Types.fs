@@ -430,6 +430,7 @@ module Chem =
 module Svg =
     
     open Fundamentals
+    open Style
     open Geometry
     
     /// <summary>
@@ -456,31 +457,29 @@ module Svg =
     /// Shape is a collection of supported shapes to draw in two-dimensional Euclidean space as SVG XML objects.
     /// </summary>
     type Shape =
-        | Line of Line2D
-        | Cylinder of Cylinder 
-        | Circle of Circle2D
-        | Quadrangle of Quadrangle
+        | Line of Index * Color * Line2D * Width
+        | Cylinder of Index * Color * Cylinder 
+        | Circle of Index * Color * Circle2D
+        | Quadrangle of Index * Color * Quadrangle
         with
         override this.ToString () =
             match this with
             
             // Draw line.
-            | Line (Line2D (a, b)) ->
-                // TODO 
-                raise <| NotImplementedException()
+            | Line (Index index, Color (red, green, blue), Line2D (a, b), Width width) ->
+                $"<line x1=\"\" x2=\"\" y1=\"\" y2=\"\" style=\"stroke:rgb({},{},{}); stroke-width:{width}\" />"
                 
             // Draw cylinder.
-            | Cylinder (Geometry.Cylinder (Line2D (a, b), Radius r)) ->
+            | Cylinder (Index index, Color (red, green, blue), Geometry.Cylinder (Line2D (a, b), Radius r)) ->
                 // TODO 
                 raise <| NotImplementedException()
                 
             // Draw circle.
-            | Circle (Circle2D (p, Radius r)) ->
-                // TODO
-                raise <| NotImplementedException()
+            | Circle (Index index, Color (red, green, blue), Circle2D (p, Radius r)) ->
+                $"<circle class=\"{index}\" style=\"fill:rgb({red},{green},{blue})\" cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\" />"
             
             // Draw quadrangle.
-            | Quadrangle (Geometry.Quadrangle (a, b, c, d)) ->
+            | Quadrangle (Index index, Color (red, green, blue), Geometry.Quadrangle (a, b, c, d)) ->
                 // TODO
                 raise <| NotImplementedException()
                 
