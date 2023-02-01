@@ -23,4 +23,5 @@ let perspectiveProjection focalLength p =
 /// Calculate projection of point from scene on canvas.
 /// </summary>
 let project camera pov focalLength p =
-    p |> physicalProjection camera pov |> perspectiveProjection focalLength
+    let projected = p |> physicalProjection camera pov |> perspectiveProjection focalLength
+    projected.ToPoint2D()

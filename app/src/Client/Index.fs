@@ -1,5 +1,7 @@
 module Client.Index
 
+open System
+
 open Browser
 open Browser.Types
 open Elmish
@@ -12,15 +14,30 @@ open Feliz.Bulma
 open Fulma
 
 open CineMol.Encoding
+open CineMol.Types.Geometry
 open CineMol.Types.Chem
 open CineMol.Types.Drawing
 open CineMol.Parsing
 open CineMol.Drawing
 
+/// <summary>
+/// Position of mouse on screen.
+/// </summary>
 type MousePosition = { X: float; Y: float }
+
+/// <summary>
+/// Wheel scroll delta.
+/// </summary>
 type WheelPosition = { Delta: float }
+
+/// <summary>
+/// Dragging state.
+/// </summary>
 type DragTarget = | Dragging | NoTarget
 
+/// <summary>
+/// Create handlers for mouse events.
+/// </summary>
 [<RequireQualifiedAccess>]
 module Cmd =
     let ups messageCtor =
@@ -43,55 +60,57 @@ module Cmd =
                 { Delta = ev.wheelDelta } |> messageCtor |> dispatch)
         [ handler ]
 
+/// <summary>
+/// Viewer background colors (i.e., dark and light modes).
+/// </summary>
 type ViewerBackgroundColor = | Black | White
     with
     override this.ToString() =
         match this with | Black -> "#000000" | White -> "#FFFFFF"
 
+/// <summary>
+/// App model.
+/// </summary>
 type Model =
     { Molecule: Molecule option
-      DrawingOptions: DrawingOptions option
+      DrawingOptions: DrawingOptions
       SvgString: string option
       EncodedSvgString: string option
       DragTarget: DragTarget
       ViewerBackgroundColor: ViewerBackgroundColor
-      Depiction: ModelStyle
-      ShowHydrogenAtoms: bool
-      RotationOverXAxis: float
-      RotationOverYAxis: float
-      SidebarCollapsed: bool }
+      SidebarCollapsed: bool
+      PreviousMousePosition: MousePosition option }
     with
     static member New () =
         { Molecule = None
-          DrawingOptions = None
+          DrawingOptions = { DrawingOptions.New() with Style = BallAndStick }
           SvgString = None
           EncodedSvgString = None
           DragTarget = NoTarget
           ViewerBackgroundColor = White
-          Depiction = BallAndStick
-          ShowHydrogenAtoms = false
-          RotationOverXAxis = 0.0
-          RotationOverYAxis = 0.0
-          SidebarCollapsed = false }
+          SidebarCollapsed = false
+          PreviousMousePosition = None }
     member this.Reset () =
         { Model.New() with
             ViewerBackgroundColor = this.ViewerBackgroundColor
             SidebarCollapsed = this.SidebarCollapsed }
 
+/// <summary>
+/// App messages.
+/// </summary>
 type Msg =
     // User interface.
     | UploadSdf of name: string * content: string
     | ResetViewer
     | DownloadSvg
-    | ToggleShowHydrogenAtoms
     | ToggleDepiction
     | ToggleBackgroundColor
     | ToggleSidebar
 
-    // Render SVG.
+    // Rendering.
     | Render
     | GotEncodedSvg of svgString: string option * encodedSvgString: string option
-    | SetRotation of MousePosition
+    | SetRotation of xRotation: float * yRotation: float
 
     // Mouse events.
     | MouseUp
@@ -101,10 +120,16 @@ type Msg =
     | MouseDragEnded
     | MouseWheelScroll of WheelPosition
 
+/// <summary>
+/// Initialize app.
+/// </summary>
 let init () : Model * Cmd<Msg> =
     Model.New(),
     Cmd.batch [ Cmd.ups MouseUp; Cmd.move MouseMove; Cmd.wheel MouseWheelScroll ]
 
+/// <summary>
+/// Element that creates file picker pop-up.
+/// </summary>
 let uploadFileEvent dispatch =
     Fulma.File.input [
         Props [
@@ -125,6 +150,9 @@ let uploadFileEvent dispatch =
         ]
     ]
 
+/// <summary>
+/// Download text to file to downloads folder.
+/// </summary>
 let private downloadSvgEvent (svgString: string option) (fileName: string) =
     match svgString with
     | Some svgString ->
@@ -139,78 +167,119 @@ let private downloadSvgEvent (svgString: string option) (fileName: string) =
         anchor.click()
     | None -> ()
 
+/// <summary>
+/// 'Render' molecule model.
+/// </summary>
 let render (model: Model) =
     async {
         match model.Molecule with
         | Some molecule ->
-            let svg = draw molecule
+            let svg, options = draw molecule model.DrawingOptions
             let svgString = svg.ToString()
-            let encodedSvgString = ISO_8859_1.Encode svgString |> sprintf "%A" // TODO: finsh encoding
+            let encodedSvgString = ISO_8859_1.Encode svgString |> Convert.ToBase64String
             return Some svgString, Some encodedSvgString
         | None -> return None, None
     }
 
+/// <summary>
+/// Update model.
+/// </summary>
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
+
+    // Upload SDF file and read and parse contents into Molecule object.
     | UploadSdf (_, content) ->
         match (FileParser Sdf).Parse content with
         | Some (molecule::_) -> { model with Molecule = Some molecule }, Cmd.ofMsg Render
         | _ -> model, Cmd.none // TODO: get error toast when parsing fails/file is empty
 
+    // Reset viewer.
     | ResetViewer ->
         let newModel = model.Reset()
-        newModel, Cmd.OfAsync.perform render model GotEncodedSvg
+        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
+    // Download SVG to downloads folder.
     | DownloadSvg ->
-        downloadSvgEvent model.SvgString "model"
+        downloadSvgEvent model.SvgString "model.svg"
         model, Cmd.none
 
-    | ToggleShowHydrogenAtoms ->
-        let newModel = { model with ShowHydrogenAtoms = not model.ShowHydrogenAtoms }
-        newModel, Cmd.OfAsync.perform render model GotEncodedSvg
-
+    // Toggle model depiction.
     | ToggleDepiction ->
         let depiction =
-            if model.Depiction = SpaceFilling then BallAndStick
-            elif model.Depiction = BallAndStick then WireFrame
+            if model.DrawingOptions.Style = SpaceFilling then BallAndStick
+            elif model.DrawingOptions.Style = BallAndStick then WireFrame
             else SpaceFilling
-        let newModel = { model with Depiction = depiction }
-        newModel, Cmd.OfAsync.perform render model GotEncodedSvg
+        let newModel = { model with DrawingOptions = { model.DrawingOptions with Style = depiction } }
+        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
+    // Toggle background color (i.e., dark and light mode).
     | ToggleBackgroundColor ->
         let backgroundColor = if model.ViewerBackgroundColor = Black then White else Black
         let newModel = { model with ViewerBackgroundColor = backgroundColor }
         newModel, Cmd.none
 
+    // Toggle sidebar between expanded and collapsed.
     | ToggleSidebar ->
         let newModel = { model with SidebarCollapsed = not model.SidebarCollapsed }
         newModel, Cmd.none
 
+    // 'Render' molecule model.
     | Render -> model, Cmd.OfAsync.perform render model GotEncodedSvg
 
+    // Process 'rendered' model.
     | GotEncodedSvg (svgString, encodedSvgString) ->
         { model with SvgString = svgString; EncodedSvgString = encodedSvgString }, Cmd.none
 
-    | SetRotation position ->
-        { model with RotationOverXAxis = position.X; RotationOverYAxis = position.Y },
-        Cmd.OfAsync.perform render model GotEncodedSvg
+    // Set new rotation of molecule model.
+    | SetRotation (x, y) ->
+        match model.Molecule with
+        | Some molecule ->
+            let rotateAtom (Atom3D(i, c, r)) =
+                let rotate axis pos (p: Point3D) = p.Rotate axis pos
+                let rotatedCenter = c |> rotate Axis.X x |> rotate Axis.Y y
+                Atom3D (i, rotatedCenter, r)
+            let rotatedAtoms = molecule.Atoms |> List.map (fun a -> rotateAtom a)
+            let rotatedMolecule = { molecule with Atoms = rotatedAtoms }
+            let newModel = { model with Molecule = Some rotatedMolecule }
+            newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
+        | None -> model, Cmd.none
 
+    // Mouse up indicates the end of a drag event.
     | MouseUp -> model, Cmd.ofMsg MouseDragEnded
 
-    | MouseMove (position: MousePosition) -> model, Cmd.ofMsg (MouseDrag position)
+    // Relay mouse drag.
+    | MouseMove pos -> model, Cmd.ofMsg (MouseDrag pos)
 
-    | MouseDragStarted _ -> { model with DragTarget = Dragging }, Cmd.none
+    // Set start of drag event.
+    | MouseDragStarted pos -> { model with DragTarget = Dragging }, Cmd.none
 
+    // Set end of drag event.
     | MouseDragEnded -> { model with DragTarget = NoTarget }, Cmd.none
 
-    | MouseDrag (position: MousePosition) ->
-        let cmd = match model.DragTarget with | Dragging -> Cmd.ofMsg (SetRotation position) | _ -> Cmd.none
-        model, cmd
+    // Register dragging movement.
+    | MouseDrag (pos: MousePosition) ->
+        let cmd =
+            match model.PreviousMousePosition with
+            | Some prevPos ->
+                match model.DragTarget with
+                | Dragging ->
+                    let xRotation = (prevPos.Y - pos.Y) / 180.0
+                    let yRotation = (prevPos.X - pos.X) / 180.0
+                    Cmd.ofMsg (SetRotation (xRotation, yRotation))
+                | _ -> Cmd.none
+            | None -> Cmd.none
 
-    | MouseWheelScroll (_: WheelPosition) ->
-        // TODO
+        let newModel = { model with PreviousMousePosition = Some pos }
+        newModel, cmd
+
+    // Register mouse scroll.
+    | MouseWheelScroll (pos: WheelPosition) ->
+        // TODO: implement zoom
         model, Cmd.none
 
+/// <summary>
+/// Sidebar element.
+/// </summary>
 let sidebar model dispatch =
         let uploadFileButton dispatch =
             Bulma.button.a [
@@ -251,7 +320,6 @@ let sidebar model dispatch =
                 generalButton DownloadSvg Fa.Solid.Download "Download"
                 generalButton ResetViewer Fa.Solid.Sync "Refresh"
                 generalButton ToggleBackgroundColor Fa.Solid.Adjust "Toggle background"
-                generalButton ToggleShowHydrogenAtoms Fa.Solid.ToggleOn "Toggle hydrogens"
                 generalButton ToggleDepiction Fa.Solid.Eye "Toggle depiction"
                 reportBugButton
 
@@ -263,6 +331,9 @@ let sidebar model dispatch =
             ]
         ]
 
+/// <summary>
+/// Viewer element.
+/// </summary>
 let viewer model dispatch =
     let viewerStyle =
         let sidebarWidth = match model.SidebarCollapsed with | true -> 60 | false -> 210
@@ -271,24 +342,25 @@ let viewer model dispatch =
         if width < height then [ style.width width; style.height width ]
         else [ style.width height; style.height height ]
 
-    let encodedSvgString = match model.EncodedSvgString with | None -> "" | Some s -> $"data:image/svg+xml;base64,{s}"
+    let encodedSvgString =
+        match model.EncodedSvgString with
+        | None -> ""
+        | Some s -> sprintf "data:image/svg+xml;base64,%s" s
 
     Html.div [
         prop.className "viewer"
         prop.style viewerStyle
         prop.onMouseDown (fun ev ->
             ev.preventDefault()
-            let coordsMouseDown = { X= ev.pageX; Y = ev.pageY }
-            dispatch (MouseDragStarted coordsMouseDown))
+            dispatch (MouseDragStarted { X = ev.pageX; Y = ev.pageY }))
         prop.children [
-            img [
-                Class "viewer"
-                Style [ BackgroundColor (model.ViewerBackgroundColor.ToString()) ]
-                Src encodedSvgString
-            ]
+            img [ Style [ BackgroundColor (model.ViewerBackgroundColor.ToString()) ]; Src encodedSvgString ]
         ]
     ]
 
+/// <summary>
+/// Main app view.
+/// </summary>
 let view (model: Model) (dispatch: Msg -> unit) =
     Html.div [
         prop.className "app"

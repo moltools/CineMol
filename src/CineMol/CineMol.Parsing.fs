@@ -25,6 +25,9 @@ type FileParser = FileParser of FileType
     member this.Parse (fileContent: string) : Molecule list option =
         match (match this with | FileParser fileType -> fileType) with
         
+        // TODO: check if file type corresponds with file extension and contents of file
+        // TODO: limit file size for uploading
+        
         // Parse molecules from SDF file.
         | Sdf ->
             /// Defines regex for whitespace.

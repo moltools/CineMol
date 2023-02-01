@@ -466,29 +466,30 @@ module Svg =
             
             // Draw line.
             | Line (Index index, Color (red, green, blue), Line2D (a, b), Width width) ->
-                $"<line class=\"{index}\" x1=\"{a.X}\" x2=\"{b.X}\" y1=\"{a.Y}\" y2=\"{b.Y}\" style=\"stroke:rgb({red},{green},{blue}); stroke-width:{width}\" />"
+                sprintf "<line class=\"%i\" x1=\"%.3f\" x2=\"%.3f\" y1=\"%.3f\" y2=\"%.2f\" style=\"stroke:rgb(%i,%i,%i);stroke-width:%.3f\"/>" index a.X b.X a.Y b.Y red green blue width
                 
             // Draw circle.
             | Circle (Index index, Color (red, green, blue), Circle2D (p, Radius r)) ->
-                $"<circle class=\"{index}\" style=\"fill:rgb({red},{green},{blue})\" cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\" />"
+                // $"<circle class=\"{index}\" style=\"fill:rgb({red},{green},{blue})\" cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\"/>"
+                sprintf "<circle class=\"%i\" style=\"fill:rgb(%i,%i,%i)\" cx=\"%.3f\" cy=\"%.3f\" r=\"%.3f\"/>" index red green blue p.X p.Y r
             
             // Draw quadrangle.
             | Quadrangle (Index index, Color (red, green, blue), Geometry.Quadrangle (a, b, c, d)) ->
-                $"<path class=\"{index}\" style=\"fill:rgb({red},{green},{blue})\" d=\"M {a.X} {a.Y} L {b.X} {b.Y} L {c.X} {c.Y} L {d.X} {d.Y} L {a.X} {a.Y}\" />"
+                sprintf "<path class=\"%i\" style=\"fill:rgb(%i,%i,%i)\" d=\"M %.3f %.3f L %.3f %.3f L %.3f %.3f L %.3f %.3f L %.3f %.3f\"/>" index red green blue a.X a.Y b.X b.Y c.X c.Y d.X d.Y a.X a.Y
                 
         member this.Clip (other: Shape) =
             // TODO
             raise <| NotImplementedException()
     
     /// <summary>
-    /// Header describes the SVG ID and the SVG viewbox.
+    /// Header describes the SVG ID and the SVG view box.
     /// </summary>
     type Header = Header of version: float * encoding: string 
         with
         static member New () = Header (1.0, "UTF-8")
-        override this.ToString () =
-            let (Header (version, encoding)) = this 
-            $"<?xml version=\"{version}\" encoding=\"{encoding}\">"
+        override this.ToString () : string =
+            let (Header (version, encoding)) = this
+            sprintf "<?xml version=\"%.1f\" encoding=\"%s\"?>" version encoding
     
     /// <summary>
     /// SVG encapsulates all individual elements in the SVG image.
@@ -500,17 +501,11 @@ module Svg =
             this.Header.ToString() + this.Body() 
             
         member this.Body() =
-            let id = $"id=\"{this.ID}\""
-            let xmlns = "xmlns=\"http://www.w3.org/2000/svg\""
-            let viewBox = this.ViewBox.ToString()
-            
             // Convert all objects to a single string.
-            let objs =
-                this.Objects
-                |> List.map (fun x -> x.ToString())
-                |> String.concat " "
+            let objs = this.Objects |> List.map (fun x -> x.ToString()) |> String.concat ""
             
-            $"<svg {id} {xmlns} {viewBox}>{objs}<\svg>"
+            // Combine items into SVG body.
+            sprintf "<svg id=\"%s\" xmlns=\"http://www.w3.org/2000/svg\" %s>%s</svg>" this.ID (this.ViewBox.ToString()) objs
             
 module Drawing =
     
@@ -519,7 +514,7 @@ module Drawing =
     /// <summary>
     /// Model styles.
     /// </summary>
-    type ModelStyle = | SpaceFilling | BallAndStick | WireFrame
+    type ModelStyle = | BallAndStick | SpaceFilling | WireFrame
     
     /// <summary>
     /// Drawing options.
@@ -530,4 +525,4 @@ module Drawing =
         with
         static member New () =
             { ViewBox = None
-              Style = SpaceFilling }
+              Style = BallAndStick }

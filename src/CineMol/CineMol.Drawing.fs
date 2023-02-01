@@ -17,14 +17,7 @@ let rotate (mol: Molecule) (axis: Axis) (rad: float) =
 /// <summary>
 /// Driver code for creating SVG for molecule.
 /// </summary>
-let draw (mol: Molecule) (options: DrawingOptions option) =
-    
-    // Set drawing options.
-    let options =
-        match options with
-        | Some options -> options
-        | None -> DrawingOptions.New()
-    
+let draw (mol: Molecule) (options: DrawingOptions) =
     // Set origin.
     let origin = Axis.Origin()
     
@@ -53,21 +46,50 @@ let draw (mol: Molecule) (options: DrawingOptions option) =
     let pov = { X = 1E-5; Y = 1E-5; Z = offset }
     
     // Sort atoms based on distance atoms to point of view.
-    let recalAtoms = mol.Atoms |> List.sortBy (fun (Atom3D (_, c, _)) -> -(c.Dist pov))
+    let adjAtoms = mol.Atoms |> List.sortBy (fun (Atom3D (_, c, _)) -> -(c.Dist pov))
     
     // Reset atom radii based based on distance atom to point of view.
-    let recalAtoms =
-        recalAtoms 
+    let adjAtoms =
+        adjAtoms 
         |> List.map (fun (Atom3D (i, c, Radius r)) ->
             Atom3D(i, c, Radius <| r * ((pov.Dist origin) / (pov.Dist c))))
         
-    let recalAtoms =
+    let adjAtoms =
         let project (p: Point3D) = project (Camera.New pov) pov offset p
-        recalAtoms |> List.map (fun (Atom3D (i, c, r)) -> Atom3D (i, project c, r))
+        adjAtoms |> List.map (fun (Atom3D (i, c, r)) -> Atom2D (i, project c, r))
+        
+    // Drawing style dictates if and how the objects are clipped and exactly drawn.
+    match options.Style with
     
-    // Determine clipping masks for projected atoms on view box.
-    // TODO
+    | BallAndStick ->
+        // Ball-and-stick model depiction.
+        // TODO: parse element 
+        // TODO: add specular 
+        
+        // Convert elements to SVG objects.
+        let objs: Shape list = []
+        
+        { Header = Header.New(); ID = "BallAndStick"; ViewBox = viewBox; Objects = objs }, options
+        
+    | SpaceFilling ->
+        // Space-filling model depiction.
+        // TODO: parse elements (incl. clipping)
+        // TODO: add specular 
     
-    let objs = []
-    
-    { Header = Header.New(); ID = "Layer_1"; ViewBox = viewBox; Objects = objs }
+        // Convert elements to SVG objects.
+        let objs: Shape list =
+            adjAtoms
+            |> List.map (fun (Atom2D ({ Index = index; Type = _; Color = color }, c, r)) ->
+                (index, color, Circle2D(c, r)) |> Circle)
+        
+        { Header = Header.New(); ID = "SpaceFilling"; ViewBox = viewBox; Objects = objs }, options
+        
+    | WireFrame ->
+        // Wire-frame model depiction.
+        // TODO: parse elements
+        // TODO: add specular 
+        
+        // Convert elements to SVG objects.
+        let objs: Shape list = []
+        
+        { Header = Header.New(); ID = "WireFrame"; ViewBox = viewBox; Objects = objs }, options
