@@ -103,6 +103,7 @@ module Geometry =
         member this.Midpoint other = (this + other).Div 2.0
         member this.FindVector other = other - this
         member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
+        member this.SlopePerpendicular other = -1.0 * (1.0 / (this.Slope other))
         
     /// <summary>
     /// Point3D resembles a point in three-dimensional Euclidean space.
@@ -411,6 +412,18 @@ module Chem =
     /// Atom2D describes an atom in two-dimensional Euclidean space.
     /// </summary>
     type Atom2D = Atom2D of AtomInfo * Point2D * Radius
+        with
+        member this.Unwrap () =
+            let (Atom2D (info, center, radius)) = this
+            info, center, radius
+        
+        member this.GetInfo () =
+            let info, _, _ = this.Unwrap()
+            info
+            
+        member this.GetCenter () =
+            let _, center, _ = this.Unwrap()
+            center
     
     /// <summary>
     /// Atom3D describes an atom in three-dimensional Euclidean space.
@@ -420,7 +433,11 @@ module Chem =
     /// <summary>
     /// Bond describes a bond between two Atoms in two-dimensional or three-dimensional Euclidean space.
     /// </summary>
-    type Bond = Bond of BondInfo  
+    type Bond = Bond of BondInfo
+        with
+        member this.Unwrap () =
+            let (Bond info) = this
+            info 
     
     /// <summary>
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
@@ -513,7 +530,7 @@ module Drawing =
     /// <summary>
     /// Model styles.
     /// </summary>
-    type ModelStyle = | BallAndStick | SpaceFilling | WireFrame
+    type ModelStyle = | BallAndStick | SpaceFilling | Tube
     
     /// <summary>
     /// Drawing options.

@@ -1,5 +1,7 @@
 module CineMol.Drawing
 
+open System 
+
 open Types.Fundamentals 
 open Types.Geometry
 open Types.Chem
@@ -67,7 +69,10 @@ let draw (mol: Molecule) (options: DrawingOptions) =
         // TODO: add specular 
         
         // Convert elements to SVG objects.
-        let objs: Shape list = []
+        let objs: Shape list =
+            adjAtoms
+            |> List.map (fun (Atom2D ({ Index = index; Type = _; Color = color }, c, Radius r)) ->
+                (index, color, Circle2D(c, Radius (r / 5.0))) |> Circle)
         
         { Header = Header.New(); ID = "BallAndStick"; ViewBox = viewBox; Objects = objs }, options
         
@@ -84,45 +89,62 @@ let draw (mol: Molecule) (options: DrawingOptions) =
         
         { Header = Header.New(); ID = "SpaceFilling"; ViewBox = viewBox; Objects = objs }, options
         
-    | WireFrame ->
-        // Wire-frame model depiction.
-        // TODO: parse elements
-        // TODO: add specular
+    | Tube ->
+        // Tube model depiction.
+        // TODO: add specular, and add masks to tips of bonds to make them look round
+        // TODO: make sure SVG elements resize with chaning perspective 
         
         // Create atom atom index to atom look-up map. 
-        let lookUp =
-            adjAtoms
-            |> List.map (fun atom ->
-                let (Atom2D({ Index = Index idx; Type = _; Color = _ }, _, _)) = atom
-                (idx, atom))
-            |> Collections.Map 
+        let getAtom = adjAtoms |> List.map (fun a -> (a.GetInfo().Index, a)) |> Collections.Map 
         
-        // Construct wire-fram from bonds.
-        let objs: Shape list =
-            mol.Bonds
-            
-            // Retrieve atoms which are connected by bonds to draw.
-            |> List.map (fun bond ->
-                let (Bond info) = bond 
-                let (Index bIdx) = info.BeginAtomIndex
-                let (Index eIdx) = info.EndAtomIndex
-                match lookUp.TryFind bIdx, lookUp.TryFind eIdx with 
-                | Some b, Some e -> Some (b, e, bond)
-                | _ -> None)
-            
-            // Ignore bonds that refer to non-existing atom indices.
-            |> List.choose id
-            
-            // Sort bonds based on begin atom from furthest away to nearest.
-            |> List.sortBy (fun (Atom2D(_, c, _), _, _) -> -(c.Dist (pov.ToPoint2D())))
-            
-            // Draw bonds.
-            |> List.map (fun (Atom2D(bInfo, bCenter, Radius bRadius), Atom2D(eInfo, eCenter, Radius eRadius), bond) ->
-                // TODO: draw bonds
-                // TODO: draw double, triple, and aromatic bonds
-                // TODO: if atom is starting point for multiple bonds it is now drawn multiple times 
-                (bInfo.Index, bInfo.Color, Circle2D (bCenter, Radius (bRadius / 10.0))) |> Circle)
+        // Find bonds connected to atom with certain atom index.
+        let getBonds idx = mol.Bonds |> List.filter (fun (Bond b) -> b.BeginAtomIndex = idx)
         
-        printf "Dm: %A" <| objs 
+        // Keep track which atoms have been drawn (as joints between wires) to prevent drawing the same atom multiple times.
+        let mutable drawn = []
         
-        { Header = Header.New(); ID = "WireFrame"; ViewBox = viewBox; Objects = objs }, options
+        // Thickness of wire-frame model in Angstrom.
+        let width = 0.1
+
+        // Draw bonds as tubes.
+        let drawBonds (Atom2D(bInfo, bCenter, _)) (Atom2D(eInfo, eCenter, _)) (Bond bond) width =
+            let slopePerpendicular = bCenter.SlopePerpendicular eCenter
+            
+            let translation width =
+                let t = width / Math.Sqrt (1.0 + Math.Pow(slopePerpendicular, 2.0))
+                { X = t; Y = slopePerpendicular * t }
+                
+            let elem idx color bL bR eR eL = (idx, color, Types.Geometry.Quadrangle (bL, bR, eR, eL)) |> Quadrangle
+            
+            let drawTube (b: Point2D) bIdx bCol e eIdx eCol adj =
+                let m = b.Midpoint e 
+                [ elem bIdx bCol (b + adj) (b - adj) (m - adj) (m + adj)
+                  elem eIdx eCol (e + adj) (e - adj) (m - adj) (m + adj) ]
+                
+            match bond.Type with
+            | Single | Aromatic -> drawTube bCenter bInfo.Index bInfo.Color eCenter eInfo.Index eInfo.Color (translation width)
+            | Double ->
+                let sep, newWidth = width / 2.0, width / 3.0
+                let adj = translation sep
+                let bL, bR, eL, eR = bCenter + adj, bCenter - adj, eCenter + adj, eCenter - adj
+                drawTube bL bInfo.Index bInfo.Color eL eInfo.Index eInfo.Color (translation newWidth) @
+                drawTube bR bInfo.Index bInfo.Color eR eInfo.Index eInfo.Color (translation newWidth)
+            | Triple ->
+                let sep, newWidth = width / 2.0, width / 5.0
+                let adj = translation sep
+                let bL, bR, eL, eR = bCenter + adj, bCenter - adj, eCenter + adj, eCenter - adj
+                drawTube bL bInfo.Index bInfo.Color eL eInfo.Index eInfo.Color (translation newWidth) @
+                drawTube bCenter bInfo.Index bInfo.Color eCenter eInfo.Index eInfo.Color (translation newWidth) @
+                drawTube bR bInfo.Index bInfo.Color eR eInfo.Index eInfo.Color (translation newWidth) 
+                        
+        // Draw objects.
+        let objs = [
+            for bAtom in adjAtoms do
+                yield Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius width))
+                drawn <- drawn @ [ bAtom.GetInfo().Index ]
+                for bond in getBonds (bAtom.GetInfo().Index) do
+                    if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
+                        match getAtom.TryFind (bond.Unwrap().EndAtomIndex) with
+                        | None -> () | Some eAtom -> for bondTube in drawBonds eAtom bAtom bond width do yield bondTube ]
+        
+        { Header = Header.New(); ID = "Tube"; ViewBox = viewBox; Objects = objs }, options

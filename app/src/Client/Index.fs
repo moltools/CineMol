@@ -63,10 +63,10 @@ module Cmd =
 /// <summary>
 /// Viewer background colors (i.e., dark and light modes).
 /// </summary>
-type ViewerBackgroundColor = | Black | White
+type ViewerBackgroundColor = | Dark | Light
     with
     override this.ToString() =
-        match this with | Black -> "#000000" | White -> "#FFFFFF"
+        match this with | Dark -> "#343231" | Light -> "#F0F0F0"
 
 /// <summary>
 /// App model.
@@ -87,7 +87,7 @@ type Model =
           SvgString = None
           EncodedSvgString = None
           DragTarget = NoTarget
-          ViewerBackgroundColor = White
+          ViewerBackgroundColor = Dark
           SidebarCollapsed = false
           PreviousMousePosition = None }
     member this.Reset () =
@@ -207,14 +207,14 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | ToggleDepiction ->
         let depiction =
             if model.DrawingOptions.Style = SpaceFilling then BallAndStick
-            elif model.DrawingOptions.Style = BallAndStick then WireFrame
+            elif model.DrawingOptions.Style = BallAndStick then Tube
             else SpaceFilling
         let newModel = { model with DrawingOptions = { model.DrawingOptions with Style = depiction } }
         newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
     // Toggle background color (i.e., dark and light mode).
     | ToggleBackgroundColor ->
-        let backgroundColor = if model.ViewerBackgroundColor = Black then White else Black
+        let backgroundColor = if model.ViewerBackgroundColor = Dark then Light else Dark
         let newModel = { model with ViewerBackgroundColor = backgroundColor }
         newModel, Cmd.none
 
