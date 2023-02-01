@@ -87,9 +87,42 @@ let draw (mol: Molecule) (options: DrawingOptions) =
     | WireFrame ->
         // Wire-frame model depiction.
         // TODO: parse elements
-        // TODO: add specular 
+        // TODO: add specular
         
-        // Convert elements to SVG objects.
-        let objs: Shape list = []
+        // Create atom atom index to atom look-up map. 
+        let lookUp =
+            adjAtoms
+            |> List.map (fun atom ->
+                let (Atom2D({ Index = Index idx; Type = _; Color = _ }, _, _)) = atom
+                (idx, atom))
+            |> Collections.Map 
+        
+        // Construct wire-fram from bonds.
+        let objs: Shape list =
+            mol.Bonds
+            
+            // Retrieve atoms which are connected by bonds to draw.
+            |> List.map (fun bond ->
+                let (Bond info) = bond 
+                let (Index bIdx) = info.BeginAtomIndex
+                let (Index eIdx) = info.EndAtomIndex
+                match lookUp.TryFind bIdx, lookUp.TryFind eIdx with 
+                | Some b, Some e -> Some (b, e, bond)
+                | _ -> None)
+            
+            // Ignore bonds that refer to non-existing atom indices.
+            |> List.choose id
+            
+            // Sort bonds based on begin atom from furthest away to nearest.
+            |> List.sortBy (fun (Atom2D(_, c, _), _, _) -> -(c.Dist (pov.ToPoint2D())))
+            
+            // Draw bonds.
+            |> List.map (fun (Atom2D(bInfo, bCenter, Radius bRadius), Atom2D(eInfo, eCenter, Radius eRadius), bond) ->
+                // TODO: draw bonds
+                // TODO: draw double, triple, and aromatic bonds
+                // TODO: if atom is starting point for multiple bonds it is now drawn multiple times 
+                (bInfo.Index, bInfo.Color, Circle2D (bCenter, Radius (bRadius / 10.0))) |> Circle)
+        
+        printf "Dm: %A" <| objs 
         
         { Header = Header.New(); ID = "WireFrame"; ViewBox = viewBox; Objects = objs }, options

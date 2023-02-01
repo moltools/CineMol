@@ -470,7 +470,6 @@ module Svg =
                 
             // Draw circle.
             | Circle (Index index, Color (red, green, blue), Circle2D (p, Radius r)) ->
-                // $"<circle class=\"{index}\" style=\"fill:rgb({red},{green},{blue})\" cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\"/>"
                 sprintf "<circle class=\"%i\" style=\"fill:rgb(%i,%i,%i)\" cx=\"%.3f\" cy=\"%.3f\" r=\"%.3f\"/>" index red green blue p.X p.Y r
             
             // Draw quadrangle.

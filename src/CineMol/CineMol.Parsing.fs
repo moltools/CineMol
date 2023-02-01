@@ -130,8 +130,13 @@ type FileParser = FileParser of FileType
                                   EndAtomIndex = Index e_idx
                                   Type = bondType
                                   Color = None }
+                                
+                            let reversedBond =
+                                { bondInfo with
+                                    BeginAtomIndex = bondInfo.EndAtomIndex
+                                    EndAtomIndex = bondInfo.BeginAtomIndex }
                             
-                            bonds <- bonds @ [ Bond bondInfo ]   
+                            bonds <- bonds @ [ Bond bondInfo; Bond reversedBond ]   
                         
                         // Unable to cast all data to appropriate types.
                         | _ ->
