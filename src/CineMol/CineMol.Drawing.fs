@@ -92,7 +92,6 @@ let draw (mol: Molecule) (options: DrawingOptions) =
     | Tube ->
         // Tube model depiction.
         // TODO: add specular, and add masks to tips of bonds to make them look round
-        // TODO: make sure SVG elements resize with chaning perspective 
         
         // Create atom atom index to atom look-up map. 
         let getAtom = adjAtoms |> List.map (fun a -> (a.GetInfo().Index, a)) |> Collections.Map 
@@ -103,11 +102,11 @@ let draw (mol: Molecule) (options: DrawingOptions) =
         // Keep track which atoms have been drawn (as joints between wires) to prevent drawing the same atom multiple times.
         let mutable drawn = []
         
-        // Thickness of wire-frame model in Angstrom.
-        let width = 0.1
+        // Resize atoms to ratio for wire-frame model in Angstrom.
+        let factor = 10.0
 
         // Draw bonds as tubes.
-        let drawBonds (Atom2D(bInfo, bCenter, _)) (Atom2D(eInfo, eCenter, _)) (Bond bond) width =
+        let drawBonds (Atom2D(bInfo, bCenter, bRad)) (Atom2D(eInfo, eCenter, eRad)) (Bond bond) =
             let slopePerpendicular = bCenter.SlopePerpendicular eCenter
             
             let translation width =
@@ -116,35 +115,39 @@ let draw (mol: Molecule) (options: DrawingOptions) =
                 
             let elem idx color bL bR eR eL = (idx, color, Types.Geometry.Quadrangle (bL, bR, eR, eL)) |> Quadrangle
             
-            let drawTube (b: Point2D) bIdx bCol e eIdx eCol adj =
-                let m = b.Midpoint e 
-                [ elem bIdx bCol (b + adj) (b - adj) (m - adj) (m + adj)
-                  elem eIdx eCol (e + adj) (e - adj) (m - adj) (m + adj) ]
+            let drawTube (b: Point2D) bIdx bCol bWidth e eIdx eCol eWidth =
+                let m = b.Midpoint e
+                let bAdj, eAdj, mAdj = translation bWidth, translation eWidth, translation ((bWidth + eWidth) / 2.0)
+                [ elem bIdx bCol (b + bAdj) (b - bAdj) (m - mAdj) (m + mAdj)
+                  elem eIdx eCol (e + eAdj) (e - eAdj) (m - mAdj) (m + mAdj) ]              
                 
             match bond.Type with
-            | Single | Aromatic -> drawTube bCenter bInfo.Index bInfo.Color eCenter eInfo.Index eInfo.Color (translation width)
+            | Single | Aromatic ->
+                drawTube bCenter bInfo.Index bInfo.Color (bRad.Unwrap() / factor) eCenter eInfo.Index eInfo.Color (eRad.Unwrap() / factor)
             | Double ->
-                let sep, newWidth = width / 2.0, width / 3.0
-                let adj = translation sep
-                let bL, bR, eL, eR = bCenter + adj, bCenter - adj, eCenter + adj, eCenter - adj
-                drawTube bL bInfo.Index bInfo.Color eL eInfo.Index eInfo.Color (translation newWidth) @
-                drawTube bR bInfo.Index bInfo.Color eR eInfo.Index eInfo.Color (translation newWidth)
+                let bSepAdj, bNewWidth = translation ((bRad.Unwrap() / factor) / 2.0), (bRad.Unwrap() / factor) / 3.0
+                let eSepAdj, eNewWidth = translation ((eRad.Unwrap() / factor) / 2.0), (eRad.Unwrap() / factor) / 3.0
+                let bL, eL = bCenter + bSepAdj, eCenter + eSepAdj
+                let bR, eR = bCenter - bSepAdj, eCenter - eSepAdj
+                drawTube bL bInfo.Index bInfo.Color bNewWidth eL eInfo.Index eInfo.Color eNewWidth @
+                drawTube bR bInfo.Index bInfo.Color bNewWidth eR eInfo.Index eInfo.Color eNewWidth
             | Triple ->
-                let sep, newWidth = width / 2.0, width / 5.0
-                let adj = translation sep
-                let bL, bR, eL, eR = bCenter + adj, bCenter - adj, eCenter + adj, eCenter - adj
-                drawTube bL bInfo.Index bInfo.Color eL eInfo.Index eInfo.Color (translation newWidth) @
-                drawTube bCenter bInfo.Index bInfo.Color eCenter eInfo.Index eInfo.Color (translation newWidth) @
-                drawTube bR bInfo.Index bInfo.Color eR eInfo.Index eInfo.Color (translation newWidth) 
-                        
+                let bSepAdj, bNewWidth = translation ((bRad.Unwrap() / factor) / 2.0), (bRad.Unwrap() / factor) / 5.0
+                let eSepAdj, eNewWidth = translation ((eRad.Unwrap() / factor) / 2.0), (eRad.Unwrap() / factor) / 5.0
+                let bL, eL = bCenter + bSepAdj, eCenter + eSepAdj
+                let bR, eR = bCenter - bSepAdj, eCenter - eSepAdj
+                drawTube bL bInfo.Index bInfo.Color bNewWidth eL eInfo.Index eInfo.Color eNewWidth @
+                drawTube bCenter bInfo.Index bInfo.Color bNewWidth eCenter eInfo.Index eInfo.Color eNewWidth @
+                drawTube bR bInfo.Index bInfo.Color bNewWidth eR eInfo.Index eInfo.Color eNewWidth
+            
         // Draw objects.
         let objs = [
             for bAtom in adjAtoms do
-                yield Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius width))
+                yield Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius (bAtom.GetRadius().Unwrap() / factor)))
                 drawn <- drawn @ [ bAtom.GetInfo().Index ]
                 for bond in getBonds (bAtom.GetInfo().Index) do
                     if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
                         match getAtom.TryFind (bond.Unwrap().EndAtomIndex) with
-                        | None -> () | Some eAtom -> for bondTube in drawBonds eAtom bAtom bond width do yield bondTube ]
+                        | None -> () | Some eAtom -> for bondTube in drawBonds eAtom bAtom bond do yield bondTube ]
         
         { Header = Header.New(); ID = "Tube"; ViewBox = viewBox; Objects = objs }, options

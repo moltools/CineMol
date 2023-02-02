@@ -13,6 +13,10 @@ module Fundamentals =
     /// Radius defines the radius of a circle or sphere.
     /// </summary>
     type Radius = Radius of float
+        with
+        member this.Unwrap () =
+            let (Radius r) = this
+            r 
     
     /// <summary>
     /// Width defines the width of a line.
@@ -424,6 +428,10 @@ module Chem =
         member this.GetCenter () =
             let _, center, _ = this.Unwrap()
             center
+            
+        member this.GetRadius () =
+            let _, _, radius = this.Unwrap()
+            radius
     
     /// <summary>
     /// Atom3D describes an atom in three-dimensional Euclidean space.
@@ -468,7 +476,7 @@ module Svg =
     type ViewBox = { MinX: float; MinY: float; Width: float; Height: float }
         with
         override this.ToString () =
-            $"viewBox=\"{this.MinX} {this.MinY} {this.Width} {this.Height}\""
+            $"viewBox=\"%.3f{this.MinX} %.3f{this.MinY} %.3f{this.Width} %.3f{this.Height}\""
     
     /// <summary>
     /// Shape is a collection of supported shapes to draw in two-dimensional Euclidean space as SVG XML objects.
@@ -482,16 +490,16 @@ module Svg =
             match this with
             
             // Draw line.
-            | Line (Index index, Color (red, green, blue), Line2D (a, b), Width width) ->
-                sprintf "<line class=\"%i\" x1=\"%.3f\" x2=\"%.3f\" y1=\"%.3f\" y2=\"%.2f\" style=\"stroke:rgb(%i,%i,%i);stroke-width:%.3f\"/>" index a.X b.X a.Y b.Y red green blue width
+            | Line (Index idx, Color (red, green, blue), Line2D (a, b), Width width) ->
+                $"<line class=\"{idx}\" x1=\"%.3f{a.X}\" x2=\"%.3f{b.X}\" y1=\"%.3f{a.Y}\" y2=\"%.2f{b.Y}\" style=\"stroke:rgb({red},{green},{blue});stroke-width:%.3f{width}\"/>"
                 
             // Draw circle.
-            | Circle (Index index, Color (red, green, blue), Circle2D (p, Radius r)) ->
-                sprintf "<circle class=\"%i\" style=\"fill:rgb(%i,%i,%i)\" cx=\"%.3f\" cy=\"%.3f\" r=\"%.3f\"/>" index red green blue p.X p.Y r
+            | Circle (Index idx, Color (red, green, blue), Circle2D (p, Radius r)) ->
+                $"<circle class=\"{idx}\" style=\"fill:rgb({red},{green},{blue})\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" r=\"%.3f{r}\"/>"
             
             // Draw quadrangle.
-            | Quadrangle (Index index, Color (red, green, blue), Geometry.Quadrangle (a, b, c, d)) ->
-                sprintf "<path class=\"%i\" style=\"fill:rgb(%i,%i,%i)\" d=\"M %.3f %.3f L %.3f %.3f L %.3f %.3f L %.3f %.3f L %.3f %.3f\"/>" index red green blue a.X a.Y b.X b.Y c.X c.Y d.X d.Y a.X a.Y
+            | Quadrangle (Index idx, Color (red, green, blue), Geometry.Quadrangle (a, b, c, d)) ->
+                $"<path class=\"{idx}\" style=\"fill:rgb({red},{green},{blue})\" d=\"M %.3f{a.X} %.3f{a.Y} L %.3f{b.X} %.3f{b.Y} L %.3f{c.X} %.3f{c.Y} L %.3f{d.X} %.3f{d.Y} L %.3f{a.X} %.3f{a.Y}\"/>"
                 
         member this.Clip (other: Shape) =
             // TODO
@@ -505,7 +513,7 @@ module Svg =
         static member New () = Header (1.0, "UTF-8")
         override this.ToString () : string =
             let (Header (version, encoding)) = this
-            sprintf "<?xml version=\"%.1f\" encoding=\"%s\"?>" version encoding
+            $"<?xml version=\"%.1f{version}\" encoding=\"{encoding}\"?>"
     
     /// <summary>
     /// SVG encapsulates all individual elements in the SVG image.
@@ -521,7 +529,7 @@ module Svg =
             let objs = this.Objects |> List.map (fun x -> x.ToString()) |> String.concat ""
             
             // Combine items into SVG body.
-            sprintf "<svg id=\"%s\" xmlns=\"http://www.w3.org/2000/svg\" %s>%s</svg>" this.ID (this.ViewBox.ToString()) objs
+            $"<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}>{objs}</svg>"
             
 module Drawing =
     
