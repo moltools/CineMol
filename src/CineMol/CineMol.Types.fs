@@ -543,10 +543,6 @@ module Drawing =
     /// <summary>
     /// Drawing options.
     /// </summary>
-    type DrawingOptions =
-        { ViewBox: ViewBox option
-          Style: ModelStyle }
+    type DrawingOptions = { ViewBox: ViewBox option; Style: ModelStyle }
         with
-        static member New () =
-            { ViewBox = None
-              Style = BallAndStick }
+        static member New () = { ViewBox = None; Style = BallAndStick }
