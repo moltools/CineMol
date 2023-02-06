@@ -485,15 +485,22 @@ module Svg =
             $"viewBox=\"%.3f{this.MinX} %.3f{this.MinY} %.3f{this.Width} %.3f{this.Height}\""
             
     /// <summary>
-    /// Radial gradient.
+    /// Shape fill.
     /// </summary>
-    type RadialGradient = RadialGradient of Index * Point2D * Radius * Color
+    type Fill =
+        | RadialGradient of Index * Point2D * Radius * Color
+        | LinearGradient of Index * Line2D * Width * Color 
         with
         override this.ToString () =
-            let (RadialGradient (Index idx, p, Radius r, color)) = this
-            let adjRadius = r * 1.5 // We make the radius for the gradient a little bit bigger so no black edges will show up at the edge of the shape.
-            let diffusion = [ 0.0; 0.11; 0.33; 0.66; 1.0 ] |> List.map (fun dr -> $"<stop offset=\"%.2f{dr}\" stop-color=\"{color.Diffuse (1.0 - dr)}\"/>") |> String.concat ""
-            $"<radialGradient id=\"fill{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" fx=\"%.3f{p.X}\" fy=\"%.3f{p.Y}\" r=\"%.3f{adjRadius}\" gradientTransform=\"matrix(1,0,0,1,0,0)\" gradientUnits=\"userSpaceOnUse\">{diffusion}</radialGradient>"
+            match this with
+            | RadialGradient (Index idx, p, Radius r, color) ->
+                let adjRadius = r * 1.5 // We make the radius for the gradient a little bit bigger so no black edges will show up at the edge of the shape.
+                let diffusion = [ 0.0; 0.11; 0.33; 0.66; 1.0 ] |> List.map (fun dr -> $"<stop offset=\"%.2f{dr}\" stop-color=\"{color.Diffuse (1.0 - dr)}\"/>") |> String.concat ""
+                $"<radialGradient id=\"{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" fx=\"%.3f{p.X}\" fy=\"%.3f{p.Y}\" r=\"%.3f{adjRadius}\" gradientTransform=\"matrix(1,0,0,1,0,0)\" gradientUnits=\"userSpaceOnUse\">{diffusion}</radialGradient>"
+            
+            | LinearGradient (Index idx, Line2D (a, b), Width w, color) ->
+                let diffusion = [ 0.0; 0.11; 0.33; 0.66; 1.0 ] |> List.map (fun dr -> $"<stop offset=\"%.2f{dr}\" stop-color=\"{color.Diffuse (1.0 - dr)}\"/>") |> String.concat ""
+                $"<linearGradient id=\"{idx}\" x1=\"{a.X}\" x2=\"{b.X}\" y1=\"{a.Y}\" y2=\"{b.Y}\" gradientUnits=\"userSpaceOnUse\" spreadMethod=\"reflect\">{diffusion}</linearGradient>"
                 
     /// <summary>
     /// Shape is a collection of supported shapes to draw in two-dimensional Euclidean space as SVG XML objects.
@@ -503,23 +510,29 @@ module Svg =
         | Quadrangle of Index * Color * Quadrangle
         with
         override this.ToString () =
+            // TODO: use `href` for gradients to lower file size
+            
             match this with
             // Draw circle.
             | Circle (Index idx, _, Circle2D (p, Radius r)) ->               
-                $"<circle class=\"{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" r=\"%.3f{r}\" fill=\"url(#fill{idx})\"/>"
+                $"<circle class=\"{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" r=\"%.3f{r}\" fill=\"url(#{idx})\"/>"
             
             // Draw quadrangle.
             | Quadrangle (Index idx, _, Geometry.Quadrangle (a, b, c, d)) ->
-                $"<path class=\"{idx}\" d=\"M %.3f{a.X} %.3f{a.Y} L %.3f{b.X} %.3f{b.Y} L %.3f{c.X} %.3f{c.Y} L %.3f{d.X} %.3f{d.Y} L %.3f{a.X} %.3f{a.Y}\" fill=\"url(#fill{idx})\"/>"
+                $"<path class=\"{idx}\" d=\"M %.3f{a.X} %.3f{a.Y} L %.3f{b.X} %.3f{b.Y} L %.3f{c.X} %.3f{c.Y} L %.3f{d.X} %.3f{d.Y} L %.3f{a.X} %.3f{a.Y}\" fill=\"url(#{idx})\"/>"
         
-        member this.RadialGradient () =
+        member this.SetIndex (idx: Index) =
             match this with
-            | Circle (idx, color, Circle2D (p, radius)) -> idx, p, radius, color 
+            | Circle (_, color, circle2d) -> Circle (idx, color, circle2d)
+            | Quadrangle (_, color, quadrangle) -> Quadrangle (idx, color, quadrangle)
+        
+        member this.Fill () =
+            match this with
+            | Circle (idx, color, Circle2D (p, radius)) ->
+                RadialGradient (idx, p, radius, color)
+                
             | Quadrangle (idx, color, Geometry.Quadrangle (a, b, c, d)) ->
-                let centroid = Point2D.Centroid [ a; b; c; d ]
-                idx, centroid, (centroid.Dist a) * 2.0 |> Radius, color 
-            |> RadialGradient
-            |> (fun rg -> rg.ToString())
+                LinearGradient (idx, Line2D (a, b), Width (b.Dist c), color) 
                 
         member this.Clip (other: Shape) =
             // TODO
@@ -545,15 +558,16 @@ module Svg =
             this.Header.ToString() + this.Body() 
             
         member this.Body() =
+            // Make sure all objects have a unique identifier.
+            let svgObjs =
+                List.zip [ 0 .. 1 .. this.Objects.Length ] this.Objects
+                |> List.map (fun (i, obj) -> obj.SetIndex (Index i))
+            
             // Convert all defs to a single string.
-            // TODO 1: Index is now used to refer to correct fill for object; index is not unique and this will cause
-            // TODO 1: multiple items to refer to different fills with the same index.
-            // TODO 2: Should fill be based on model type? Probably.
-            // For now only circles have filters applied to them. Bonds need to be named differently for correct fill assignment. 
-            let defs = this.Objects |> List.filter (fun obj -> match obj with | Circle _ -> true | _ -> false) |> List.map (fun x -> x.RadialGradient().ToString()) |> String.concat ""
+            let defs = svgObjs |> List.map (fun x -> x.Fill().ToString()) |> String.concat ""
             
             // Convert all objects to a single string.
-            let objs = this.Objects |> List.map (fun x -> x.ToString()) |> String.concat ""
+            let objs = svgObjs |> List.map (fun x -> x.ToString()) |> String.concat ""
             
             // Combine items into SVG body.
             $"<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}><defs>{defs}</defs>{objs}</svg>"
