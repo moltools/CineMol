@@ -14,7 +14,7 @@ type AtomColorStyle =
     member this.Color (atomType: AtomType) =
         match atomType with
         | H                           -> 255, 255, 255 // White
-        | C                           ->   0,   0,   0 // Black 
+        | C                           ->  48,  48,  48 // Not quite black (need non-zero values to able to diffuse)
         | N                           ->   0,   0, 255 // Blue
         | O                           -> 255,   0,   0 // Red
         | P                           -> 255, 165,   0 // Orange
