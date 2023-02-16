@@ -464,6 +464,10 @@ module Chem =
         member this.GetRadius () =
             let _, _, radius = this.Unwrap()
             radius
+            
+        member this.AsSphere () =
+            let _, center, radius = this.Unwrap()
+            Sphere (center, radius)
     
     /// <summary>
     /// Bond describes a bond between two Atoms in two-dimensional or three-dimensional Euclidean space.

@@ -145,8 +145,25 @@ let draw (mol: Molecule) (options: DrawingOptions) =
         // Convert elements to SVG objects.
         let mutable masks = []
         let objs = [
-            for Atom2D ({ Index = index; Type = _; Color = color }, c, Radius r) in adjAtoms do
-                masks <- masks @ [ Mask.Circle (index, Circle2D (c, Radius (r / 2.0))) ]                
+            for atom in adjAtoms do
+                let (Atom2D ({ Index = index; Type = _; Color = color }, c, Radius r)) = atom
+
+                match getAtom.TryFind(index) with
+                | Some this ->
+                    mol.Atoms
+                    // Atom cannot clip with itself.
+                    |> List.filter (fun other -> other.GetInfo().Index <> this.GetInfo().Index)
+                    // Only clip with atoms that are clipping with it in 3D Euclidean space.
+                    |> List.map (fun other ->
+                        match this.AsSphere().IntersectionWithSphere(other.AsSphere()) with
+                        | Some (Circle3D (c, r, n)) ->
+                            // TODO: project 3D circle to 2D ellips on canvas
+                            // TODO: convert ellips to clipping mask by finding the larger circle that fits in the arc of the ellips
+                            ()
+                        | None -> ())
+                    |> ignore 
+                | None -> ()
+                    
                 yield (index, color, Circle2D(c, Radius r)) |> Shape.Circle
         ]       
         
