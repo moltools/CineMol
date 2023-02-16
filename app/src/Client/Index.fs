@@ -14,6 +14,7 @@ open Feliz.Bulma
 open Fulma
 
 open CineMol.Encoding
+open CineMol.Types.Style
 open CineMol.Types.Geometry
 open CineMol.Types.Chem
 open CineMol.Types.Drawing

@@ -125,8 +125,7 @@ type FileParser = FileParser of FileType
                         // Able to cast all data to appropriate types.
                         | Some s_idx, Some e_idx, Some bondType ->
                             let bondInfo =
-                                { Index = bonds.Length + 1 |> Index
-                                  BeginAtomIndex = Index s_idx
+                                { BeginAtomIndex = Index s_idx
                                   EndAtomIndex = Index e_idx
                                   Type = bondType
                                   Color = None }

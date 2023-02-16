@@ -1,14 +1,16 @@
 module CineMol.Drawing
 
-open System 
+open System
 
+open CineMol.Helpers
 open CineMol.Style
+open Types.Style 
 open Types.Fundamentals 
 open Types.Geometry
 open Types.Chem
-open Types.Svg
+open Types.Svg 
 open Types.Drawing
-open Projection
+open CineMol.Projection
 
 /// <summary>
 /// Driver code for rotating atoms in molecule.
@@ -98,8 +100,9 @@ let draw (mol: Molecule) (options: DrawingOptions) =
         let project (p: Point3D) = project (Camera.New pov) pov offset p
         adjAtoms |> List.map (fun (Atom3D (i, c, r)) -> Atom2D (i, project c, r))
         
-    // Create atom atom index to atom look-up map. 
-    let getAtom = adjAtoms |> List.map (fun a -> (a.GetInfo().Index, a)) |> Collections.Map 
+    // Create atom atom index to atom look-up map.
+    let getAtom = mol.Atoms |> List.map (fun a -> (a.GetInfo().Index, a)) |> Collections.Map
+    let getAdjAtom = adjAtoms |> List.map (fun a -> (a.GetInfo().Index, a)) |> Collections.Map 
     
     // Find bonds connected to atom with certain atom index.
     let getBonds idx = mol.Bonds |> List.filter (fun (Bond b) -> b.BeginAtomIndex = idx)        
@@ -108,10 +111,6 @@ let draw (mol: Molecule) (options: DrawingOptions) =
     match options.Style with
     
     | BallAndStick ->
-        // Ball-and-stick model depiction.
-        // TODO: add specular, and add masks to tips of bonds to make them look round
-        // TODO: add clipping 
-        
         // Resize atoms to ratio for wire-frame model in Angstrom.
         let defaultRatio = 5.0
         let defaultBondSize = 0.1
@@ -120,43 +119,40 @@ let draw (mol: Molecule) (options: DrawingOptions) =
         let mutable drawn = []                       
             
         // Draw objects.
+        let mutable masks = []
         let objs = [
             for bAtom in adjAtoms do
                 // Scale down atom to make sure bonds are visible.
                 let bSize = bAtom.GetRadius().Unwrap() / defaultRatio
-                yield Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
+                yield Shape.Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
                 drawn <- drawn @ [ bAtom.GetInfo().Index ]
                 for bond in getBonds (bAtom.GetInfo().Index) do
                     if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
-                        match getAtom.TryFind (bond.Unwrap().EndAtomIndex) with
+                        match getAdjAtom.TryFind (bond.Unwrap().EndAtomIndex) with
                         | None -> ()
                         | Some eAtom ->
                             // Make sure to resize default bond size based on perspective.
                             let bSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultBondSize
                             let eSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultBondSize 
-                            for bondTube in drawBonds eAtom (eAtom.GetCenter()) eSize bAtom (bAtom.GetCenter()) bSize bond do yield bondTube ]        
+                            for bondTube in drawBonds eAtom (eAtom.GetCenter()) eSize bAtom (bAtom.GetCenter()) bSize bond do yield bondTube ]
         
-        { Header = Header.New(); ID = "BallAndStick"; ViewBox = viewBox; Objects = objs }, options
+        // Set new unique object indices.
+        let objs = enumerate objs |> List.map (fun (idx, obj) -> obj.SetIndex(Index idx))        
+        
+        { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options            
         
     | SpaceFilling ->
-        // Space-filling model depiction.
-        // TODO: parse elements (incl. clipping)
-        // TODO: add specular
-        // TODO: add clipping
-    
         // Convert elements to SVG objects.
-        let objs: Shape list =
-            adjAtoms
-            |> List.map (fun (Atom2D ({ Index = index; Type = _; Color = color }, c, r)) ->
-                (index, color, Circle2D(c, r)) |> Circle)
+        let mutable masks = []
+        let objs = [
+            for Atom2D ({ Index = index; Type = _; Color = color }, c, Radius r) in adjAtoms do
+                masks <- masks @ [ Mask.Circle (index, Circle2D (c, Radius (r / 2.0))) ]                
+                yield (index, color, Circle2D(c, Radius r)) |> Shape.Circle
+        ]       
         
-        { Header = Header.New(); ID = "SpaceFilling"; ViewBox = viewBox; Objects = objs }, options
-        
+        { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options            
+    
     | Tube ->
-        // Tube model depiction.
-        // TODO: add specular, and add masks to tips of bonds to make them look round
-        // TODO: add clipping 
-        
         // Resize atoms to ratio for wire-frame model in Angstrom.
         let defaultSize = 0.2
         
@@ -164,19 +160,23 @@ let draw (mol: Molecule) (options: DrawingOptions) =
         let mutable drawn = []     
             
         // Draw objects.
+        let mutable masks = []
         let objs = [
             for bAtom in adjAtoms do
                 // Make sure to resize default size of begin atom of bond based on perspective.
                 let bSize = (bAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (bAtom.GetInfo().Type)).Unwrap()) * defaultSize 
-                yield Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
+                yield Shape.Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
                 drawn <- drawn @ [ bAtom.GetInfo().Index ]
                 for bond in getBonds (bAtom.GetInfo().Index) do
                     if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
-                        match getAtom.TryFind (bond.Unwrap().EndAtomIndex) with
+                        match getAdjAtom.TryFind (bond.Unwrap().EndAtomIndex) with
                         | None -> ()
                         | Some eAtom ->
                             // Make sure to resize default size of end atom of bond based on perspective.
                             let eSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultSize 
                             for bondTube in drawBonds eAtom (eAtom.GetCenter()) eSize bAtom (bAtom.GetCenter()) bSize bond do yield bondTube ]
+    
+        // Set new unique object indices.
+        let objs = enumerate objs |> List.map (fun (idx, obj) -> obj.SetIndex(Index idx))        
         
-        { Header = Header.New(); ID = "Tube"; ViewBox = viewBox; Objects = objs }, options
+        { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options

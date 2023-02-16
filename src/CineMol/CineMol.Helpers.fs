@@ -26,3 +26,8 @@ let clamp lowerBound upperBound (v: float) =
 let inline tryCast (cast: string -> 'a) s =
     try s |> cast |> Some 
     with :? FormatException -> None
+    
+/// <summary>
+/// Enumerate a list.
+/// </summary>
+let inline enumerate (items: 'a list) = List.zip [0 .. 1 .. items.Length] items 

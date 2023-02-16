@@ -47,6 +47,13 @@ module Style =
             ( diffuseChannel r,
               diffuseChannel g,
               diffuseChannel b ) |> Color
+            
+    /// <summary>
+    /// Model styles.
+    /// </summary>
+    type ModelStyle = | BallAndStick | SpaceFilling | Tube
+
+open Style
 
 module Geometry =
 
@@ -354,7 +361,6 @@ module Geometry =
 module Chem =
 
     open Fundamentals
-    open Style
     open Geometry
     
     /// <summary>
@@ -412,8 +418,7 @@ module Chem =
     /// BondInfo records all information on the bond identity and styling.
     /// </summary>
     type BondInfo =
-        { Index: Index
-          BeginAtomIndex: Index
+        { BeginAtomIndex: Index
           EndAtomIndex: Index
           Type: BondType 
           Color: Color option }
@@ -442,7 +447,23 @@ module Chem =
     /// <summary>
     /// Atom3D describes an atom in three-dimensional Euclidean space.
     /// </summary>
-    type Atom3D = Atom3D of AtomInfo * Point3D * Radius     
+    type Atom3D = Atom3D of AtomInfo * Point3D * Radius
+        with
+        member this.Unwrap () =
+            let (Atom3D (info, center, radius)) = this
+            info, center, radius
+            
+        member this.GetInfo () =
+            let info, _, _ = this.Unwrap()
+            info
+            
+        member this.GetCenter () =
+            let _, center, _ = this.Unwrap()
+            center
+            
+        member this.GetRadius () =
+            let _, _, radius = this.Unwrap()
+            radius
     
     /// <summary>
     /// Bond describes a bond between two Atoms in two-dimensional or three-dimensional Euclidean space.
@@ -461,7 +482,6 @@ module Chem =
 module Svg =
     
     open Fundamentals
-    open Style
     open Geometry
     
     /// <summary>
@@ -495,11 +515,11 @@ module Svg =
             match this with
             | RadialGradient (Index idx, p, Radius r, color) ->
                 let adjRadius = r * 1.5 // We make the radius for the gradient a little bit bigger so no black edges will show up at the edge of the shape.
-                let diffusion = [ 0.0; 0.11; 0.33; 0.66; 1.0 ] |> List.map (fun dr -> $"<stop offset=\"%.2f{dr}\" stop-color=\"{color.Diffuse (1.0 - dr)}\"/>") |> String.concat ""
+                let diffusion = [ 0.0; 0.11; 0.11; 0.11; 1.0 ] |> List.map (fun dr -> $"<stop offset=\"%.2f{dr}\" stop-color=\"{color.Diffuse (1.0 - dr)}\"/>") |> String.concat ""
                 $"<radialGradient id=\"{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" fx=\"%.3f{p.X}\" fy=\"%.3f{p.Y}\" r=\"%.3f{adjRadius}\" gradientTransform=\"matrix(1,0,0,1,0,0)\" gradientUnits=\"userSpaceOnUse\">{diffusion}</radialGradient>"
             
-            | LinearGradient (Index idx, Line2D (a, b), Width w, color) ->
-                let diffusion = [ 0.0; 0.11; 0.33; 0.66; 1.0 ] |> List.map (fun dr -> $"<stop offset=\"%.2f{dr}\" stop-color=\"{color.Diffuse (1.0 - dr)}\"/>") |> String.concat ""
+            | LinearGradient (Index idx, Line2D (a, b), _, color) ->
+                let diffusion = [ 0.0; 0.11; 0.11; 0.11; 1.0 ] |> List.map (fun dr -> $"<stop offset=\"%.2f{dr}\" stop-color=\"{color.Diffuse (1.0 - dr)}\"/>") |> String.concat ""
                 $"<linearGradient id=\"{idx}\" x1=\"{a.X}\" x2=\"{b.X}\" y1=\"{a.Y}\" y2=\"{b.Y}\" gradientUnits=\"userSpaceOnUse\" spreadMethod=\"reflect\">{diffusion}</linearGradient>"
                 
     /// <summary>
@@ -514,8 +534,9 @@ module Svg =
             
             match this with
             // Draw circle.
-            | Circle (Index idx, _, Circle2D (p, Radius r)) ->               
-                $"<circle class=\"{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" r=\"%.3f{r}\" fill=\"url(#{idx})\"/>"
+            | Circle (Index idx, _, Circle2D (p, Radius r)) ->
+                // TODO: if there is no mask, the mask url does not refer to anything. This is ok for now but should be refactored to reduce file size.
+                $"<circle class=\"{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" r=\"%.3f{r}\" fill=\"url(#{idx})\" mask=\"url(#mask{idx})\"/>"
             
             // Draw quadrangle.
             | Quadrangle (Index idx, _, Geometry.Quadrangle (a, b, c, d)) ->
@@ -531,13 +552,20 @@ module Svg =
             | Circle (idx, color, Circle2D (p, radius)) ->
                 RadialGradient (idx, p, radius, color)
                 
-            | Quadrangle (idx, color, Geometry.Quadrangle (a, b, c, d)) ->
-                LinearGradient (idx, Line2D (a, b), Width (b.Dist c), color) 
+            | Quadrangle (idx, color, Geometry.Quadrangle (a, b, c, _)) ->
+                LinearGradient (idx, Line2D (a, b), Width (b.Dist c), color)
                 
-        member this.Clip (other: Shape) =
-            // TODO
-            raise <| NotImplementedException()
-    
+    /// <summary>
+    /// Shape is a collection of supported masks.
+    /// </summary>
+    type Mask =
+        | Circle of Index * Circle2D 
+        with
+        override this.ToString () =
+            match this with
+            | Circle (Index idx, Circle2D (p, Radius r)) ->
+                $"<mask id=\"mask{idx}\"><rect id=\"bg\" x=\"-10\" y=\"-10\" width=\"20\" height=\"20\" fill=\"white\"/><circle cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\" fill=\"black\"/></mask>"
+                
     /// <summary>
     /// Header describes the SVG ID and the SVG view box.
     /// </summary>
@@ -551,35 +579,28 @@ module Svg =
     /// <summary>
     /// SVG encapsulates all individual elements in the SVG image.
     /// </summary>
-    type SVG = { Header: Header; ID: string; ViewBox: ViewBox; Objects: Shape list }
+    type SVG = { Header: Header; ID: string; ViewBox: ViewBox; Objects: Shape list; Masks: Mask list }
         with
         override this.ToString () =            
             // Concatenate definitions, objects, and header strings. 
             this.Header.ToString() + this.Body() 
             
         member this.Body() =
-            // Make sure all objects have a unique identifier.
-            let svgObjs =
-                List.zip [ 0 .. 1 .. this.Objects.Length ] this.Objects
-                |> List.map (fun (i, obj) -> obj.SetIndex (Index i))
-            
             // Convert all defs to a single string.
-            let defs = svgObjs |> List.map (fun x -> x.Fill().ToString()) |> String.concat ""
+            let defs = this.Objects |> List.map (fun x -> x.Fill().ToString()) |> String.concat ""
+            
+            // Convert all masks to a single string.
+            let masks = this.Masks |> List.map (fun m -> m.ToString()) |> String.concat ""
             
             // Convert all objects to a single string.
-            let objs = svgObjs |> List.map (fun x -> x.ToString()) |> String.concat ""
+            let objs = this.Objects |> List.map (fun x -> x.ToString()) |> String.concat ""
             
             // Combine items into SVG body.
-            $"<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}><defs>{defs}</defs>{objs}</svg>"
+            $"<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}><defs>{defs + masks}</defs>{objs}</svg>"
             
 module Drawing =
     
     open Svg
-    
-    /// <summary>
-    /// Model styles.
-    /// </summary>
-    type ModelStyle = | BallAndStick | SpaceFilling | Tube
     
     /// <summary>
     /// Drawing options.
