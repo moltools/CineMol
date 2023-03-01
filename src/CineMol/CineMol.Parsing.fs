@@ -145,5 +145,6 @@ type FileParser = FileParser of FileType
                     // Skip other lines.
                     | _ -> ()
                     
-            ]            
+            ]
+            |> List.map (fun mol -> mol.AdjustForCentroid())
             |> Some 

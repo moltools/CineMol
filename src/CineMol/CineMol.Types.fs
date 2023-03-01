@@ -154,6 +154,8 @@ module Geometry =
                  Z = p.Z }
         member this.ToPoint2D () = { X = this.X; Y = this.Y }
         member this.ToVector3D () : Vector3D = { X = this.X; Y = this.Y; Z = this.Z }
+        static member Centroid (ps: Point3D list) =
+            ps |> List.fold (fun pSum p -> pSum + p) { X = 0.0; Y = 0.0; Z = 0.0 } |> (fun p -> p.Div (float ps.Length))
     
     /// <summary>
     /// Axis describes a plane in a three-dimensional Euclidean space.
@@ -482,6 +484,12 @@ module Chem =
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
     /// </summary>
     type Molecule = { Atoms: Atom3D list; Bonds: Bond list }
+        with
+        member this.AdjustForCentroid () =
+            let centroid = this.Atoms |> List.map (fun atom -> atom.GetCenter()) |> Point3D.Centroid
+            let adjustedAtoms = this.Atoms |> List.map (fun (Atom3D (i, c, r)) -> (Atom3D (i, c - centroid, r)))
+            { this with Atoms = adjustedAtoms }  
+            
 
 module Svg =
     

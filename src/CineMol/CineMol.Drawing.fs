@@ -65,13 +65,13 @@ let draw (mol: Molecule) (options: DrawingOptions) =
     
     // Set view box.
     let offset, viewBox  =
-        let marginRatio = 2.0
+        let margin = 5.0
         
         let offset =
             mol.Atoms
             |> List.map (fun (Atom3D (_, c, _)) -> c.Dist origin)
             |> List.max
-            |> (*) marginRatio
+            |> (+) margin
             
         let viewBox =
             match options.ViewBox with
@@ -79,8 +79,8 @@ let draw (mol: Molecule) (options: DrawingOptions) =
             | None ->
                 { MinX = -offset
                   MinY = -offset
-                  Width = offset * marginRatio
-                  Height = offset * marginRatio }
+                  Width = offset * 2.0
+                  Height = offset * 2.0 }
                 
         offset, viewBox
         
@@ -108,92 +108,95 @@ let draw (mol: Molecule) (options: DrawingOptions) =
     let getBonds idx = mol.Bonds |> List.filter (fun (Bond b) -> b.BeginAtomIndex = idx)        
         
     // Drawing style dictates if and how the objects are clipped and exactly drawn.
-    match options.Style with
-    
-    | BallAndStick ->
-        // Resize atoms to ratio for wire-frame model in Angstrom.
-        let defaultRatio = 5.0
-        let defaultBondSize = 0.1
+    let objs, masks = 
+        match options.Style with
         
-        // Keep track which atoms have been drawn (as joints between wires) to prevent drawing the same atom multiple times.
-        let mutable drawn = []                       
+        | BallAndStick ->
+            // Resize atoms to ratio for wire-frame model in Angstrom.
+            let defaultRatio = 5.0
+            let defaultBondSize = 0.1
             
-        // Draw objects.
-        let mutable masks = []
-        let objs = [
-            for bAtom in adjAtoms do
-                // Scale down atom to make sure bonds are visible.
-                let bSize = bAtom.GetRadius().Unwrap() / defaultRatio
-                yield Shape.Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
-                drawn <- drawn @ [ bAtom.GetInfo().Index ]
-                for bond in getBonds (bAtom.GetInfo().Index) do
-                    if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
-                        match getAdjAtom.TryFind (bond.Unwrap().EndAtomIndex) with
-                        | None -> ()
-                        | Some eAtom ->
-                            // Make sure to resize default bond size based on perspective.
-                            let bSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultBondSize
-                            let eSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultBondSize 
-                            for bondTube in drawBonds eAtom (eAtom.GetCenter()) eSize bAtom (bAtom.GetCenter()) bSize bond do yield bondTube ]
-        
-        // Set new unique object indices.
-        let objs = enumerate objs |> List.map (fun (idx, obj) -> obj.SetIndex(Index idx))        
-        
-        { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options            
-        
-    | SpaceFilling ->
-        // Convert elements to SVG objects.
-        let mutable masks = []
-        let objs = [
-            for atom in adjAtoms do
-                let (Atom2D ({ Index = index; Type = _; Color = color }, c, Radius r)) = atom
+            // Keep track which atoms have been drawn (as joints between wires) to prevent drawing the same atom multiple times.
+            let mutable drawn = []                       
+                
+            // Draw objects.
+            let mutable masks = []
+            let objs = [
+                for bAtom in adjAtoms do
+                    // Scale down atom to make sure bonds are visible.
+                    let bSize = bAtom.GetRadius().Unwrap() / defaultRatio
+                    yield Shape.Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
+                    drawn <- drawn @ [ bAtom.GetInfo().Index ]
+                    for bond in getBonds (bAtom.GetInfo().Index) do
+                        if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
+                            match getAdjAtom.TryFind (bond.Unwrap().EndAtomIndex) with
+                            | None -> ()
+                            | Some eAtom ->
+                                // Make sure to resize default bond size based on perspective.
+                                let bSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultBondSize
+                                let eSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultBondSize 
+                                for bondTube in drawBonds eAtom (eAtom.GetCenter()) eSize bAtom (bAtom.GetCenter()) bSize bond do yield bondTube ]
+            
+            // Set new unique object indices.
+            let objs = enumerate objs |> List.map (fun (idx, obj) -> obj.SetIndex(Index idx))
+            
+            objs, masks 
+            
+        | SpaceFilling ->
+            // Convert elements to SVG objects.
+            let mutable masks = []
+            let objs = [
+                for atom in adjAtoms do
+                    let (Atom2D ({ Index = index; Type = _; Color = color }, c, Radius r)) = atom
 
-                match getAtom.TryFind(index) with
-                | Some this ->
-                    mol.Atoms
-                    // Atom cannot clip with itself.
-                    |> List.filter (fun other -> other.GetInfo().Index <> this.GetInfo().Index)
-                    // Only clip with atoms that are clipping with it in 3D Euclidean space.
-                    |> List.map (fun other ->
-                        match this.AsSphere().IntersectionWithSphere(other.AsSphere()) with
-                        | Some (Circle3D (c, r, n)) ->
-                            // TODO: project 3D circle to 2D ellips on canvas
-                            // TODO: convert ellips to clipping mask by finding the larger circle that fits in the arc of the ellips
-                            ()
-                        | None -> ())
-                    |> ignore 
-                | None -> ()
-                    
-                yield (index, color, Circle2D(c, Radius r)) |> Shape.Circle
-        ]       
-        
-        { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options            
-    
-    | Tube ->
-        // Resize atoms to ratio for wire-frame model in Angstrom.
-        let defaultSize = 0.2
-        
-        // Keep track which atoms have been drawn (as joints between wires) to prevent drawing the same atom multiple times.
-        let mutable drawn = []     
+                    match getAtom.TryFind(index) with
+                    | Some this ->
+                        mol.Atoms
+                        // Atom cannot clip with itself.
+                        |> List.filter (fun other -> other.GetInfo().Index <> this.GetInfo().Index)
+                        // Only clip with atoms that are clipping with it in 3D Euclidean space.
+                        |> List.map (fun other ->
+                            match this.AsSphere().IntersectionWithSphere(other.AsSphere()) with
+                            | Some (Circle3D (c, Radius r, n)) ->
+                                // TODO: project 3D circle to 2D ellips on canvas
+                                // TODO: convert ellips to clipping mask by finding the larger circle that fits in the arc of the ellips
+                                ()
+                            | None -> ())
+                        |> ignore 
+                    | None -> ()
+                        
+                    yield (index, color, Circle2D(c, Radius r)) |> Shape.Circle
+            ]
             
-        // Draw objects.
-        let mutable masks = []
-        let objs = [
-            for bAtom in adjAtoms do
-                // Make sure to resize default size of begin atom of bond based on perspective.
-                let bSize = (bAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (bAtom.GetInfo().Type)).Unwrap()) * defaultSize 
-                yield Shape.Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
-                drawn <- drawn @ [ bAtom.GetInfo().Index ]
-                for bond in getBonds (bAtom.GetInfo().Index) do
-                    if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
-                        match getAdjAtom.TryFind (bond.Unwrap().EndAtomIndex) with
-                        | None -> ()
-                        | Some eAtom ->
-                            // Make sure to resize default size of end atom of bond based on perspective.
-                            let eSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultSize 
-                            for bondTube in drawBonds eAtom (eAtom.GetCenter()) eSize bAtom (bAtom.GetCenter()) bSize bond do yield bondTube ]
-    
-        // Set new unique object indices.
-        let objs = enumerate objs |> List.map (fun (idx, obj) -> obj.SetIndex(Index idx))        
+            objs, masks 
         
-        { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options
+        | Tube ->
+            // Resize atoms to ratio for wire-frame model in Angstrom.
+            let defaultSize = 0.2
+            
+            // Keep track which atoms have been drawn (as joints between wires) to prevent drawing the same atom multiple times.
+            let mutable drawn = []     
+                
+            // Draw objects.
+            let mutable masks = []
+            let objs = [
+                for bAtom in adjAtoms do
+                    // Make sure to resize default size of begin atom of bond based on perspective.
+                    let bSize = (bAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (bAtom.GetInfo().Type)).Unwrap()) * defaultSize 
+                    yield Shape.Circle (bAtom.GetInfo().Index, bAtom.GetInfo().Color, Circle2D (bAtom.GetCenter(), Radius bSize))
+                    drawn <- drawn @ [ bAtom.GetInfo().Index ]
+                    for bond in getBonds (bAtom.GetInfo().Index) do
+                        if not (List.contains (bond.Unwrap().EndAtomIndex) drawn) then
+                            match getAdjAtom.TryFind (bond.Unwrap().EndAtomIndex) with
+                            | None -> ()
+                            | Some eAtom ->
+                                // Make sure to resize default size of end atom of bond based on perspective.
+                                let eSize = (eAtom.GetRadius().Unwrap() / (AtomRadius.PubChem.Radius (eAtom.GetInfo().Type)).Unwrap()) * defaultSize 
+                                for bondTube in drawBonds eAtom (eAtom.GetCenter()) eSize bAtom (bAtom.GetCenter()) bSize bond do yield bondTube ]
+        
+            // Set new unique object indices.
+            let objs = enumerate objs |> List.map (fun (idx, obj) -> obj.SetIndex(Index idx))
+            
+            objs, masks
+        
+    { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options
