@@ -1,16 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <RootNamespace>CineMol</RootNamespace>
-    </PropertyGroup>
-    <ItemGroup>
-        <Compile Include="CineMol.Helpers.fs" />
-        <Compile Include="CineMol.Encoding.fs" />
-        <Compile Include="CineMol.Types.fs" />
-        <Compile Include="CineMol.Projection.fs" />
-        <Compile Include="CineMol.Style.fs" />
-        <Compile Include="CineMol.Drawing.fs" />
-        <Compile Include="CineMol.Parsing.fs" />
-    </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>CineMol</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CineMol.Helpers.fs" />
+    <Compile Include="CineMol.Encoding.fs" />
+    <Compile Include="CineMol.Types.fs" />
+    <Compile Include="CineMol.Projection.fs" />
+    <Compile Include="CineMol.Style.fs" />
+    <Compile Include="CineMol.Drawing.fs" />
+    <Compile Include="CineMol.Parsing.fs" />
+  </ItemGroup>
 </Project>

@@ -128,11 +128,13 @@ let draw (mol: Molecule) (options: DrawingOptions) =
                             match this.AsSphere().IntersectionWithSphere(other.AsSphere()) with
                             | Some intersectionCircle ->
                                 
+                                // first create straight clipping boundary
+                                // then curve straigh clipping boundary by inferring curvature from size of intersection circle radius
+                                // we can do this by combining a rectangular clipping with a ellipse clipping
+                                
                                 
                                 let (Circle3D (c, Radius r, _)) = intersectionCircle
-                                
-                                // TODO: project 3D circle to 2D ellips on canvas; now we assume we look at circle frontally for clipping which is not the case
-                                // TODO: convert ellips to clipping mask by finding the larger circle that fits in the arc of the ellips
+
                                 // TODO: how to check if you can actually see the clipping?
                                  
                                 // Gather all individual masks for atom based on clipping with nearby atoms.
