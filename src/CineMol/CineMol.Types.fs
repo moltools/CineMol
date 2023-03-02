@@ -21,7 +21,7 @@ module Fundamentals =
     /// <summary>
     /// Width defines the width of a line.
     /// </summary>
-    type Width = Width of float 
+    type Width = Width of float
 
 module Style =
 
@@ -291,11 +291,25 @@ module Geometry =
     /// Definition of a circle in three-dimensional Euclidean space.
     /// </summary>
     and Circle3D = Circle3D of Point3D * Radius * Vector3D
+        with
+        member this.SamplePoint (random: Random) =
+            let randomDouble = random.NextDouble()
+            let (Circle3D (c, Radius r, v)) = this
+            
+            // Get random perpendicular vector to normal v. 
+            let mutable w: Vector3D = { X = randomDouble; Y = randomDouble; Z = randomDouble}
+            let mutable vPerp = v.Cross w
+            while vPerp.Sum() = 1.0 do 
+                w <- { X = randomDouble; Y = randomDouble; Z = randomDouble}
+                vPerp <- v.Cross w 
+            
+            // Get point on circumference of circle in 3D space.
+            c + vPerp.Mul(r).ToPoint3D()
     
     /// <summary>
     /// Definition for a quadrangle.
     /// </summary>
-    and Quadrangle = Quadrangle of Point2D * Point2D * Point2D * Point2D
+    and Quadrangle2D= Quadrangle2D of Point2D * Point2D * Point2D * Point2D
     
     /// <summary>
     /// Definition for a sphere.
@@ -539,7 +553,7 @@ module Svg =
     /// </summary>
     type Shape =
         | Circle of Index * Color * Circle2D
-        | Quadrangle of Index * Color * Quadrangle
+        | Quadrangle of Index * Color * Quadrangle2D
         with
         override this.ToString () =
             // TODO: use `href` for gradients to lower file size
@@ -551,7 +565,7 @@ module Svg =
                 $"<circle class=\"{idx}\" cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" r=\"%.3f{r}\" fill=\"url(#{idx})\" mask=\"url(#mask{idx})\"/>"
             
             // Draw quadrangle.
-            | Quadrangle (Index idx, _, Geometry.Quadrangle (a, b, c, d)) ->
+            | Quadrangle (Index idx, _, Quadrangle2D (a, b, c, d)) ->
                 $"<path class=\"{idx}\" d=\"M %.3f{a.X} %.3f{a.Y} L %.3f{b.X} %.3f{b.Y} L %.3f{c.X} %.3f{c.Y} L %.3f{d.X} %.3f{d.Y} L %.3f{a.X} %.3f{a.Y}\" fill=\"url(#{idx})\"/>"
         
         member this.SetIndex (idx: Index) =
@@ -564,19 +578,24 @@ module Svg =
             | Circle (idx, color, Circle2D (p, radius)) ->
                 RadialGradient (idx, p, radius, color)
                 
-            | Quadrangle (idx, color, Geometry.Quadrangle (a, b, c, _)) ->
+            | Quadrangle (idx, color, Quadrangle2D (a, b, c, _)) ->
                 LinearGradient (idx, Line2D (a, b), Width (b.Dist c), color)
                 
     /// <summary>
     /// Shape is a collection of supported masks.
     /// </summary>
     type Mask =
-        | Circle of Index * Circle2D 
+        | Circular of Index * Circle2D list  
         with
         override this.ToString () =
             match this with
-            | Circle (Index idx, Circle2D (p, Radius r)) ->
-                $"<mask id=\"mask{idx}\"><rect id=\"bg\" x=\"-10\" y=\"-10\" width=\"20\" height=\"20\" fill=\"white\"/><circle cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\" fill=\"black\"/></mask>"
+            | Circular (Index idx, ms) ->                
+                let masks =
+                    [ for m in ms do
+                        let (Circle2D (p, Radius r)) = m 
+                        $"<circle cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\" fill=\"black\"/>" ]
+                    |> String.concat ""
+                $"<mask id=\"mask{idx}\"><rect id=\"bg\" x=\"-10\" y=\"-10\" width=\"20\" height=\"20\" fill=\"white\"/>{masks}</mask>"
                 
     /// <summary>
     /// Header describes the SVG ID and the SVG view box.
