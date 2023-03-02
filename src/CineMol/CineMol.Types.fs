@@ -76,6 +76,8 @@ module Geometry =
         member this.Sum () = this.X + this.Y
         member this.SumOfSquares = (this.Pow 2.0).Sum()
         member this.Norm = this.Mul (if this.Mag() = 0.0 then infinity else 1.0 / this.Mag())
+        member this.Perpendicular = { this with X = this.Y; Y = -1.0 * this.X }
+        member this.ToPoint2D () : Point2D = { X = this.X; Y = this.Y }
     
     /// <summary>
     /// Vector3D resembles a vector in three-dimensional Euclidean space.
@@ -116,9 +118,11 @@ module Geometry =
         member this.Sum () = this.X + this.Y
         member this.Dist other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
         member this.Midpoint other = (this + other).Div 2.0
-        member this.FindVector other = other - this
+        member this.FindVector (other: Point2D) : Vector2D = { X = other.X - this.X; Y = other.Y - this.Y }
         member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
         member this.SlopePerpendicular other = -1.0 * (1.0 / (this.Slope other))
+        member this.Translate (v: Vector2D) = this + v.ToPoint2D()
+            
         static member Centroid (ps: Point2D list) =
             ps |> List.fold (fun pSum p -> pSum + p) { X = 0.0; Y = 0.0 } |> (fun p -> p.Div (float ps.Length))
         
@@ -330,40 +334,21 @@ module Geometry =
         member this.IntersectionWithSphere other =
             let Sphere (pThis, Radius rThis), Sphere (pOther, Radius rOther) = this, other
             
-            // Calculate the distance between the center of two spheres and determine the type of intersection.
             match pThis.Dist pOther with
+            // Spheres do not intersect.
+            | d when d > rThis + rOther -> None
             
-            // No intersection.
-            | dist when dist >= rThis + rOther || (dist = 0.0 && rThis = rOther) -> None
+            // One sphere is contained within the other.
+            | d when d < abs(rThis - rOther) -> None
             
-            // This sphere is inside other sphere or vica versa.
-            | dist when dist + rThis < rOther || dist + rOther < rThis -> None
+            // Spheres intersect.
+            | d ->
+                let a = (rThis * rThis - rOther * rOther + d * d) / (2.0 * d)
+                let h = Math.Sqrt(rThis * rThis - a * a)
+                let p = pThis + (pOther - pThis).Mul(a).Div(d) // Intersection point.
+                let n = (p - pThis).ToVector3D().Norm // Normal vector. 
+                Circle3D (p, Radius h, n) |> Some
             
-            // Spheres are intersecting (i.e, there is an intersection circle in three-dimensional Euclidean space).
-            | dist ->
-                /// Intersection plane.
-                let a = (pOther - pThis).Mul 2.0
-                let b = (pThis.Pow 2.0 - pOther.Pow 2.0).Sum()
-                
-                /// Intersection center.
-                let t = (pThis * a).Sum() + b / (a * (pThis - pOther)).Sum()
-                let intersectionCenter = (pThis.Add t)  * (pOther - pThis)
-                        
-                /// Calculate intersection.
-                let x = (rThis ** 2.0 + dist ** 2.0 - rOther ** 2.0) / (2.0 * rThis * dist)
-                
-                // Calculate radius of intersection circle.
-                match rThis * Math.Sin (Math.Acos(x)) with
-                | 0.0 ->
-                    // Radius of intersection circle is zero. This and other sphere
-                    // are not intersecting but touching.
-                    None
-                    
-                | intersectionCircleRadius ->
-                    // Radius of intersection circle is non-zero. There is an intersection circle.
-                    let intersectionCircleNorm = pThis.FindVector pOther
-                    Circle3D (intersectionCenter, Radius intersectionCircleRadius, intersectionCircleNorm) |> Some 
-
         /// <summary>
         /// Calculates the intersection points of a sphere with a line. We interpret tangent line as non-intersecting.
         /// </summary>
@@ -582,20 +567,23 @@ module Svg =
                 LinearGradient (idx, Line2D (a, b), Width (b.Dist c), color)
                 
     /// <summary>
-    /// Shape is a collection of supported masks.
+    /// MaskShape is a collection of supported masks.
     /// </summary>
-    type Mask =
-        | Circular of Index * Circle2D list  
+    type MaskShape =
+        | Circular of Circle2D
+        | Quadrangle of Quadrangle2D 
+    
+    type Mask = Mask of Index * MaskShape list  
         with
         override this.ToString () =
-            match this with
-            | Circular (Index idx, ms) ->                
-                let masks =
-                    [ for m in ms do
-                        let (Circle2D (p, Radius r)) = m 
-                        $"<circle cx=\"{p.X}\" cy=\"{p.Y}\" r=\"{r}\" fill=\"black\"/>" ]
-                    |> String.concat ""
-                $"<mask id=\"mask{idx}\"><rect id=\"bg\" x=\"-10\" y=\"-10\" width=\"20\" height=\"20\" fill=\"white\"/>{masks}</mask>"
+            let (Mask (Index idx, ms)) = this
+            let masks =
+                [ for m in ms do
+                    match m with
+                    | Circular (Circle2D (p, Radius r)) -> yield $"<circle cx=\"%.3f{p.X}\" cy=\"%.3f{p.Y}\" r=\"%.3f{r}\" fill=\"black\"/>"
+                    | Quadrangle (Quadrangle2D (a, b, c, d)) -> yield $"<path d=\"M %.3f{a.X} %.3f{a.Y} L %.3f{b.X} %.3f{b.Y} L %.3f{c.X} %.3f{c.Y} L %.3f{d.X} %.3f{d.Y} L %.3f{a.X} %.3f{a.Y}\" fill=\"black\"/>" ]
+                |> String.concat ""
+            $"<mask id=\"mask{idx}\"><rect id=\"bg\" x=\"-10\" y=\"-10\" width=\"20\" height=\"20\" fill=\"white\"/>{masks}</mask>"
                 
     /// <summary>
     /// Header describes the SVG ID and the SVG view box.

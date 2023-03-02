@@ -29,7 +29,7 @@ let drawBonds (Atom2D(bInfo, _, _)) (bStart: Point2D) bSize (Atom2D(eInfo, _, _)
         let t = width / Math.Sqrt (1.0 + Math.Pow(slopePerpendicular, 2.0))
         { X = t; Y = slopePerpendicular * t }
         
-    let elem idx color bL bR eR eL = (idx, color, Quadrangle2D (bL, bR, eR, eL)) |> Quadrangle
+    let elem idx color bL bR eR eL = (idx, color, Quadrangle2D (bL, bR, eR, eL)) |> Shape.Quadrangle
     
     let drawTube (b: Point2D) bIdx bCol bWidth e eIdx eCol eWidth =
         let m = b.Midpoint e
@@ -114,7 +114,10 @@ let draw (mol: Molecule) (options: DrawingOptions) =
             let objs = [
                 for atom in adjAtoms do
                     let (Atom2D ({ Index = index; Type = _; Color = color }, c, Radius r)) = atom
-                    let mutable atomMasks: Circle2D list = []
+                    let mutable atomMasks: MaskShape list = []
+                    
+                    let drawCircle = Circle2D(c, Radius r)
+                    yield (index, color, drawCircle) |> Shape.Circle
                     
                     match getAtom.TryFind(index) with
                     | Some this ->
@@ -125,30 +128,34 @@ let draw (mol: Molecule) (options: DrawingOptions) =
                         |> List.filter (fun other -> other.GetCenter().Dist pov > this.GetCenter().Dist pov)
                         // Only clip with atoms that are clipping with it in 3D Euclidean space.
                         |> List.map (fun other ->
+                            
+                            // Clipping.
                             match this.AsSphere().IntersectionWithSphere(other.AsSphere()) with
-                            | Some intersectionCircle ->
+                            | Some (Circle3D (cClip, Radius rClip, _)) ->
                                 
-                                // first create straight clipping boundary
-                                // then curve straigh clipping boundary by inferring curvature from size of intersection circle radius
-                                // we can do this by combining a rectangular clipping with a ellipse clipping
+                                let clipCircle = Circle2D (project cClip, Radius (resizeRadius rClip cClip))
+                                match drawCircle.IntersectionWithCircle(clipCircle) with
+                                | Some (p1, p2) ->
+                                    let line = Line2D (p1, p2)
+                                    let aRef, bRef = project (this.GetCenter()), project (other.GetCenter())
+                                    
+                                    let aPoint = p1
+                                    let bPoint = p2
+                                    let cPoint = p2.Translate (p1.FindVector(p2).Perpendicular)
+                                    let dPoint = p1.Translate (p1.FindVector(p2).Perpendicular)
+                                    
+                                    // Gather all individual masks for atom based on clipping with nearby atoms.
+                                    atomMasks <- [ MaskShape.Quadrangle (Quadrangle2D (aPoint, bPoint, cPoint, dPoint)) ] @ atomMasks 
+                                | None -> ()
                                 
-                                
-                                let (Circle3D (c, Radius r, _)) = intersectionCircle
-
-                                // TODO: how to check if you can actually see the clipping?
-                                 
-                                // Gather all individual masks for atom based on clipping with nearby atoms.
-                                atomMasks <- [ Circle2D (project c, Radius 0.5) ] @ atomMasks
-                                // atomMasks <- [ Circle2D (project c, Radius (resizeRadius r c)) ] @ atomMasks
-                                
+                            // No clipping.
                             | None -> ())
+                        
                         |> ignore 
                     | None -> ()
                     
                     // Combine all individual masks for atom in single mask for clipping.
-                    masks <- [ Mask.Circular (index, atomMasks) ] @ masks
-
-                    yield (index, color, Circle2D(c, Radius r)) |> Shape.Circle
+                    masks <- [ Mask (index, atomMasks) ] @ masks
             ]
             
             objs, masks 
