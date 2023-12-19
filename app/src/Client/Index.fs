@@ -14,7 +14,7 @@ open Feliz.Bulma
 open Fulma
 
 open CineMol.Encoding
-open CineMol.Types.Style
+open CineMol.Types
 open CineMol.Types.Geometry
 open CineMol.Types.Chem
 open CineMol.Types.Drawing
@@ -84,7 +84,7 @@ type Model =
     with
     static member New () =
         { Molecule = None
-          DrawingOptions = { DrawingOptions.New() with Style = BallAndStick }
+          DrawingOptions = { DrawingOptions.New() with Style = SpaceFilling }
           SvgString = None
           EncodedSvgString = None
           DragTarget = NoTarget
@@ -207,9 +207,8 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     // Toggle model depiction.
     | ToggleDepiction ->
         let depiction =
-            if model.DrawingOptions.Style = SpaceFilling then BallAndStick
-            elif model.DrawingOptions.Style = BallAndStick then Tube
-            else SpaceFilling
+            SpaceFilling
+            // TODO: add other depictions when implemented.
         let newModel = { model with DrawingOptions = { model.DrawingOptions with Style = depiction } }
         newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
@@ -235,10 +234,10 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | SetRotation (x, y) ->
         match model.Molecule with
         | Some molecule ->
-            let rotateAtom (Atom3D(i, c, r)) =
+            let rotateAtom (atom : Atom) =
                 let rotate axis pos (p: Point3D) = p.Rotate axis pos
-                let rotatedCenter = c |> rotate Axis.X x |> rotate Axis.Y y
-                Atom3D (i, rotatedCenter, r)
+                let rotatedCenter = atom.Position |> rotate Axis.X x |> rotate Axis.Y y
+                { atom with Position = rotatedCenter }
             let rotatedAtoms = molecule.Atoms |> List.map (fun a -> rotateAtom a)
             let rotatedMolecule = { molecule with Atoms = rotatedAtoms }
             let newModel = { model with Molecule = Some rotatedMolecule }

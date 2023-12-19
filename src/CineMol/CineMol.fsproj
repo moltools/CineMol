@@ -8,7 +8,6 @@
     <Compile Include="CineMol.Helpers.fs" />
     <Compile Include="CineMol.Encoding.fs" />
     <Compile Include="CineMol.Types.fs" />
-    <Compile Include="CineMol.Projection.fs" />
     <Compile Include="CineMol.Style.fs" />
     <Compile Include="CineMol.Drawing.fs" />
     <Compile Include="CineMol.Parsing.fs" />

@@ -3,7 +3,6 @@ module CineMol.Parsing
 open System.Text.RegularExpressions
 open Helpers
 open Style 
-open Types.Fundamentals
 open Types.Geometry
 open Types.Chem
 
@@ -73,7 +72,7 @@ type FileParser = FileParser of FileType
             
             /// Parse input file.
             let mutable count = 0
-            let mutable atoms: Atom3D list = []
+            let mutable atoms: Atom list = []
             let mutable bonds: Bond list = []
             
             [
@@ -99,15 +98,14 @@ type FileParser = FileParser of FileType
                         
                         // Able to cast all data to appropriate types.
                         | Some x, Some y, Some z, Some atomType ->
-                            let atomInfo =
-                                { Index = atoms.Length + 1 |> Index
+                            let atom : Atom =
+                                { Index = atoms.Length + 1
                                   Type = atomType
-                                  Color = CPK.Color atomType }
-                                
-                            let atomCenter = { X = x; Y = y; Z = z }                              
-                            let atomRadius = PubChem.Radius atomType
+                                  Color = CPK.Color atomType
+                                  Position = { X = x; Y = y; Z = z }
+                                  Radius = PubChem.Radius atomType }
 
-                            atoms <- atoms @ [ Atom3D (atomInfo, atomCenter, atomRadius) ]
+                            atoms <- atoms @ [ atom ]
                         
                         // Unable to cast all data to appropriate types.
                         | _ ->
@@ -125,8 +123,8 @@ type FileParser = FileParser of FileType
                         // Able to cast all data to appropriate types.
                         | Some s_idx, Some e_idx, Some bondType ->
                             let bondInfo =
-                                { BeginAtomIndex = Index s_idx
-                                  EndAtomIndex = Index e_idx
+                                { BeginAtomIndex = s_idx
+                                  EndAtomIndex = e_idx
                                   Type = bondType
                                   Color = None }
                                 

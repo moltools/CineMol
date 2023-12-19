@@ -1,8 +1,7 @@
 module CineMol.Style
 
-open Types.Fundamentals
-open Types.Style 
-open Types.Chem
+open CineMol.Types
+open CineMol.Types.Chem
 
 type AtomColorStyle =
     
@@ -54,4 +53,3 @@ type AtomRadius =
         | Tl -> 196.0 | Pb -> 202.0 | Bi -> 207.0 | Po -> 197.0 | At -> 202.0 | Rn -> 220.0
         | Fr -> 348.0 | Ra -> 283.0
         |> (fun v -> v / 100.0) // Adjust picometer to Angstrom. 
-        |> Radius   
