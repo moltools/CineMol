@@ -2,7 +2,7 @@
 [![Maintainer](https://img.shields.io/badge/Maintainer-davidmeijer-blue)](https://github.com/davidmeijer)
 [![Generic badge](https://img.shields.io/badge/Version-alpha-green.svg)](https://shields.io/)
 
-## CineMol
+# CineMol
 
 <img src="./logo.png" alt="logo" width="100">
 
@@ -10,7 +10,7 @@ CineMol is a direct-to-SVG small molecule drawer.
 
 Try it out with a low resolution [here](https://moltools.nl/cinemol).
 
-# Usage
+## Usage
 
 CineMol will be made available as command line tool and a NuGet package for .NET 6.0 shortly.
 
@@ -47,11 +47,11 @@ The output SVG file will look like this:
   </tr>
  </table>
 
-# Interactive viewer 
+## Interactive viewer 
 
 For an explanation on how to start an interactive molecule viewer locally, please see the `app` folder.
 
-# Using CineMol with Python
+## Using CineMol with Python
 
 You can easily use [Fable Python](https://fable.io/Fable.Python/) in order to use CineMol from Python.
 
