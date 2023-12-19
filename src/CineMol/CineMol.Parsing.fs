@@ -122,18 +122,21 @@ type FileParser = FileParser of FileType
                         
                         // Able to cast all data to appropriate types.
                         | Some s_idx, Some e_idx, Some bondType ->
-                            let bondInfo =
-                                { BeginAtomIndex = s_idx
-                                  EndAtomIndex = e_idx
+                            let bond : Bond =
+                                { Index = bonds.Length + 1
                                   Type = bondType
-                                  Color = None }
+                                  BeginAtomIndex = s_idx
+                                  EndAtomIndex = e_idx
+                                  Color = None
+                                  Radius = 0.5 }
                                 
                             let reversedBond =
-                                { bondInfo with
-                                    BeginAtomIndex = bondInfo.EndAtomIndex
-                                    EndAtomIndex = bondInfo.BeginAtomIndex }
+                                { bond with
+                                    Index = bonds.Length + 2
+                                    BeginAtomIndex = bond.EndAtomIndex
+                                    EndAtomIndex = bond.BeginAtomIndex }
                             
-                            bonds <- bonds @ [ Bond bondInfo; Bond reversedBond ]   
+                            bonds <- bonds @ [ bond; reversedBond ]   
                         
                         // Unable to cast all data to appropriate types.
                         | _ ->

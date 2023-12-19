@@ -95,7 +95,7 @@ let makePolygon (currAtom : Atom) (intersectsWith : Atom list) (resolution : int
 /// <summary>
 /// Driver code for translating atoms in molecule.
 /// </summary> 
-let toSvg (prevAtoms : Atom list) (currAtom : Atom) (resolution : int) : Shape =
+let atomToSvg (prevAtoms : Atom list) (currAtom : Atom) (resolution : int) : Shape =
     let currAtomGeom : Sphere = { Center = currAtom.Position; Radius = currAtom.Radius }
     
     let intersectsWith =
@@ -110,6 +110,13 @@ let toSvg (prevAtoms : Atom list) (currAtom : Atom) (resolution : int) : Shape =
     | _ ->
         let points : Point2D list = makePolygon currAtom intersectsWith resolution 
         Shape.Polygon (currAtom.Index, currAtom.Color, points)
+ 
+/// <summary>
+/// Driver code for translating bonds in molecule.
+/// </summary>
+let bondToSvg (mol : Molecule) (prevBonds : Bond list) (currBond : Bond) (resolution : int) : Shape option =
+    // TODO 
+    None 
  
 /// <summary>
 /// Driver code for creating SVG for molecule.
@@ -140,22 +147,80 @@ let draw (mol: Molecule) (options: DrawingOptions) : SVG * DrawingOptions =
         viewBox
         
     // Drawing style dictates if and how the objects are clipped and exactly drawn.
-    let objs : Shape list = 
+    let objs : Shape list =
+        
+        // Filter out hydrogen atoms.
+        let atoms =
+            match options.DisplayHydrogenAtoms with
+            | true -> mol.Atoms
+            | false -> mol.Atoms |> List.filter (fun atom -> atom.Type <> AtomType.H)
+            
+        // Filter out bonds connected to hydrogen atoms.
+        let bonds =
+            match options.DisplayHydrogenAtoms with
+            | true -> mol.Bonds
+            | false ->
+                mol.Bonds
+                |> List.filter (fun bond ->
+                    match mol.GetAtom bond.BeginAtomIndex, mol.GetAtom bond.EndAtomIndex with
+                    | Some a, Some b -> a.Type <> AtomType.H && b.Type <> AtomType.H
+                    | _, _ -> false)
+        
         match options.Style with        
         | SpaceFilling ->
-            // Sort atoms by position on Z axis.
-            let atoms = mol.Atoms |> List.sortBy (fun atom -> atom.Position.Z) |> List.rev
+            let atoms = atoms |> List.sortBy (fun atom -> atom.Position.Z) |> List.rev
     
             let rec processAtoms (prevAtoms : Atom list) (shapes : Shape list) : Shape list =
                 match prevAtoms with
                 | [] -> shapes
                 | currAtom :: prevAtoms ->
-                    let shape : Shape = toSvg prevAtoms currAtom options.Resolution 
+                    let shape : Shape = atomToSvg prevAtoms currAtom options.Resolution 
                     processAtoms prevAtoms (shape :: shapes)
                     
             match atoms with
             | [] -> []
-            | atoms -> processAtoms atoms [] 
+            | atoms -> processAtoms atoms []
+            
+        | BallAndStick ->
+            // TODO: add in bonds.
+            
+            let atoms = atoms |> List.sortBy (fun atom -> atom.Position.Z) |> List.rev
+            
+            // BallAndStick has smaller atom radii.
+            let atoms = atoms |> List.map (fun atom -> { atom with Radius = atom.Radius * 0.3 })
+            
+            let rec processAtoms (prevAtoms : Atom list) (shapes : Shape list) : Shape list =
+                match prevAtoms with
+                | [] -> shapes
+                | currAtom :: prevAtoms ->
+                    let shape : Shape = atomToSvg prevAtoms currAtom options.Resolution 
+                    processAtoms prevAtoms (shape :: shapes)
+            
+            match atoms with
+            | [] -> []
+            | atoms -> processAtoms atoms []
+            
+        | Tube ->
+            // Sort bonds on Z of of atom furthest away.
+            let bonds =
+                bonds
+                |> List.map (fun bond ->
+                    match mol.GetAtom bond.BeginAtomIndex, mol.GetAtom bond.EndAtomIndex with
+                    | Some a, Some b -> (bond, max a.Position.Z b.Position.Z)
+                    | _, _ -> (bond, 0.0))
+                |> List.sortBy (fun (_, z) -> z)
+                |> List.rev
+                |> List.map fst
+
+            match bonds with
+            | [] -> []
+            | bonds ->
+                bonds
+                |> List.map (fun bond ->
+                    let otherBonds = bonds |> List.filter (fun otherBond -> otherBond.Index <> bond.Index)
+                    bondToSvg mol otherBonds bond options.Resolution)
+                |> List.filter (fun shapeOption -> match shapeOption with | Some _ -> true | None -> false)
+                |> List.map (fun shapeOption -> shapeOption.Value)
 
     // { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Masks = masks }, options
     { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs }, options           

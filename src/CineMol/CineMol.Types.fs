@@ -27,7 +27,10 @@ type Color = Color of int * int * int
 /// <summary>
 /// Model styles.
 /// </summary>
-type ModelStyle = | SpaceFilling 
+type ModelStyle =
+    | SpaceFilling
+    | BallAndStick
+    | Tube
 
 module Geometry =
 
@@ -186,7 +189,56 @@ module Geometry =
             // Transpose the list of lists.
             // quadrants |> List.transpose
             
-            points 
+            points
+            
+    /// <summary>
+    /// Definition for a cylinder.
+    /// </summary>
+    type Cylinder =
+        { Start : Point3D
+          End : Point3D
+          Radius : float }
+        with
+        member this.IsInside (point: Point3D) : bool =
+            let cylinderDirection = this.End - this.Start
+            let pointToStart = point - this.Start
+            let projection =
+                let nominator = pointToStart |> fun p -> p.X * cylinderDirection.X + p.Y * cylinderDirection.Y + p.Z * cylinderDirection.Z
+                let denominator = cylinderDirection |> fun c -> c.X * c.X + c.Y * c.Y + c.Z * c.Z
+                nominator / denominator
+                
+            if projection < 0.0 then false // The point is behind the cylinder's start point
+            elif projection > 1.0 then false // The point is beyond the cylinder's end point
+            else
+                let closestPointOnAxis = this.Start.Add(projection) * cylinderDirection
+                let distanceSquared = (point - closestPointOnAxis) |> fun d -> d.X * d.X + d.Y * d.Y + d.Z * d.Z
+                let radiusSquared = this.Radius * this.Radius
+                distanceSquared <= radiusSquared
+                
+        member this.PointsOnCylinder (resolution : int) : Point3D list =
+            let N = resolution
+            
+            let latitudeDivisions = N / 2
+            let longitudeDivisions = N
+            
+            [
+                for lat = 0 to latitudeDivisions do
+                    let theta = float lat * Math.PI / float latitudeDivisions
+                    let sinTheta = sin theta
+                    let cosTheta = cos theta
+
+                    for lon = 0 to longitudeDivisions do
+                        let phi = float lon * 2.0 * Math.PI / float longitudeDivisions
+                        let sinPhi = sin phi
+                        let cosPhi = cos phi
+
+                        let x = this.Radius * sinTheta * cosPhi
+                        let y = this.Radius * sinTheta * sinPhi
+                        let z = this.Radius * cosTheta
+
+                        let point = { X = x; Y = y; Z = z }
+                        yield point 
+            ]
 
 module Chem =
 
@@ -234,16 +286,7 @@ module Chem =
             | "3" | "TRIPLE"   | "Triple"   -> Some Triple
             | "4" | "AROMATIC" | "Aromatic" -> Some Aromatic
             | _                             -> None 
-    
-    /// <summary>
-    /// BondInfo records all information on the bond identity and styling.
-    /// </summary>
-    type BondInfo =
-        { BeginAtomIndex: int
-          EndAtomIndex: int
-          Type: BondType 
-          Color: Color option }
-    
+
     /// <summary>
     /// Atom3D describes an atom in three-dimensional Euclidean space.
     /// </summary>
@@ -257,11 +300,13 @@ module Chem =
     /// <summary>
     /// Bond describes a bond between two Atoms in two-dimensional or three-dimensional Euclidean space.
     /// </summary>
-    type Bond = Bond of BondInfo
-        with
-        member this.Unwrap () =
-            let (Bond info) = this
-            info 
+    type Bond =
+        { Index : int 
+          Type : BondType
+          BeginAtomIndex : int
+          EndAtomIndex : int
+          Color : Color option
+          Radius : float }
     
     /// <summary>
     /// Molecule describes a molecule, which contains of Atoms and Bonds.
@@ -271,7 +316,11 @@ module Chem =
         member this.AdjustForCentroid () =
             let centroid = this.Atoms |> List.map (fun atom -> atom.Position) |> Point3D.Centroid
             let adjustedAtoms = this.Atoms |> List.map (fun atom -> { atom with Position = atom.Position - centroid })
-            { this with Atoms = adjustedAtoms }  
+            { this with Atoms = adjustedAtoms }
+            
+        member this.GetAtom (index: int) : Atom option =
+            try this.Atoms |> List.find (fun atom -> atom.Index = index) |> Some 
+            with _ -> None 
 
 module Svg =
     
@@ -341,9 +390,11 @@ module Drawing =
     type DrawingOptions =
         { ViewBox: ViewBox option
           Style: ModelStyle
+          DisplayHydrogenAtoms : bool 
           Resolution: int }
         with
         static member New () =
             { ViewBox = None
               Style = SpaceFilling
-              Resolution = 50 }
+              DisplayHydrogenAtoms = false
+              Resolution = 40 }

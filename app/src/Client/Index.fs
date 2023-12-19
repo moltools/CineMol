@@ -80,7 +80,8 @@ type Model =
       DragTarget: DragTarget
       ViewerBackgroundColor: ViewerBackgroundColor
       SidebarCollapsed: bool
-      PreviousMousePosition: MousePosition option }
+      PreviousMousePosition: MousePosition option
+      IsRendering: bool }
     with
     static member New () =
         { Molecule = None
@@ -88,9 +89,10 @@ type Model =
           SvgString = None
           EncodedSvgString = None
           DragTarget = NoTarget
-          ViewerBackgroundColor = Dark
+          ViewerBackgroundColor = Light
           SidebarCollapsed = false
-          PreviousMousePosition = None }
+          PreviousMousePosition = None
+          IsRendering = false }
     member this.Reset () =
         { Model.New() with
             ViewerBackgroundColor = this.ViewerBackgroundColor
@@ -106,6 +108,7 @@ type Msg =
     | DownloadSvg
     | ToggleDepiction
     | ToggleBackgroundColor
+    | ToggleHydrogenAtoms
     | ToggleSidebar
 
     // Rendering.
@@ -197,7 +200,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     // Reset viewer.
     | ResetViewer ->
         let newModel = model.Reset()
-        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
+        { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
     // Download SVG to downloads folder.
     | DownloadSvg ->
@@ -206,11 +209,14 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 
     // Toggle model depiction.
     | ToggleDepiction ->
-        let depiction =
+        let depiction : ModelStyle =
             SpaceFilling
-            // TODO: add other depictions when implemented.
+            // match model.DrawingOptions.Style with
+            // | SpaceFilling -> BallAndStick
+            // | BallAndStick -> Tube
+            // | Tube -> SpaceFilling
         let newModel = { model with DrawingOptions = { model.DrawingOptions with Style = depiction } }
-        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
+        { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
     // Toggle background color (i.e., dark and light mode).
     | ToggleBackgroundColor ->
@@ -218,17 +224,23 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let newModel = { model with ViewerBackgroundColor = backgroundColor }
         newModel, Cmd.none
 
+    // Toggle displaying of hydrogen atoms.
+    | ToggleHydrogenAtoms ->
+        let toggle = not model.DrawingOptions.DisplayHydrogenAtoms
+        let newModel = { model with DrawingOptions = { model.DrawingOptions with DisplayHydrogenAtoms = toggle } }
+        { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
+
     // Toggle sidebar between expanded and collapsed.
     | ToggleSidebar ->
         let newModel = { model with SidebarCollapsed = not model.SidebarCollapsed }
         newModel, Cmd.none
 
     // 'Render' molecule model.
-    | Render -> model, Cmd.OfAsync.perform render model GotEncodedSvg
+    | Render -> { model with IsRendering = true }, Cmd.OfAsync.perform render model GotEncodedSvg
 
     // Process 'rendered' model.
     | GotEncodedSvg (svgString, encodedSvgString) ->
-        { model with SvgString = svgString; EncodedSvgString = encodedSvgString }, Cmd.none
+        { model with IsRendering = false; SvgString = svgString; EncodedSvgString = encodedSvgString }, Cmd.none
 
     // Set new rotation of molecule model.
     | SetRotation (x, y) ->
@@ -241,7 +253,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             let rotatedAtoms = molecule.Atoms |> List.map (fun a -> rotateAtom a)
             let rotatedMolecule = { molecule with Atoms = rotatedAtoms }
             let newModel = { model with Molecule = Some rotatedMolecule }
-            newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
+            { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
         | None -> model, Cmd.none
 
     // Mouse up indicates the end of a drag event.
@@ -265,7 +277,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 | Dragging ->
                     let xRotation = (prevPos.Y - pos.Y) / 180.0
                     let yRotation = (prevPos.X - pos.X) / 180.0
-                    Cmd.ofMsg (SetRotation (xRotation, yRotation))
+                    Cmd.ofMsg (SetRotation (xRotation, -1.0 * yRotation))
                 | _ -> Cmd.none
             | None -> Cmd.none
 
@@ -301,6 +313,16 @@ let sidebar model dispatch =
                 prop.onClick (fun _ -> dispatch action)
             ]
 
+        let rec toggleHydrogenAtoms dispatch =
+            Bulma.button.a [
+                prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
+                prop.children [
+                    Fa.i [ Fa.Solid.Atom ] []
+                    Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else "Toggle hydrogens") ]
+                ]
+                prop.onClick (fun _ -> dispatch ToggleHydrogenAtoms)
+            ]
+
         let reportBugButton =
             Bulma.button.a [
                 prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
@@ -320,7 +342,8 @@ let sidebar model dispatch =
                 generalButton DownloadSvg Fa.Solid.Download "Download"
                 generalButton ResetViewer Fa.Solid.Sync "Refresh"
                 generalButton ToggleBackgroundColor Fa.Solid.Adjust "Toggle background"
-                generalButton ToggleDepiction Fa.Solid.Eye "Toggle depiction"
+                // generalButton ToggleDepiction Fa.Solid.Eye "Toggle depiction"
+                toggleHydrogenAtoms dispatch
                 reportBugButton
 
                 Html.div [
@@ -358,6 +381,11 @@ let viewer model dispatch =
         ]
     ]
 
+let viewerRendering =
+    Html.div [
+        Html.span [ prop.text "Loading..." ]
+    ]
+
 /// <summary>
 /// Main app view.
 /// </summary>
@@ -367,6 +395,9 @@ let view (model: Model) (dispatch: Msg -> unit) =
         prop.style [ style.backgroundColor (model.ViewerBackgroundColor.ToString()) ]
         prop.children [
             sidebar model dispatch
+            // match model.IsRendering with
+            // | false -> viewer model dispatch
+            // | true -> viewerRendering
             viewer model dispatch
         ]
     ]
