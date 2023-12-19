@@ -1,11 +1,11 @@
-module CineMol.Tests.Helpers
+module CineMol.Tests.Example
 
 open NUnit.Framework
-open CineMol.Helpers
-    
+
 //[<TestFixture>]
 //type CineMolTests () =
 //    
 //    [<Test>]
 //    member _.``Dummy test`` () =
+//        /// TODO
 //        Assert.True(true)
