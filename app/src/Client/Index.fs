@@ -84,7 +84,7 @@ type Model =
     with
     static member New () =
         { Molecule = None
-          DrawingOptions = { DrawingOptions.New() with Style = SpaceFilling }
+          DrawingOptions = DrawingOptions.New()
           SvgString = None
           EncodedSvgString = None
           DragTarget = NoTarget

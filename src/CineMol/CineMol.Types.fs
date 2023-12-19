@@ -56,12 +56,14 @@ module Geometry =
         
         member this.Midpoint other = (this + other).Div 2.0
         
-        member this.Slope other = (other.Y - this.Y) / (other.X - this.X)
-        
-        member this.SlopePerpendicular other = -1.0 * (1.0 / (this.Slope other))
+        member this.CreateVector (other: Point2D) : Vector2D = { X = other.X - this.X; Y = other.Y - this.Y }
 
         static member Centroid (ps: Point2D list) =
             ps |> List.fold (fun pSum p -> pSum + p) { X = 0.0; Y = 0.0 } |> (fun p -> p.Div (float ps.Length))
+            
+    and Vector2D = { X: float; Y: float }
+        with
+        member this.Cross (other: Vector2D) = this.X * other.Y - this.Y * other.X
         
     /// <summary>
     /// Point3D resembles a point in three-dimensional Euclidean space.
@@ -87,7 +89,7 @@ module Geometry =
         member this.Dist other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
         
         member this.Midpoint other = (this + other).Div 2.0
-        
+
         member p.Rotate axis rad =
             match axis with
             | X ->
@@ -128,6 +130,63 @@ module Geometry =
     and Sphere =
         { Center: Point3D
           Radius : float }
+        with
+        member this.Encloses (o: Sphere) : bool =
+            let dist = this.Center.Dist o.Center
+            dist + o.Radius <= this.Radius
+            
+        member this.Intersects (o: Sphere) : bool =
+            let dist = this.Center.Dist o.Center
+            dist <= this.Radius + o.Radius
+            
+        member this.PointsOnSphere (resolution : int) : Point3D list =
+            let N = float resolution 
+            
+            // Calculate polar angles.
+            let numPointsPhi = N / 2.0 |> int
+            let phis =
+                [ for i in [ 1 .. 1 .. numPointsPhi ] do
+                    yield ((float i) / (( float numPointsPhi) - 1.0)) * Math.PI ]
+            
+            // Calculate azimuthal angles.
+            let numPointsTheta = N / 2.0 |> int
+            let thetas =
+                [ for i in [ 0 .. 1 .. numPointsTheta ] do
+                    yield ((float i) / (float numPointsTheta)) * 2.0 * Math.PI ]
+            
+            // Calculate points on sphere.
+            let points = 
+                [
+                    for phi in phis do
+                        
+                        // Only calculate points on half of sphere we can see over the z-axis.
+                        let z = this.Center.Z + this.Radius * Math.Cos(phi)
+                        match z with
+                        | z when z < this.Center.Z -> () // We can never see this part of the sphere.
+                        | _ ->
+                            // let points : Point3D list =
+                            //     [
+                            //         for theta in thetas do
+                            //             let x = this.Center.X + this.Radius * Math.Sin(phi) * Math.Cos(theta)
+                            //             let y = this.Center.Y + this.Radius * Math.Sin(phi) * Math.Sin(theta)
+                            //             yield { X = x; Y = y; Z = z } 
+                            //     ]
+                            //     |> List.rev // Point furthest away from us first.
+                            //
+                            // match points with
+                            // | [] -> ()
+                            // | _ -> yield points
+                            
+                            for theta in thetas do 
+                                let x = this.Center.X + this.Radius * Math.Sin(phi) * Math.Cos(theta)
+                                let y = this.Center.Y + this.Radius * Math.Sin(phi) * Math.Sin(theta)
+                                yield { X = x; Y = y; Z = z }
+                ]
+                
+            // Transpose the list of lists.
+            // quadrants |> List.transpose
+            
+            points 
 
 module Chem =
 
@@ -279,6 +338,12 @@ module Drawing =
     /// <summary>
     /// Drawing options.
     /// </summary>
-    type DrawingOptions = { ViewBox: ViewBox option; Style: ModelStyle }
+    type DrawingOptions =
+        { ViewBox: ViewBox option
+          Style: ModelStyle
+          Resolution: int }
         with
-        static member New () = { ViewBox = None; Style = SpaceFilling }
+        static member New () =
+            { ViewBox = None
+              Style = SpaceFilling
+              Resolution = 50 }
