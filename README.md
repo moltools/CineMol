@@ -16,7 +16,13 @@ CineMol will be made available as command line tool and a NuGet package for .NET
 
 See `scripts/draw_molecule.fsx` for an example script which you can use right now.
 
-You can execute this script yourself by running on the command line:
+You can execute this script yourself. First build CineMol by running on the command line:
+
+```bash
+dotnet build src/CineMol/CineMol.fsproj
+```
+
+Then run the script with:
 
 ```bash 
 dotnet fsi scripts/draw_molecule.fsx <path_to_input_sdf_file> <path_to_output_svg_file>
