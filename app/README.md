@@ -27,27 +27,12 @@ Then open `http://localhost:8080` in your browser.
 
 The build project in root directory contains a couple of different build targets. You can specify them after `--` (target name is case-insensitive).
 
-To run concurrently server and client tests in watch mode (you can run this command in parallel to the previous one in new terminal):
+## Build project for deployment
+
+Run the following command to build the application in release mode:
 
 ```bash
-dotnet run -- RunTests
+dotnet run --project Build.fsproj Bundle
 ```
 
-Client tests are available under `http://localhost:8081` in your browser and server tests are running in watch mode in console.
-
-Finally, there are `Bundle` and `Azure` targets that you can use to package your app and deploy to Azure, respectively:
-
-```bash
-dotnet run -- Bundle
-dotnet run -- Azure
-```
-
-## SAFE Stack Documentation
-
-If you want to know more about the full Azure Stack and all of it's components (including Azure) visit the official [SAFE documentation](https://safe-stack.github.io/docs/).
-
-You will find more documentation about the used F# components at the following places:
-
-* [Saturn](https://saturnframework.org/)
-* [Fable](https://fable.io/docs/)
-* [Elmish](https://elmish.github.io/elmish/)
+You can then find the bundled app in the `deploy` folder.
