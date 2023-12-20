@@ -42,6 +42,7 @@ The output SVG file will look like this:
   <tr>
     <td>No rotation</td>
     <td>90&deg; rotation over X-axis</td>
+    <td>$\beta$-lactam ring highlighted</td>
   </tr>
   <tr>
     <td>
@@ -49,6 +50,9 @@ The output SVG file will look like this:
     </td>
     <td>
         <img src="./data/penicillin_G_rotated.svg" alt="logo" width="160">
+    </td>
+        <td>
+        <img src="./data/penicillin_G_highlighted.svg" alt="logo" width="160">
     </td>
   </tr>
  </table>
