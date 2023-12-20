@@ -42,7 +42,7 @@ The output SVG file will look like this:
   <tr>
     <td>No rotation</td>
     <td>90&deg; rotation over X-axis</td>
-    <td>$\beta$-lactam ring highlighted</td>
+    <td>beta-lactam ring highlighted</td>
   </tr>
   <tr>
     <td>
