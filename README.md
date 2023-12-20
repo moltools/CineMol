@@ -51,6 +51,7 @@ The output SVG file will look like this:
     <td>
         <img src="./data/penicillin_G_rotated.svg" alt="example2" width="125">
     </td>
+    <td>
         <img src="./data/penicillin_G_highlighted.svg" alt="example3" width="125">
     </td>
   </tr>
