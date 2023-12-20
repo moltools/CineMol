@@ -46,13 +46,12 @@ The output SVG file will look like this:
   </tr>
   <tr>
     <td>
-        <img src="./data/penicillin_G.svg" alt="logo" width="160">
+        <img src="./data/penicillin_G.svg" alt="example1" width="125">
     </td>
     <td>
-        <img src="./data/penicillin_G_rotated.svg" alt="logo" width="160">
+        <img src="./data/penicillin_G_rotated.svg" alt="example2" width="125">
     </td>
-        <td>
-        <img src="./data/penicillin_G_highlighted.svg" alt="logo" width="160">
+        <img src="./data/penicillin_G_highlighted.svg" alt="example3" width="125">
     </td>
   </tr>
  </table>
