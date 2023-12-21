@@ -13,6 +13,7 @@ open Feliz
 open Feliz.Bulma
 open Fulma
 
+open CineMol
 open CineMol.Encoding
 open CineMol.Types
 open CineMol.Types.Geometry
@@ -20,6 +21,101 @@ open CineMol.Types.Chem
 open CineMol.Types.Drawing
 open CineMol.Parsing
 open CineMol.Drawing
+
+/// <summary>
+/// Load example molecule penicillin G.
+/// </summary>
+let loadExampleMolecule () : string = """5904
+  -OEChem-12182318453D
+
+ 41 43  0     1  0  0  0  0  0999 V2000
+   -0.8019    1.2308    0.5170 S   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2842   -2.5451   -1.2026 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.3517    1.0760   -0.8170 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.1157   -0.6970    0.5961 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1598   -2.0405    1.2167 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4781   -0.7369    0.3018 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5677   -1.3807   -0.3375 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.3100   -0.4177    1.1279 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -2.5670    1.6679    0.1134 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.1671    0.3360   -0.3862 C   0  0  2  0  0  0  0  0  0  0  0  0
+   -0.6142   -1.6325    0.4990 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -1.9181   -1.8261   -0.3007 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.2193    2.2224    1.3871 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5771    2.7313   -0.9863 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.6296    0.1576   -0.1297 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.8730   -1.6107    0.1024 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.9020   -1.2655   -0.9563 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.8679   -0.1949   -0.5225 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5670    1.1373   -0.7687 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.0457   -0.5556    0.1171 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.4619    2.1290   -0.3670 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.9405    0.4362    0.5190 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.6486    1.7786    0.2769 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5167   -0.4852    2.1999 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.9961    0.1926   -1.4616 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4509   -2.4585    1.2025 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.2655    1.4761    2.1882 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.6724    3.0921    1.7709 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.2446    2.5572    1.1944 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.0666    3.6467   -0.6644 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.0842    2.3779   -1.8995 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.6008    3.0119   -1.2561 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4359   -1.0113   -1.2762 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -6.3150    0.9762   -0.6611 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.4453   -2.1891   -1.1950 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.4229   -0.9646   -1.8960 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.6443    1.4206   -1.2675 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.2818   -1.5979    0.3120 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.2343    3.1743   -0.5548 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.8642    0.1634    1.0209 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.3451    2.5508    0.5901 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  8  1  0  0  0  0
+  1  9  1  0  0  0  0
+  2 12  2  0  0  0  0
+  3 15  1  0  0  0  0
+  3 34  1  0  0  0  0
+  4 15  2  0  0  0  0
+  5 16  2  0  0  0  0
+  6  8  1  0  0  0  0
+  6 10  1  0  0  0  0
+  6 12  1  0  0  0  0
+  7 11  1  0  0  0  0
+  7 16  1  0  0  0  0
+  7 33  1  0  0  0  0
+  8 11  1  0  0  0  0
+  8 24  1  0  0  0  0
+  9 10  1  0  0  0  0
+  9 13  1  0  0  0  0
+  9 14  1  0  0  0  0
+ 10 15  1  0  0  0  0
+ 10 25  1  0  0  0  0
+ 11 12  1  0  0  0  0
+ 11 26  1  0  0  0  0
+ 13 27  1  0  0  0  0
+ 13 28  1  0  0  0  0
+ 13 29  1  0  0  0  0
+ 14 30  1  0  0  0  0
+ 14 31  1  0  0  0  0
+ 14 32  1  0  0  0  0
+ 16 17  1  0  0  0  0
+ 17 18  1  0  0  0  0
+ 17 35  1  0  0  0  0
+ 17 36  1  0  0  0  0
+ 18 19  2  0  0  0  0
+ 18 20  1  0  0  0  0
+ 19 21  1  0  0  0  0
+ 19 37  1  0  0  0  0
+ 20 22  2  0  0  0  0
+ 20 38  1  0  0  0  0
+ 21 23  2  0  0  0  0
+ 21 39  1  0  0  0  0
+ 22 23  1  0  0  0  0
+ 22 40  1  0  0  0  0
+ 23 41  1  0  0  0  0
+M  END
+$$$$
+"""
 
 /// <summary>
 /// Position of mouse on screen.
@@ -67,7 +163,7 @@ module Cmd =
 type ViewerBackgroundColor = | Dark | Light
     with
     override this.ToString() =
-        match this with | Dark -> "#343231" | Light -> "#F0F0F0"
+        match this with | Dark -> "#000" | Light -> "#f0f0f0"
 
 /// <summary>
 /// App model.
@@ -107,8 +203,11 @@ type Msg =
     | ResetViewer
     | DownloadSvg
     | ToggleDepiction
+    | ToggleArt
     | ToggleBackgroundColor
     | ToggleHydrogenAtoms
+    | LoadExample
+    | HighResolution
     | ToggleSidebar
 
     // Rendering.
@@ -200,7 +299,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     // Reset viewer.
     | ResetViewer ->
         let newModel = model.Reset()
-        { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
+        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
     // Download SVG to downloads folder.
     | DownloadSvg ->
@@ -210,13 +309,21 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     // Toggle model depiction.
     | ToggleDepiction ->
         let depiction : ModelStyle =
-            SpaceFilling
-            // match model.DrawingOptions.Style with
-            // | SpaceFilling -> BallAndStick
-            // | BallAndStick -> Tube
-            // | Tube -> SpaceFilling
-        let newModel = { model with DrawingOptions = { model.DrawingOptions with Style = depiction } }
-        { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
+            match model.DrawingOptions.ModelStyle with
+            | SpaceFilling -> BallAndStick
+            | BallAndStick -> WireFrame
+            | WireFrame -> SpaceFilling
+        let newModel = { model with DrawingOptions = { model.DrawingOptions with ModelStyle = depiction } }
+        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
+
+    // Toggle art style.
+    | ToggleArt ->
+        let art : ArtStyle =
+            match model.DrawingOptions.ArtStyle with
+            | Cartoon -> Glossy
+            | Glossy -> Cartoon
+        let newModel = { model with DrawingOptions = { model.DrawingOptions with ArtStyle = art } }
+        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
     // Toggle background color (i.e., dark and light mode).
     | ToggleBackgroundColor ->
@@ -228,6 +335,20 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | ToggleHydrogenAtoms ->
         let toggle = not model.DrawingOptions.DisplayHydrogenAtoms
         let newModel = { model with DrawingOptions = { model.DrawingOptions with DisplayHydrogenAtoms = toggle } }
+        newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
+
+    // Load  example molecule.
+    | LoadExample ->
+        let content = loadExampleMolecule()
+        match (FileParser Sdf).Parse content with
+        | Some (molecule::_) -> { model with Molecule = Some molecule }, Cmd.ofMsg Render
+        | _ ->
+            printfn "ERROR: Could not parse example molecule."
+            model, Cmd.none // TODO: get error toast when parsing fails/file is empty
+
+    // Draw current model in high resolution.
+    | HighResolution ->
+        let newModel = { model with DrawingOptions = { model.DrawingOptions with Resolution = 200 } }
         { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
 
     // Toggle sidebar between expanded and collapsed.
@@ -236,11 +357,17 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         newModel, Cmd.none
 
     // 'Render' molecule model.
-    | Render -> { model with IsRendering = true }, Cmd.OfAsync.perform render model GotEncodedSvg
+    | Render -> model, Cmd.OfAsync.perform render model GotEncodedSvg
 
     // Process 'rendered' model.
     | GotEncodedSvg (svgString, encodedSvgString) ->
-        { model with IsRendering = false; SvgString = svgString; EncodedSvgString = encodedSvgString }, Cmd.none
+        let defaultOptions = DrawingOptions.New()
+        { model with
+            DrawingOptions = { model.DrawingOptions with Resolution = defaultOptions.Resolution }
+            IsRendering = false
+            SvgString = svgString
+            EncodedSvgString = encodedSvgString }
+        , Cmd.none
 
     // Set new rotation of molecule model.
     | SetRotation (x, y) ->
@@ -253,7 +380,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             let rotatedAtoms = molecule.Atoms |> List.map (fun a -> rotateAtom a)
             let rotatedMolecule = { molecule with Atoms = rotatedAtoms }
             let newModel = { model with Molecule = Some rotatedMolecule }
-            { newModel with IsRendering = true }, Cmd.OfAsync.perform render newModel GotEncodedSvg
+            newModel, Cmd.OfAsync.perform render newModel GotEncodedSvg
         | None -> model, Cmd.none
 
     // Mouse up indicates the end of a drag event.
@@ -293,66 +420,77 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 /// Sidebar element.
 /// </summary>
 let sidebar model dispatch =
-        let uploadFileButton dispatch =
-            Bulma.button.a [
-                prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
-                prop.children [
-                    Fa.i [ Fa.Solid.Upload ] []
-                    Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else "Upload file") ]
-                    uploadFileEvent dispatch
-                ]
-            ]
-
-        let generalButton action  icon  (label: string) =
-            Bulma.button.a [
-                prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
-                prop.children [
-                    Fa.i [ icon ] []
-                    Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else label) ]
-                ]
-                prop.onClick (fun _ -> dispatch action)
-            ]
-
-        let rec toggleHydrogenAtoms dispatch =
-            Bulma.button.a [
-                prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
-                prop.children [
-                    Fa.i [ Fa.Solid.Atom ] []
-                    Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else "Toggle hydrogens") ]
-                ]
-                prop.onClick (fun _ -> dispatch ToggleHydrogenAtoms)
-            ]
-
-        let reportBugButton =
-            Bulma.button.a [
-                prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
-                prop.href "https://github.com/moltools/cinemol/issues"
-                prop.rel "noreffer noopener"
-                prop.target "_blank"
-                prop.children [
-                    Fa.i [ Fa.Solid.Bug ] []
-                    Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else "Report bug") ]
-                ]
-            ]
-
-        Html.div [
-            prop.className ("sidebar " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
+    let uploadFileButton dispatch =
+        Bulma.button.a [
+            prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
             prop.children [
-                uploadFileButton dispatch
-                generalButton DownloadSvg Fa.Solid.Download "Download"
-                generalButton ResetViewer Fa.Solid.Sync "Refresh"
-                generalButton ToggleBackgroundColor Fa.Solid.Adjust "Toggle background"
-                // generalButton ToggleDepiction Fa.Solid.Eye "Toggle depiction"
-                toggleHydrogenAtoms dispatch
-                reportBugButton
-
-                Html.div [
-                    prop.className "collapse-button"
-                    prop.children [ Fa.i [ (if model.SidebarCollapsed then Fa.Solid.AngleDoubleRight else Fa.Solid.AngleDoubleLeft) ] [] ]
-                    prop.onClick (fun _ -> ToggleSidebar |> dispatch)
-                ]
+                Fa.i [ Fa.Solid.Upload ] []
+                Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else "Upload file") ]
+                uploadFileEvent dispatch
             ]
         ]
+
+    let generalButton action  icon  (label: string) =
+        Bulma.button.a [
+            prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
+            prop.children [
+                Fa.i [ icon ] []
+                Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else label) ]
+            ]
+            prop.onClick (fun _ -> dispatch action)
+        ]
+
+    let rec toggleHydrogenAtoms dispatch =
+        Bulma.button.a [
+            prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
+            prop.children [
+                Fa.i [ Fa.Solid.Atom ] []
+                Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else "Toggle hydrogens") ]
+            ]
+            prop.onClick (fun _ -> dispatch ToggleHydrogenAtoms)
+        ]
+
+    let reportBugButton =
+        Bulma.button.a [
+            prop.className ("sidebar-button " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
+            prop.href "https://github.com/moltools/cinemol/issues"
+            prop.rel "noreffer noopener"
+            prop.target "_blank"
+            prop.children [
+                Fa.i [ Fa.Solid.Bug ] []
+                Html.span [ prop.style [ style.marginLeft (length.em 0.5) ]; prop.text (if model.SidebarCollapsed then "" else "Report bug") ]
+            ]
+        ]
+
+    Html.div [
+        prop.className ("sidebar " + match model.SidebarCollapsed with | true -> "collapsed" | false -> "expanded")
+        prop.children [
+
+            Html.span [
+                prop.className "version"
+                if model.SidebarCollapsed then prop.children [ Html.div [ prop.className "version collapsed" ] ]
+                else prop.text $"CineMol v{Version.version}"
+            ]
+
+            uploadFileButton dispatch
+            generalButton DownloadSvg Fa.Solid.Download "Download"
+            generalButton ResetViewer Fa.Solid.Sync "Refresh"
+            generalButton ToggleBackgroundColor Fa.Solid.Adjust "Toggle background"
+            generalButton ToggleDepiction Fa.Solid.Eye "Toggle depiction"
+            generalButton ToggleArt Fa.Solid.PaintBrush "Toggle styling"
+            toggleHydrogenAtoms dispatch
+            generalButton LoadExample Fa.Solid.Seedling "Load example"
+            generalButton HighResolution Fa.Solid.DrawPolygon "High resolution"
+            reportBugButton
+
+            Html.div [
+                prop.className "collapse-button"
+                prop.children [ Fa.i [ (if model.SidebarCollapsed then Fa.Solid.AngleDoubleRight else Fa.Solid.AngleDoubleLeft) ] [] ]
+                prop.onClick (fun _ -> ToggleSidebar |> dispatch)
+            ]
+
+        ]
+    ]
 
 /// <summary>
 /// Viewer element.
@@ -381,9 +519,15 @@ let viewer model dispatch =
         ]
     ]
 
+/// <summary>
+/// Loading indicator.
+/// </summary>
 let viewerRendering =
     Html.div [
-        Html.span [ prop.text "Loading..." ]
+        prop.className "loading"
+        prop.children [
+            Html.span [ prop.text "Loading..." ]
+        ]
     ]
 
 /// <summary>
@@ -395,9 +539,8 @@ let view (model: Model) (dispatch: Msg -> unit) =
         prop.style [ style.backgroundColor (model.ViewerBackgroundColor.ToString()) ]
         prop.children [
             sidebar model dispatch
-            // match model.IsRendering with
-            // | false -> viewer model dispatch
-            // | true -> viewerRendering
-            viewer model dispatch
+            match model.IsRendering with
+            | false -> viewer model dispatch
+            | true -> viewerRendering
         ]
     ]

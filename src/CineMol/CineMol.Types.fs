@@ -30,7 +30,14 @@ type Color = Color of int * int * int
 type ModelStyle =
     | SpaceFilling
     | BallAndStick
-    | Tube
+    | WireFrame
+    
+/// <summary>
+/// Art styles.
+/// </summary>
+type ArtStyle =
+    | Cartoon
+    | Glossy 
 
 module Geometry =
 
@@ -92,7 +99,18 @@ module Geometry =
         member this.Dist other = ((this - other).Pow 2.0).Sum() |> Math.Sqrt
         
         member this.Midpoint other = (this + other).Div 2.0
-
+        
+        member this.VectorTo other : Vector3D = { X = other.X - this.X; Y = other.Y - this.Y; Z = other.Z - this.Z }
+        
+        member this.MoveTowards other (distance: float) =
+            let dist = this.Dist other
+            let vector = this.VectorTo other
+            match dist - distance with
+            | newDist when newDist <= 0.0 -> other
+            | newDist ->
+                let norm = vector.Normalize ()
+                this + { X = norm.X * newDist; Y = norm.Y * newDist; Z = norm.Z * newDist }
+            
         member p.Rotate axis rad =
             match axis with
             | X ->
@@ -113,12 +131,18 @@ module Geometry =
         static member Centroid (ps: Point3D list) =
             ps |> List.fold (fun pSum p -> pSum + p) { X = 0.0; Y = 0.0; Z = 0.0 } |> (fun p -> p.Div (float ps.Length))
     
+    and Vector3D = { X: float; Y: float; Z: float }
+        with
+        member this.Normalize () =
+            let length = Math.Sqrt (this.X * this.X + this.Y * this.Y + this.Z * this.Z)
+            { X = this.X / length; Y = this.Y / length; Z = this.Z / length }
+    
     /// <summary>
     /// Axis describes a plane in a three-dimensional Euclidean space.
     /// </summary>
     and Axis = | X | Y | Z
         with
-        static member Origin () = { X = 0.0; Y = 0.0; Z = 0.0 }
+        static member Origin () : Point3D = { X = 0.0; Y = 0.0; Z = 0.0 }
     
     /// <summary>
     /// Definition for a circle in two-dimensional Euclidean space.
@@ -183,7 +207,8 @@ module Geometry =
                             for theta in thetas do 
                                 let x = this.Center.X + this.Radius * Math.Sin(phi) * Math.Cos(theta)
                                 let y = this.Center.Y + this.Radius * Math.Sin(phi) * Math.Sin(theta)
-                                yield { X = x; Y = y; Z = z }
+                                let point : Point3D = { X = x; Y = y; Z = z }
+                                yield point 
                 ]
                 
             // Transpose the list of lists.
@@ -236,9 +261,18 @@ module Geometry =
                         let y = this.Radius * sinTheta * sinPhi
                         let z = this.Radius * cosTheta
 
-                        let point = { X = x; Y = y; Z = z }
+                        let point : Point3D = { X = x; Y = y; Z = z }
                         yield point 
             ]
+            
+    /// <summary>
+    /// Calculate the centroid of a list of points.
+    /// </summary>
+    let calcCentroid (points : Point2D list) : Point2D =
+        let start : Point2D = { X = 0.0; Y = 0.0 }
+        let sum = points |> List.fold (fun pSum p -> pSum + p) start
+        let count = float points.Length
+        sum.Div count 
 
 module Chem =
 
@@ -294,6 +328,7 @@ module Chem =
         { Index : int
           Type : AtomType
           Color : Color
+          Opacity : float 
           Position : Point3D
           Radius : float }
     
@@ -301,10 +336,12 @@ module Chem =
     /// Bond describes a bond between two Atoms in two-dimensional or three-dimensional Euclidean space.
     /// </summary>
     type Bond =
-        { Index : int 
+        { BeginIndex : int
+          EndIndex : int 
           Type : BondType
           BeginAtomIndex : int
           EndAtomIndex : int
+          Opacity : float option 
           Color : Color option
           Radius : float }
     
@@ -318,9 +355,21 @@ module Chem =
             let adjustedAtoms = this.Atoms |> List.map (fun atom -> { atom with Position = atom.Position - centroid })
             { this with Atoms = adjustedAtoms }
             
-        member this.GetAtom (index: int) : Atom option =
-            try this.Atoms |> List.find (fun atom -> atom.Index = index) |> Some 
-            with _ -> None 
+        member this.GetAtom (atomIndex: int) : Atom option =
+            try this.Atoms |> List.find (fun atom -> atom.Index = atomIndex) |> Some 
+            with _ -> None
+            
+        member this.GetBonds (includeHydrogenAtoms : bool) (atomIndex: int) : Bond list =
+            this.Bonds
+            |> List.filter (fun bond -> bond.BeginAtomIndex = atomIndex || bond.EndAtomIndex = atomIndex)
+            |> List.filter (fun bond ->
+                let beginAtom = this.GetAtom bond.BeginAtomIndex
+                let endAtom = this.GetAtom bond.EndAtomIndex
+                match beginAtom, endAtom with
+                | Some beginAtom, Some endAtom ->
+                    if includeHydrogenAtoms then true
+                    else beginAtom.Type <> H && endAtom.Type <> H
+                | _ -> false)
 
 module Svg =
     
@@ -335,22 +384,103 @@ module Svg =
             $"viewBox=\"%.3f{this.MinX} %.3f{this.MinY} %.3f{this.Width} %.3f{this.Height}\""
 
     /// <summary>
+    /// SVG fills.
+    /// </summary>
+    type Fill =
+        | RadialGradient of int * Point2D * float * Color
+        | LinearGradient of int * Point2D * Point2D * Color
+        with
+        override this.ToString () =
+            match this with
+            | LinearGradient (index, start, stop, color) ->
+                let x1 = start.X
+                let y1 = start.Y
+                let x2 = stop.X
+                let y2 = stop.Y
+                let startColor = color
+                let stopColor = color.Diffuse 0.5
+                $"<linearGradient id=\"item-{index}\" x1=\"%.3f{x1}\" x2=\"%.3f{x2}\" y1=\"%.3f{y1}\" y2=\"%.3f{y2}\" gradientUnits=\"userSpaceOnUse\" spreadMethod=\"reflect\"><stop offset=\"0.00\" stop-color=\"{startColor}\"/><stop offset=\"1.00\" stop-color=\"{stopColor}\"/></linearGradient>"
+            
+            | RadialGradient (index, center, radius, color) ->
+                let cx = center.X
+                let cy = center.Y
+                let r = radius * 1.5 // Make the gradient a bit larger than the object.
+                let startColor = color 
+                let stopColor = color.Diffuse 0.5
+                $"<radialGradient id=\"item-{index}\" cx=\"%.3f{cx}\" cy=\"%.3f{cy}\" r=\"%.3f{r}\" fx=\"%.3f{cx}\" fy=\"%.3f{cy}\" gradientTransform=\"matrix(1,0,0,1,0,0)\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0.00\" stop-color=\"{startColor}\"/><stop offset=\"1.00\" stop-color=\"{stopColor}\"/></radialGradient>"
+    
+    /// <summary>
     /// Shape is a collection of supported shapes to draw in two-dimensional Euclidean space as SVG XML objects.
     /// </summary>
     type Shape =
-        | Circle of Index * Color * Circle
-        | Polygon of Index * Color * Point2D list
+        | Circle of int * Color * Circle * float 
+        | Polygon of int * Color * Point2D list * float 
+        | BondPolygon of int * Color * Point2D * Point2D * Point2D * Point2D * float // Bonds have a different gradient fill for Glossy style.
+        | Line of int * Color * Point2D * Point2D * float 
         with
-        member this.ToSvg () =
-            match this with
-            | Circle (index, color, circle) ->
+        member this.ToSvg (style : ArtStyle) =
+            match this with 
+            | Circle (index, color, circle, opacity) -> 
                 let x = circle.Center.X
                 let y = circle.Center.Y
-                $"<circle class=\"item-{index}\" cx=\"%.3f{x}\" cy=\"%.3f{y}\" r=\"%.3f{circle.Radius}\" fill=\"{color}\" style=\"stroke:black;stroke-width:0.1\"/>"
-
-            | Polygon (index, color, points) ->
+                
+                match style with
+                | Cartoon ->
+                    $"<circle cx=\"%.3f{x}\" cy=\"%.3f{y}\" r=\"%.3f{circle.Radius}\" fill=\"{color}\" style=\"stroke:black;stroke-width:0.05\" fill-opacity=\"{opacity}\" stroke-opacity=\"{opacity}\"/>"
+                
+                | Glossy ->
+                    $"<circle class=\"item-{index}\" cx=\"%.3f{x}\" cy=\"%.3f{y}\" r=\"%.3f{circle.Radius}\" fill-opacity=\"{opacity}\"/>"
+                
+            | Polygon (index, color, points, opacity) ->
                 let pointsStr = points |> List.map (fun p -> $"%.3f{p.X},%.3f{p.Y}") |> String.concat " "
-                $"<polygon class=\"item-{index}\" points=\"{pointsStr}\" fill=\"{color}\" style=\"stroke:black;stroke-width:0.1\"/>"
+                
+                match style with
+                | Cartoon -> 
+                    $"<polygon points=\"{pointsStr}\" fill=\"{color}\" style=\"stroke:black;stroke-width:0.05\" stroke-linejoin=\"round\" fill-opacity=\"{opacity}\" stroke-opacity=\"{opacity}\"/>"
+                    
+                | Glossy ->
+                    $"<polygon class=\"item-{index}\" points=\"{pointsStr}\" fill-opacity=\"{opacity}\"/>"
+                    
+            | BondPolygon (index, color, p1, p2, p3, p4, opacity) -> 
+                let r1 = (p1.Dist p2) / 2.0
+                let r2 = (p3.Dist p4) / 2.0
+                
+                let path = $"M %.3f{p1.X} %.3f{p1.Y} A %.3f{r1} %.3f{r1} 0 0 1 %.3f{p2.X} %.3f{p2.Y} L %.3f{p3.X} %.3f{p3.Y} A %.3f{r2} %.3f{r2} 0 0 1 %.3f{p4.X} %.3f{p4.Y} Z"
+                
+                match style with
+                | Cartoon ->
+                    $"<path d=\"{path}\" fill=\"{color}\" style=\"stroke:black;stroke-width:0.05\" stroke-linejoin=\"round\" fill-opacity=\"{opacity}\" stroke-opacity=\"{opacity}\"/>"
+                
+                | Glossy ->
+                    $"<path class=\"item-{index}\" d=\"{path}\" fill-opacity=\"{opacity}\"/>"
+            
+            | Line (index, color, p1, p2, opacity) ->
+                let x1 = p1.X
+                let y1 = p1.Y
+                let x2 = p2.X
+                let y2 = p2.Y
+                $"<line class=\"item-{index}\" x1=\"%.3f{x1}\" y1=\"%.3f{y1}\" x2=\"%.3f{x2}\" y2=\"%.3f{y2}\" stroke=\"{color}\" stroke-width=\"0.1\" stroke-linecap=\"round\" stroke-opacity=\"{opacity}\"/>"
+        
+        member this.Fill (style : ArtStyle) : Fill option =
+            match style with
+            | Cartoon -> None
+            | Glossy ->
+                match this with
+                | Circle (index, color, circle, _) ->
+                    (index, circle.Center, circle.Radius, color) |> RadialGradient |> Some 
+                
+                | Polygon (index, color, points, _) ->
+                    let centroid = calcCentroid points
+                    let maxDist = points |> List.map (fun p -> p.Dist centroid) |> List.max
+                    (index, centroid, maxDist, color) |> RadialGradient |> Some    
+                
+                // | BondPolygon (index, color, points) ->    
+                | BondPolygon (index, color, p1, p2, p3, p4, _) ->
+                    let midPoint1 = p1.Midpoint p3
+                    let midPoint2 = p2.Midpoint p4
+                    (index, midPoint1, midPoint2, color) |> LinearGradient |> Some
+
+                | _ -> None
         
     and Index = int 
                 
@@ -367,18 +497,42 @@ module Svg =
     /// <summary>
     /// SVG encapsulates all individual elements in the SVG image.
     /// </summary>
-    type SVG = { Header: Header; ID: string; ViewBox: ViewBox; Objects: Shape list }
+    type SVG =
+        { Header : Header
+          ID : string
+          ViewBox : ViewBox
+          Objects : Shape list
+          Style : ArtStyle }
         with
         override this.ToString () =            
             // Concatenate definitions, objects, and header strings. 
             this.Header.ToString() + this.Body() 
             
-        member this.Body() =            
+        member this.Body() =
+            // Format style references.
+            let formatStyleReference (o: Shape) : string =
+                match o with
+                | Circle (index, _, _, _)
+                | Polygon (index, _, _, _)
+                | BondPolygon (index, _, _, _, _, _, _)
+                | Line (index, _, _, _, _) ->
+                    $".item-{index}{{fill:url(#item-{index});}}"
+            
+            // Get style references.
+            let styles = this.Objects |> List.map (fun x -> formatStyleReference x) |> String.concat "\n"
+            
             // Convert all objects to a single string.
-            let objs = this.Objects |> List.map (fun x -> x.ToSvg()) |> String.concat "\n"
+            let objs = this.Objects |> List.map (fun x -> x.ToSvg this.Style) |> String.concat "\n"
             
             // Combine items into SVG body.
-            $"<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}>\n{objs}\n</svg>"
+            match this.Style with
+            | Cartoon ->
+                $"<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}>\n{objs}\n</svg>"
+                
+            | Glossy ->
+                let defs : string = this.Objects |> List.map (fun o -> o.Fill(this.Style).ToString()) |> String.concat "\n"
+                 
+                $"\n<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}>\n<defs>\n<style>\n{styles}\n</style>\n{defs}\n</defs>\n{objs}\n</svg>"
             
 module Drawing =
     
@@ -388,13 +542,15 @@ module Drawing =
     /// Drawing options.
     /// </summary>
     type DrawingOptions =
-        { ViewBox: ViewBox option
-          Style: ModelStyle
+        { ViewBox : ViewBox option
+          ArtStyle : ArtStyle
+          ModelStyle : ModelStyle
           DisplayHydrogenAtoms : bool 
-          Resolution: int }
+          Resolution : int }
         with
         static member New () =
             { ViewBox = None
-              Style = SpaceFilling
+              ArtStyle = Cartoon 
+              ModelStyle = SpaceFilling
               DisplayHydrogenAtoms = false
               Resolution = 40 }

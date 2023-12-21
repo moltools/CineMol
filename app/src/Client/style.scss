@@ -26,7 +26,15 @@ html, body { margin: 0; overflow: hidden; }
     }
 }
 
+.version { margin-left: 48px; }
+
 .viewer { float: left; }
+
+.loading {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+}
 
 .file-input { cursor: pointer; }
 

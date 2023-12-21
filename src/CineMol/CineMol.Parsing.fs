@@ -99,9 +99,10 @@ type FileParser = FileParser of FileType
                         // Able to cast all data to appropriate types.
                         | Some x, Some y, Some z, Some atomType ->
                             let atom : Atom =
-                                { Index = atoms.Length + 1
+                                { Index = atoms.Length + (bonds.Length * 2) + 1
                                   Type = atomType
                                   Color = CPK.Color atomType
+                                  Opacity = 1.0
                                   Position = { X = x; Y = y; Z = z }
                                   Radius = PubChem.Radius atomType }
 
@@ -123,20 +124,16 @@ type FileParser = FileParser of FileType
                         // Able to cast all data to appropriate types.
                         | Some s_idx, Some e_idx, Some bondType ->
                             let bond : Bond =
-                                { Index = bonds.Length + 1
+                                { BeginIndex = atoms.Length + (bonds.Length * 2) + 1
+                                  EndIndex = atoms.Length + (bonds.Length * 2) + 2
                                   Type = bondType
                                   BeginAtomIndex = s_idx
                                   EndAtomIndex = e_idx
+                                  Opacity = None 
                                   Color = None
                                   Radius = 0.5 }
-                                
-                            let reversedBond =
-                                { bond with
-                                    Index = bonds.Length + 2
-                                    BeginAtomIndex = bond.EndAtomIndex
-                                    EndAtomIndex = bond.BeginAtomIndex }
-                            
-                            bonds <- bonds @ [ bond; reversedBond ]   
+
+                            bonds <- bonds @ [ bond ]  
                         
                         // Unable to cast all data to appropriate types.
                         | _ ->
