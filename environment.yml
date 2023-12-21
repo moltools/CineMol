@@ -7,4 +7,5 @@ dependencies:
   - pip
   - pip: 
     - rdkit
+    - Bio
     - -e .

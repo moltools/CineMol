@@ -14,19 +14,19 @@ let main (argv : string array) =
     | Some molecules -> 
         let molecule = List.head molecules
 
-        let atomIndicesToHighlight = [ 2; 6; 8; 11; 12 ]
-        let highlightColor = Types.Color (238, 130, 238) // Violet 
-        let defaultColor = Types.Color (128, 128, 128) // Grey
+        // let atomIndicesToHighlight = [ 2; 6; 8; 11; 12 ]
+        // let highlightColor = Types.Color (238, 130, 238) // Violet 
+        // let defaultColor = Types.Color (128, 128, 128) // Grey
 
-        let molecule = 
-            { molecule with 
-                Atoms = 
-                    molecule.Atoms 
-                    |> List.map (fun atom ->
-                        if List.contains atom.Index atomIndicesToHighlight then
-                            { atom with Color = highlightColor }
-                        else
-                            { atom with Color = defaultColor }) }
+        // let molecule = 
+        //     { molecule with 
+        //         Atoms = 
+        //             molecule.Atoms 
+        //             |> List.map (fun atom ->
+        //                 if List.contains atom.Index atomIndicesToHighlight then
+        //                     { atom with Color = highlightColor }
+        //                 else
+        //                     { atom with Color = defaultColor; Opacity = 0.25 }) }
 
         // let rotationAxis = Types.Geometry.Axis.X
         // let rotationRads = Math.PI / 2.0 // 90 degrees
@@ -34,7 +34,8 @@ let main (argv : string array) =
 
         let options : Types.Drawing.DrawingOptions = 
             { ViewBox = None 
-              Style = Types.ModelStyle.SpaceFilling  
+              ModelStyle = Types.ModelStyle.SpaceFilling  
+              ArtStyle = Types.ArtStyle.Cartoon
               DisplayHydrogenAtoms = true
               Resolution = 200 }
               

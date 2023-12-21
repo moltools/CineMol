@@ -505,6 +505,7 @@ def draw(mol: Chem_Molecule, options: Drawing_DrawingOptions) -> tuple[Svg_SVG, 
 
         atoms_1: FSharpList[Chem_Atom] = reverse(sort_by(projection, atoms, ObjectExpr40()))
         def process_atoms(prev_atoms_mut: FSharpList[Chem_Atom], shapes_mut: FSharpList[Svg_Shape], mol: Any=mol, options: Any=options) -> FSharpList[Svg_Shape]:
+            processed = 0
             while True:
                 (prev_atoms, shapes) = (prev_atoms_mut, shapes_mut)
                 if not is_empty(prev_atoms):
@@ -512,6 +513,8 @@ def draw(mol: Chem_Molecule, options: Drawing_DrawingOptions) -> tuple[Svg_SVG, 
                     curr_atom: Chem_Atom = head(prev_atoms)
                     prev_atoms_mut = prev_atoms_1
                     shapes_mut = cons(atom_to_svg(prev_atoms_1, curr_atom, options.Resolution, curr_atom.Opacity), shapes)
+                    processed += 1
+                    print(f"{processed}".zfill(5), end="\r")
                     continue
 
                 else: 

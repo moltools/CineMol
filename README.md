@@ -28,35 +28,6 @@ Then run the script with:
 dotnet fsi scripts/draw_molecule.fsx <path_to_input_sdf_file> <path_to_output_svg_file>
 ```
 
-or 
-
-```bash
-dotnet fsi scripts/draw_molecule.fsx data/penicillin_G.sdf output/penicillin_G.svg
-```
-
-The SDF file for penicillin G referenced above was downloaded from [PubChem](https://pubchem.ncbi.nlm.nih.gov/compound/Penicillin-G).
-
-The output SVG file will look like this:
-
-<table>
-  <tr>
-    <td>No rotation</td>
-    <td>90&deg; rotation over X-axis</td>
-    <td>beta-lactam ring highlighted</td>
-  </tr>
-  <tr>
-    <td>
-        <img src="./data/penicillin_G.svg" alt="example1" width="160">
-    </td>
-    <td>
-        <img src="./data/penicillin_G_rotated.svg" alt="example2" width="160">
-    </td>
-    <td>
-        <img src="./data/penicillin_G_highlighted.svg" alt="example3" width="160">
-    </td>
-  </tr>
- </table>
-
 ## Interactive viewer 
 
 For an explanation on how to start an interactive molecule viewer locally, please see the `app` folder.
