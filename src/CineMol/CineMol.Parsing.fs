@@ -2,7 +2,7 @@ module CineMol.Parsing
 
 open System.Text.RegularExpressions
 open Helpers
-open Style 
+open Style
 open Types.Geometry
 open Types.Chem
 

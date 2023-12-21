@@ -532,7 +532,7 @@ module Svg =
             | Glossy ->
                 let defs : string = this.Objects |> List.map (fun o -> o.Fill(this.Style).ToString()) |> String.concat "\n"
                  
-                $"\n<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}>\n<defs>\n<style>\n{styles}\n</style>\n{defs}\n</defs>\n{objs}\n</svg>"
+                $"\n<svg id=\"{this.ID}\" xmlns=\"http://www.w3.org/2000/svg\" {this.ViewBox.ToString()}>\n<defs>\n<style>\n{styles}\n</style>\n{defs}\n</defs>\n{objs}\n</svg>"    
             
 module Drawing =
     

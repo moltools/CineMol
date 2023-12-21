@@ -1,6 +1,7 @@
 #r "../src/CineMol/bin/Debug/net6.0/CineMol.dll"
 
 open System
+open System.Diagnostics
 open CineMol
 
 let main (argv : string array) =
@@ -35,11 +36,16 @@ let main (argv : string array) =
         let options : Types.Drawing.DrawingOptions = 
             { ViewBox = None 
               ModelStyle = Types.ModelStyle.SpaceFilling  
-              ArtStyle = Types.ArtStyle.Cartoon
+              ArtStyle = Types.ArtStyle.Glossy
               DisplayHydrogenAtoms = true
-              Resolution = 200 }
-              
-        let svg = Drawing.draw molecule options |> fst
+              Resolution = 300 }
+
+        let stopwatch = Stopwatch()
+        stopwatch.Start()
+        let svg: Types.Svg.SVG = Drawing.draw molecule options |> fst
+        stopwatch.Stop()
+        printfn "Elapsed time: %f seconds" (stopwatch.Elapsed.TotalSeconds)
+
         System.IO.File.WriteAllText(outFilePath, svg.ToString())
 
         0

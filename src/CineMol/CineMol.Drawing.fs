@@ -318,4 +318,4 @@ let draw (mol: Molecule) (options: DrawingOptions) : SVG * DrawingOptions =
             | [] -> []
             | atoms -> processAtoms atoms []
 
-    { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Style = options.ArtStyle }, options           
+    { Header = Header.New(); ID = "model"; ViewBox = viewBox; Objects = objs; Style = options.ArtStyle }, options       
