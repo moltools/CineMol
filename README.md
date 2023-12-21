@@ -63,6 +63,26 @@ For an explanation on how to start an interactive molecule viewer locally, pleas
 
 ## Using CineMol with Python
 
-You can easily use [Fable Python](https://fable.io/Fable.Python/) in order to use CineMol from Python.
+You can easily use [Fable Python](https://fable.io/Fable.Python/) in order to use CineMol from Python (>=3.10):
+
+```bash 
+dotnet new tool-manifest
+dotnet tool install fable --prerelease
+dotnet tool run fable --lang Python CineMol.fsproj
+```
+
+Since CineMol-py has already been created (see: `/src/cinemol_py`) you can install it directly with:
+
+```bash
+pip install .
+```
+
+or by creating a dedicated environment first, together with the RDKit cheminformatics toolkit:
+
+```bash
+conda env create -f environment.yml
+```
+
+
 
 

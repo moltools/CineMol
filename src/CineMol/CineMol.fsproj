@@ -13,4 +13,8 @@
     <Compile Include="CineMol.Parsing.fs" />
     <Compile Include="CineMol.Version.fs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" Version="4.2.0" />
+    <PackageReference Include="Fable.Python" Version="4.6.1" />
+  </ItemGroup>
 </Project>
