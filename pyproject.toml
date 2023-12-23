@@ -16,4 +16,4 @@ rdkit = "^2023.03.1"
 pre-commit = "^3.3.3"
 
 [tool.poetry.packages]
-include = ["cinemol_py"]
+include = ["cinemolpy"]
