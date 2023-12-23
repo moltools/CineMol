@@ -1,4 +1,4 @@
-name: CineMol-py
+name: cinemolpy
 channels:
   - conda-forge
   - defaults 
