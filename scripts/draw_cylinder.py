@@ -140,9 +140,9 @@ def plot_points(points: ty.List[Point3D], colors: ty.List[int]) -> None:
     plt.clf()
     
 def main() -> None:
-    points = generate_points_on_cylinder(Point3D(0, 0, 0), Point3D(0, 5, 5), 1, 50, Cap.Round, Cap.Round)
+    points = generate_points_on_cylinder(Point3D(0, 0, 0), Point3D(0, 5, 5), 1, 30, Cap.Round, Cap.Round)
     sphere_center = Point3D(0, 5.5, 4)
-    sphere = generate_points_on_sphere(sphere_center, 2, 50)
+    sphere = generate_points_on_sphere(sphere_center, 2, 30)
     colors = []
     for point in points: 
         dist = math.sqrt((point.x - sphere_center.x) ** 2 + (point.y - sphere_center.y) ** 2 + (point.z - sphere_center.z) ** 2)
@@ -155,7 +155,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-# TODO: how to quicly filter which points i can see from POV? without calculating distance to each point?
-# TODO: what if cylinder is completely or almost cleaved in two?? we need two polygons with same index...
-# TODO: round and flat cap for cylinders

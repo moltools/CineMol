@@ -3,7 +3,7 @@ requires = ["setuptools>=68.1.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.poetry]
-name = "cinemolpy"
+name = "cinemol"
 version = "0.1.0"
 authors = ["David Meijer <david.meijer@wur.nl>"]
 license = "MIT"
@@ -13,4 +13,4 @@ python = "^3.10"
 pythonnet = "^3.0.3"
 
 [tool.poetry.packages]
-include = ["cinemolpy"]
+include = ["cinemol"]
