@@ -1,8 +1,44 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import typing as ty
 
-from cinemol.style import Style 
-from cinemol.geometry import Shape2D
+from cinemol.style import Fill 
+
+import numpy as np
+
+class Shape2D(ABC):
+    @abstractmethod
+    def to_svg(self) -> str:
+        ...
+
+@dataclass 
+class Circle2D(Shape2D):
+    reference: str
+    center: np.ndarray
+    radius: float   
+
+    def to_svg(self) -> str:
+        cx, cy, r = self.center[0], self.center[1], self.radius
+        return f'<circle class="{self.reference}" cx="{cx:.3f}" cy="{cy:.3f}" r="{r:.3f}"/>'
+
+@dataclass
+class Line2D(Shape2D):
+    reference: str
+    start: np.ndarray
+    end: np.ndarray
+
+    def to_svg(self) -> str:
+        x1, y1, x2, y2 = self.start[0], self.start[1], self.end[0], self.end[1]
+        return f'<line class="{self.reference}" x1="{x1:.3f}" y1="{y1:.3f}" x2="{x2:.3f}" y2="{y2:.3f}"/>'
+
+@dataclass
+class Polygon2D(Shape2D):
+    reference: str 
+    points: np.ndarray # Ordered list of points
+
+    def to_svg(self) -> str:
+        points = " ".join([f"{p[0]:.3f},{p[1]:.3f}" for p in self.points])
+        return f'<polygon class="{self.reference}" points="{points}"/>'
 
 @dataclass
 class ViewBox:
@@ -32,11 +68,22 @@ class Svg:
     def footer(self) -> str:
         return "</svg>"
     
-    def to_svg(self, styles: ty.List[Style], objects: ty.List[Shape2D]) -> str:
+    def to_svg(self, fills: ty.List[Fill], objects: ty.List[Shape2D]) -> str:
         header = self.header()
         footer = self.footer()
         
-        styles = "\n".join([style.to_svg() for style in styles])
+        styles, definitions = [], []
+        for fill in fills:
+            style, definition = fill.to_svg()
+            
+            if style is not None:
+                styles.append(style)
+            
+            if definition is not None:
+                definitions.append(definition)
+
+        styles = "\n".join(styles)
+        definitions = "\n".join(definitions)
         objects = "\n".join([object.to_svg() for object in objects])
 
-        return f"{header}\n<defs>\n<style>\n{styles}\n</style>\n</defs>\n{objects}\n{footer}"
+        return f"{header}\n<defs>\n<style>\n{styles}\n</style>\n{definitions}\n</defs>\n{objects}\n{footer}"

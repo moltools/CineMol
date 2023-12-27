@@ -1,5 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum, auto 
+import typing as ty
+
+import numpy as np
 
 class Color:
     def __init__(self, r: int, g: int, b: int) -> None: 
@@ -14,7 +18,8 @@ class Color:
         return f"#{self.r:02x}{self.g:02x}{self.b:02x}"
     
     def diffuse(self, alpha: float) -> "Color":
-        return Color(self.r * alpha, self.g * alpha, self.b * alpha)
+        alpha = max(0, min(1, alpha))
+        return Color(int(self.r * alpha), int(self.g * alpha), int(self.b * alpha))
     
 class AtomColoringScheme(ABC):
     @abstractmethod
@@ -23,7 +28,7 @@ class AtomColoringScheme(ABC):
 
 class AtomRadiusScheme(ABC):
     @abstractmethod
-    def to_angstrum(self, atom_symbol: str) -> float:
+    def to_angstrom(self, atom_symbol: str) -> float:
         ...
 
 class CoreyPaulingKoltungAtomColor(AtomColoringScheme):
@@ -87,14 +92,44 @@ class PubChemAtomRadius(AtomRadiusScheme):
     Tl = 196.0; Pb = 202.0; Bi = 207.0; Po = 197.0; At = 202.0; Rn = 220.0
     Fr = 348.0; Ra = 283.0
 
-    def to_angstrum(self, atom_symbol: str) -> float:
+    def to_angstrom(self, atom_symbol: str) -> float:
         default = 170.0
         return getattr(self, atom_symbol, default) / 100
+    
+class FillStyle(Enum):
+    Cartoon = auto()
+    Glossy = auto()
 
 @dataclass
-class Style:
+class Fill:
     reference: str 
-    color: Color
+    center: np.ndarray 
+    radius: float 
+    fill_color: Color
+    fill_style: FillStyle
 
-    def to_svg(self) -> str:
-        return f".{self.reference}{{fill:{self.color.to_hex()}}}"
+    def to_svg(self) -> ty.Tuple[str, ty.Optional[str]]:
+        if self.fill_style == FillStyle.Cartoon:
+            return (
+                f".{self.reference}{{fill:{self.fill_color.to_hex()};stroke:black;stroke-width:0.05px;}}",
+                None
+            )
+        
+        elif self.fill_style == FillStyle.Glossy:
+            cx, cy, r = self.center[0], self.center[1], self.radius
+            return (
+                f".{self.reference}{{fill:url(#{self.reference});stroke:black;stroke-width:0.05px;}}",
+                (
+                    f"<radialGradient"
+                        f" id=\"{self.reference}\""
+                        f" cx=\"{cx:.3f}\" cy=\"{cy:.3f}\""
+                        f" r=\"{r:.3f}\" fx=\"{cx:.3f}\" fy=\"{cy:.3f}\""
+                        " gradientTransform=\"matrix(1,0,0,1,0,0)\""
+                        " gradientUnits=\"userSpaceOnUse\""
+                    ">"
+                    f"<stop offset=\"0.00\" stop-color=\"{self.fill_color.to_hex()}\"/>"
+                    f"<stop offset=\"1.00\" stop-color=\"{self.fill_color.diffuse(0.5).to_hex()}\"/>"
+                    "</radialGradient>"
+                )
+            )
+        

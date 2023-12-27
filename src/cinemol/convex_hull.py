@@ -1,39 +1,25 @@
+"""
+Source: https://stackoverflow.com/questions/74812556/computing-quick-convex-hull-using-numba
+"""
 import typing as ty 
 
-from cinemol.geometry import Point2D 
+import numpy as np
 
-def process(S: ty.List[Point2D], P: ty.List[int], a: int, b: int) -> ty.List[int]:
-    signed_dist = []
-    for i in P: 
-        p = S[i]
-        p = Point2D(p.x - S[a].x, p.y - S[a].y) # Subtract a from p 
-        p = Point2D(p.x * S[b].y, p.y * S[b].x) # Cross product with b
-        p = Point2D(p.x - S[a].x, p.y - S[a].y) # Subtract a from p
-        signed_dist.append(p)
-
+def process(S: np.ndarray, P: np.ndarray, a: int, b: int) -> ty.Tuple[int, ...]:
+    signed_dist = np.cross(S[P] - S[a], S[b] - S[a])
     K = [i for s, i in zip(signed_dist, P) if s > 0 and i != a and i != b]
 
-    if len(K) == 0: 
+    if len(K) == 0:
         return (a, b)
-    
-    c = max(zip(signed_dist, P))[1]
 
+    c = max(zip(signed_dist, P))[1]
     return process(S, K, a, c)[:-1] + process(S, K, c, b)
 
-def argmin(vals: ty.List[float]) -> int:
-    return min(range(len(vals)), key=lambda i: vals[i])
-
-def argmax(vals: ty.List[float]) -> int:
-    return max(range(len(vals)), key=lambda i: vals[i])
-
-def arange(n: int) -> ty.List[int]:
-    return list(range(n))
-
-def quickhull_2d(S) -> ty.List[int]:
-    a = argmin([p.x for p in S])
-    max_index = argmax([p.x for p in S])
+def quick_hull_2d(S: np.ndarray) -> np.ndarray:
+    a = np.argmin(S[:,0])
+    max_index = np.argmax(S[:,0])
 
     return (
-        process(S, arange(len(S)), a, max_index)[:-1] + 
-        process(S, arange(len(S)), max_index, a)[:-1]
+        process(S, np.arange(S.shape[0]), a, max_index)[:-1] + 
+        process(S, np.arange(S.shape[0]), max_index, a)[:-1]
     )
