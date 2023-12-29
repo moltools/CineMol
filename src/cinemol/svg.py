@@ -42,8 +42,7 @@ class Circle2D(Shape2D):
         :return: The SVG representation of the circle.
         :rtype: str
         """
-        # cx, cy, r = self.center.x, self.center.y, self.radius
-        cx, cy, r = self.center[0], self.center[1], self.radius # TODO: Remove dependency on numpy.
+        cx, cy, r = self.center.x, self.center.y, self.radius
         return f'<circle class="{self.reference}" cx="{cx:.3f}" cy="{cy:.3f}" r="{r:.3f}"/>'
 
 @dataclass
@@ -66,8 +65,7 @@ class Line2D(Shape2D):
         :return: The SVG representation of the line.
         :rtype: str
         """
-        # x1, y1, x2, y2 = self.start.x, self.start.y, self.end.x, self.end.y
-        x1, y1, x2, y2 = self.start[0], self.start[1], self.end[0], self.end[1] # TODO: Remove dependency on numpy.
+        x1, y1, x2, y2 = self.start.x, self.start.y, self.end.x, self.end.y
         return f'<line class="{self.reference}" x1="{x1:.3f}" y1="{y1:.3f}" x2="{x2:.3f}" y2="{y2:.3f}"/>'
 
 @dataclass
@@ -88,8 +86,7 @@ class Polygon2D(Shape2D):
         :return: The SVG representation of the polygon.
         :rtype: str
         """
-        # points = " ".join([f"{p.x:.3f},{p.y:.3f}" for p in self.points])
-        points = " ".join([f"{p[0]:.3f},{p[1]:.3f}" for p in self.points]) # TODO: Remove dependency on numpy.
+        points = " ".join([f"{p.x:.3f},{p.y:.3f}" for p in self.points])
         return f'<polygon class="{self.reference}" points="{points}"/>'
 
 @dataclass

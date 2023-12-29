@@ -4,6 +4,21 @@ Contains classes for representing vectors and points in 2D and 3D space.
 import math
 import random
 
+def sign(x: float) -> int:
+    """
+    Returns the sign of a number.
+    
+    :param float x: The number.
+    :return: The sign of the number.
+    :rtype: int
+    """
+    if x < 0:
+        return -1
+    elif x > 0:
+        return 1
+    else:
+        return 0
+
 class Vector3D:
     """
     Represents a vector in 3D space.
@@ -145,3 +160,13 @@ class Point3D:
         :rtype: Vector3D
         """
         return Vector3D(self.x - other.x, self.y - other.y, self.z - other.z)
+    
+    def calculate_distance(self, other: "Point3D") -> float:
+        """
+        Calculates the distance between this point and another point.
+
+        :param Point3D other: The other point.
+        :return: The distance between this point and another point.
+        :rtype: float
+        """
+        return self.create_vector(other).length()
