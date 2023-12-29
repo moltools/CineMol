@@ -102,14 +102,14 @@ class ModelSphere(ModelNode):
         :return: Whether the node intersects with the other node.
         :rtype: bool
         """
-        # if isinstance(other, ModelSphere):
-        #     return np.linalg.norm(self.geometry.center - other.geometry.center) <= self.geometry.radius + other.geometry.radius
-        # elif isinstance(other, ModelCylinder):
-        #     line = Line3D(other.geometry.start, other.geometry.end) 
-        #     return line.distance_to_line(self.geometry.center) <= self.geometry.radius
-        # else:
-        #     raise ValueError(f"Unknown node type '{type(other)}'")
-        return True 
+        if isinstance(other, ModelSphere):
+            dist = self.geometry.center.calculate_distance(other.geometry.center)
+            return dist <= self.geometry.radius + other.geometry.radius
+        elif isinstance(other, ModelCylinder):
+            line = Line3D(other.geometry.start, other.geometry.end) 
+            return line.distance_to_line(self.geometry.center) <= self.geometry.radius
+        else:
+            raise ValueError(f"Unknown node type '{type(other)}'")
 
 class ModelCylinder(ModelNode):
     """
@@ -178,16 +178,15 @@ class ModelCylinder(ModelNode):
         :return: Whether the node intersects with the other node.
         :rtype: bool
         """
-        # line = Line3D(self.geometry.start, self.geometry.end) 
-        # if isinstance(other, ModelSphere):
-        #     return line.distance_to_line(other.geometry.center) <= other.geometry.radius
-        # elif isinstance(other, ModelCylinder):
-        #     # TODO: This is now a hack to sort of get bonds that are in the neighborhood.
-        #     other_middle = (other.geometry.start + other.geometry.end) / 2
-        #     return line.distance_to_line(other_middle) <= other.geometry.radius * 10
-        # else:
-        #     raise ValueError(f"Unknown node type '{type(other)}'")
-        return True 
+        line = Line3D(self.geometry.start, self.geometry.end) 
+        if isinstance(other, ModelSphere):
+            return line.distance_to_line(other.geometry.center) <= other.geometry.radius
+        elif isinstance(other, ModelCylinder):
+            # TODO: This is now a hack to sort of get bonds that are in the neighborhood.
+            other_middle = other.geometry.start.midpoint(other.geometry.end)
+            return line.distance_to_line(other_middle) <= other.geometry.radius * 10
+        else:
+            raise ValueError(f"Unknown node type '{type(other)}'")
 
 def get_node_polygon_vertices(this: ModelNode, others: ty.List[ModelNode], resolution: int):
     """
@@ -291,10 +290,20 @@ class Scene:
 
         nodes = sorted(nodes, key=lambda node: node.position_for_sorting().z, reverse=False)
 
+        has_spheres = any(isinstance(node, ModelSphere) for node in nodes)
+        # if ther are spheres (even one), then don't calculate cylinder-cylinder intersections.
+
         objects, fills = [], []
         for i, node in enumerate(nodes):
-            # previous_nodes = [previous_node for previous_node in nodes[:i] if node.intersects_with(previous_node)]
-            previous_nodes = nodes[:i]
+            previous_nodes = [previous_node for previous_node in nodes[:i] if node.intersects_with(previous_node)]
+
+            if isinstance(node, ModelSphere):
+                previous_nodes = [node for node in previous_nodes if isinstance(node, ModelSphere)]
+                # NOTE: otherwise some nodes disappear... spheres get cut off by cylinders that are behind it and intersect it.
+            
+            if has_spheres and isinstance(node, ModelCylinder):
+                previous_nodes = [node for node in previous_nodes if isinstance(node, ModelSphere)]
+                # NOTE: you can't see cylinders intersecting inside spheres anyway.
 
             # Filter previous nodes to see which ones intersect with the current node.
             # TODO 
@@ -305,7 +314,12 @@ class Scene:
                 objects.append(outline)
 
             else:
-                points = get_node_polygon_vertices(node, previous_nodes, res)
+                if isinstance(node, ModelCylinder):
+                    temp_res = int(res / 4)
+                else:
+                    temp_res = res
+
+                points = get_node_polygon_vertices(node, previous_nodes, temp_res)
                 polygon = Polygon2D(f"node-{i}", points)
                 objects.append(polygon)
 

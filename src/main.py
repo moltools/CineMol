@@ -28,9 +28,10 @@ def main() -> None:
     for i, atom in enumerate(mol.GetAtoms()):
         atom_symbol = atom.GetSymbol()
         atom_color = CoreyPaulingKoltungAtomColor().get_color(atom_symbol)
+        atom_radius = PubChemAtomRadius().to_angstrom(atom_symbol) / 3
 
         node = ModelSphere(
-            geometry=Sphere(Point3D(*pos[i]), PubChemAtomRadius().to_angstrom(atom_symbol) / 3),
+            geometry=Sphere(Point3D(*pos[i]), atom_radius),
             fill_color=atom_color,
             fill_style=fill_style
         )
@@ -54,7 +55,7 @@ def main() -> None:
         )
 
         bond_radius = 0.3
-        cap_style = CapType.Round
+        cap_style = CapType.NoCap
 
         start_edge = ModelCylinder(
             geometry=Cylinder(start_pos, middle_pos, bond_radius, cap_style),

@@ -170,3 +170,13 @@ class Point3D:
         :rtype: float
         """
         return self.create_vector(other).length()
+
+    def midpoint(self, other: "Point3D") -> "Point3D":
+        """
+        Calculates the midpoint between this point and another point.
+
+        :param Point3D other: The other point.
+        :return: The midpoint between this point and another point.
+        :rtype: Point3D
+        """
+        return Point3D((self.x + other.x) / 2, (self.y + other.y) / 2, (self.z + other.z) / 2)

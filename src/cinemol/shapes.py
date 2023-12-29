@@ -245,9 +245,6 @@ class CapType(Enum):
         elif self == CapType.Round:
             sphere = Sphere(center, radius)
             points = sphere.generate_points_on_surface(res)
-            # plane = Plane3D(center, normal) 
-            # TODO: Check which points are visible at all from sphere, since half
-            #       of the points will be inside the cylinder anyway.
             return points
         
         else:
@@ -268,18 +265,10 @@ class Cylinder:
         :return: The points on the surface of the cylinder. 
         :rtype: ty.List[Point3D]
         """
-        res /= 4 # TODO: implement proper resolution.
-        res = int(res)
-
         normal = self.end.create_vector(self.start).normalize()
+        centers = Line3D(self.start, self.end).generate_points_along_line(res)
 
-        # Generate points along core of cylinder. 
-        line = Line3D(self.start, self.end)
-        centers = line.generate_points_along_line(res)
-
-        # For each radius, generate points on the circumference.
         points = []
-
         for center in centers:
             circle = Circle3D(center, self.radius, normal)
             points_on_circle = circle.generate_points_on_circumference(res)

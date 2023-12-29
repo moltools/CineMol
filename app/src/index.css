@@ -1,0 +1,9 @@
+:root {
+    --app-background-color: white;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    background-color: var(--app-background-color);
+}
