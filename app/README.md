@@ -16,4 +16,4 @@ Build the app for deployment:
 npm run build
 ```
 
-YOu can find the app in the `build` folder.
+You can find the app in the `build` folder after running the build command.
