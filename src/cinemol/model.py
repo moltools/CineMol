@@ -1,12 +1,16 @@
+"""
+Contains definitions for a model scene.
+"""
 from abc import ABC, abstractmethod
 import typing as ty
 
-from cinemol.fitting import quick_hull_2d
+from cinemol.geometry import Point2D
+from cinemol.fitting import calculate_convex_hull
 from cinemol.shapes import Line3D, Sphere, Cylinder 
 from cinemol.style import Color, Fill, FillStyleType, Solid, RadialGradient, LinearGradient
 from cinemol.svg import ViewBox, Svg, Circle2D, Polygon2D
 
-import numpy as np
+import numpy as np # TODO: Remove numpy dependency.
 
 class ModelNode(ABC):
     """
@@ -233,8 +237,14 @@ def get_node_polygon_vertices(this: ModelNode, others: ty.List[ModelNode], resol
     visible = np.array([point[:2] for point in points if is_visible(point)])
 
     if len(visible) > 0:
-        inds = quick_hull_2d(visible)
+        # inds = quick_hull_2d(visible)
+        # verts = [visible[ind] for ind in inds]
+
+        visible = [Point2D(point[0], point[1]) for point in visible]
+        inds = calculate_convex_hull(visible)
         verts = [visible[ind] for ind in inds]
+        verts = np.array([[vert.x, vert.y] for vert in verts])
+        
         return verts
     else:
         return []

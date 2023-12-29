@@ -9,4 +9,5 @@ dependencies:
     - rdkit
     - Bio
     - matplotlib
+    - transcrypt
     - -e .

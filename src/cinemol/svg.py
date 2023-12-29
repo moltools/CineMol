@@ -5,9 +5,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import typing as ty
 
+from cinemol.geometry import Point2D
 from cinemol.style import Fill 
-
-import numpy as np
 
 class Shape2D(ABC):
     """
@@ -29,11 +28,11 @@ class Circle2D(Shape2D):
     A 2D circle.
 
     :param str reference: The reference name of the circle.
-    :param np.ndarray center: The center of the circle with shape (2,).
+    :param Point2D center: The center of the circle with shape (2,).
     :param float radius: The radius of the circle.
     """
     reference: str
-    center: np.ndarray
+    center: Point2D
     radius: float   
 
     def to_svg(self) -> str:
@@ -43,7 +42,8 @@ class Circle2D(Shape2D):
         :return: The SVG representation of the circle.
         :rtype: str
         """
-        cx, cy, r = self.center[0], self.center[1], self.radius
+        # cx, cy, r = self.center.x, self.center.y, self.radius
+        cx, cy, r = self.center[0], self.center[1], self.radius # TODO: Remove dependency on numpy.
         return f'<circle class="{self.reference}" cx="{cx:.3f}" cy="{cy:.3f}" r="{r:.3f}"/>'
 
 @dataclass
@@ -52,12 +52,12 @@ class Line2D(Shape2D):
     A 2D line.
     
     :param str reference: The reference name of the line.
-    :param np.ndarray start: The start point of the line with shape (2,).
-    :param np.ndarray end: The end point of the line with shape (2,).
+    :param Point2D start: The start point of the line with shape (2,).
+    :param Point2D end: The end point of the line with shape (2,).
     """
     reference: str
-    start: np.ndarray
-    end: np.ndarray
+    start: Point2D
+    end: Point2D
 
     def to_svg(self) -> str:
         """
@@ -66,7 +66,8 @@ class Line2D(Shape2D):
         :return: The SVG representation of the line.
         :rtype: str
         """
-        x1, y1, x2, y2 = self.start[0], self.start[1], self.end[0], self.end[1]
+        # x1, y1, x2, y2 = self.start.x, self.start.y, self.end.x, self.end.y
+        x1, y1, x2, y2 = self.start[0], self.start[1], self.end[0], self.end[1] # TODO: Remove dependency on numpy.
         return f'<line class="{self.reference}" x1="{x1:.3f}" y1="{y1:.3f}" x2="{x2:.3f}" y2="{y2:.3f}"/>'
 
 @dataclass
@@ -75,10 +76,10 @@ class Polygon2D(Shape2D):
     A 2D polygon.
     
     :param str reference: The reference name of the polygon.
-    :param np.ndarray points: The points of the polygon with shape (N, 2).
+    :param ty.List[Point2D] points: The vertices of the polygon.
     """
     reference: str 
-    points: np.ndarray # Ordered list of points
+    points: ty.List[Point2D] # Ordered list of points.
 
     def to_svg(self) -> str:
         """
@@ -87,7 +88,8 @@ class Polygon2D(Shape2D):
         :return: The SVG representation of the polygon.
         :rtype: str
         """
-        points = " ".join([f"{p[0]:.3f},{p[1]:.3f}" for p in self.points])
+        # points = " ".join([f"{p.x:.3f},{p.y:.3f}" for p in self.points])
+        points = " ".join([f"{p[0]:.3f},{p[1]:.3f}" for p in self.points]) # TODO: Remove dependency on numpy.
         return f'<polygon class="{self.reference}" points="{points}"/>'
 
 @dataclass

@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 import argparse 
+import os
 import typing as ty
 
 import matplotlib.pyplot as plt 
 import numpy as np 
+
+from cinemol.geometry import Point2D
+from cinemol.fitting import calculate_convex_hull
 
 def cli() -> argparse.Namespace:
     """
@@ -14,7 +18,7 @@ def cli() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-out", type=str, required=True, help="Path to output dir.")
-    parser.add_argument("-dpi", type=int, default=300, help="DPI of output images.")
+    parser.add_argument("-dpi", type=int, required=False, default=300, help="DPI of output images.")
     return parser.parse_args()
 
 def step1(path: str, dpi: int) -> None:
@@ -180,13 +184,15 @@ def step3(path: str, dpi: int, visible_points: np.ndarray) -> None:
     plt.savefig(path, dpi=dpi, transparent=True)
     plt.clf()
 
-def step4(path: str, dpi: int, visible_points: np.ndarray) -> None:
+def step4(path: str, dpi: int, visible_points: np.ndarray) -> ty.List[Point2D]:
     """
     Step 4 of the algorithm.
 
     :param str path: Path to save image to.
     :param int dpi: DPI of output image.
     :param np.ndarray visible_points: Visible points.
+    :return: Convex hull.
+    :rtype: ty.List[Point2D]
     """
     # Plot visible points on 2D.
     fig = plt.figure()
@@ -207,37 +213,7 @@ def step4(path: str, dpi: int, visible_points: np.ndarray) -> None:
 
     ax.scatter(visible_points[:, 0], visible_points[:, 2], color="black", s=1)
 
-    class Point2D:
-        def __init__(self, x: float, y: float) -> None:
-            self.x = x 
-            self.y = y
-
-    def process(S: ty.List[Point2D], P: ty.List[int], a: int, b: int) -> ty.List[int]:
-        signed_dist = []
-        for i in P: signed_dist.append(S[i].subtract_point(S[a]).cross(S[b].subtract_point(S[a])))
-        K = [i for s, i in zip(signed_dist, P) if s > 0 and i != a and i != b]
-        if len(K) == 0: return (a, b)
-        c = max(zip(signed_dist, P))[1]
-        return process(S, K, a, c)[:-1] + process(S, K, c, b)
-
-    def argmin(vals: ty.List[float]) -> int:
-        return min(range(len(vals)), key=lambda i: vals[i])
-
-    def argmax(vals: ty.List[float]) -> int:
-        return max(range(len(vals)), key=lambda i: vals[i])
-
-    def arange(n: int) -> ty.List[int]:
-        return list(range(n))
-
-    def quickhull_2d(S) -> ty.List[int]:
-        a = argmin([p.x for p in S])
-        max_index = argmax([p.x for p in S])
-        return (
-            process(S, arange(len(S)), a, max_index)[:-1] + 
-            process(S, arange(len(S)), max_index, a)[:-1]
-        )
-
-    convex_hull = quickhull_2d([Point2D(point[0], point[2]) for point in visible_points])
+    convex_hull = calculate_convex_hull([Point2D(point[0], point[2]) for point in visible_points])
     hull = [visible_points[i] for i in convex_hull]
 
     # Add hull as line segments.
@@ -250,12 +226,15 @@ def step4(path: str, dpi: int, visible_points: np.ndarray) -> None:
     plt.savefig(path, dpi=dpi, transparent=True)
     plt.clf()
 
-def step5(path: str, dpi: int) -> None:
+    return hull 
+
+def step5(path: str, dpi: int, hull: ty.List[Point2D]) -> None:
     """
     Step 5 of the algorithm.
     
     :param str path: Path to save image to.
     :param int dpi: DPI of output image.
+    :param ty.List[Point2D] hull: Hull.
     """
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -266,12 +245,12 @@ def step5(path: str, dpi: int) -> None:
     ax.set_ylim([-2.5, 2.5])
 
     # Line along x axis
-    ax.plot([0.83, 2.5], [0, 0], color="black", linewidth=2)
-    ax.text(2.6, -0.1, "X", fontsize=12, color="black")
+    ax.plot([0, 2.5], [0, 0], color="black", linewidth=2, zorder=1)
+    ax.text(2.6, -0.1, "X", fontsize=12, color="black", zorder=1)
 
     # Line along y axis
-    ax.plot([0, 0], [1.2, 2.5], color='black', linewidth=2)
-    ax.text(-0.1, 2.6, "Y", fontsize=12, color="black")
+    ax.plot([0, 0], [0, 2.5], color='black', linewidth=2, zorder=1)
+    ax.text(-0.1, 2.6, "Y", fontsize=12, color="black", zorder=1)
 
     # Plot sphere 2 as circle on x/y axis.
     sphere2_radius = 0.75
@@ -290,6 +269,18 @@ def step5(path: str, dpi: int) -> None:
 
 def main() -> None:
     args = cli()
+    os.makedirs(args.out, exist_ok=True)
+
+    step1(os.path.join(args.out, "step1.png"), args.dpi)
+
+    visible_points = step2(os.path.join(args.out, "step2.png"), args.dpi)
+
+    step3(os.path.join(args.out, "step3.png"), args.dpi, visible_points)
+
+    hull = step4(os.path.join(args.out, "step4.png"), args.dpi, visible_points)
+
+    step5(os.path.join(args.out, "step5.png"), args.dpi, hull)
+
     exit(0)
 
 if __name__ == "__main__":

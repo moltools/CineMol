@@ -6,30 +6,25 @@ from enum import Enum, auto
 import math
 import typing as ty
 
-import numpy as np
+from cinemol.geometry import Vector3D, Point3D
+
+import numpy as np # TODO: Remove dependency on numpy.
 
 # ==============================================================================
 # Helper functions
 # ==============================================================================
 
-def gram_schmidt(n: np.ndarray) -> ty.Tuple[np.ndarray, np.ndarray]:
+def gram_schmidt(n: Vector3D) -> ty.Tuple[Vector3D, Vector3D]:
     """
     Generate two vectors that are orthogonal to the given vector.
     
-    :param np.ndarray n: The vector to generate the orthogonal vectors from, with shape (3,).
-    :return: Two orthogonal vectors, with shape (3,).
-    :rtype: ty.Tuple[np.ndarray, np.ndarray]
+    :param Vector3D n: The vector to generate orthogonal vectors for.
+    :return: Two orthogonal vectors to the given vector.
+    :rtype: ty.Tuple[Vector3D, Vector3D]
     """
-    if np.allclose(n, np.array([0, 0, 0])):
-        raise ValueError("n must not be the zero vector.")
-    
-    if n.shape != (3,):
-        raise ValueError("n must have shape (3,).")
-
-    v = np.random.rand(3)       # Random vector
-    v = v - np.dot(v, n) * n    # Create a vector that is orthogonal to n
-    v = v / np.linalg.norm(v)   # Normalize
-    w = np.cross(n, v)          # Create a vector that is orthogonal to both n and v
+    v = Vector3D.create_random()
+    v = v.subtract(n.multiply(v.dot(n))).normalize()
+    w = n.cross(v)
     return v, w
 
 # ==============================================================================
@@ -95,7 +90,11 @@ class Circle3D:
         :return: The points on the circumference of the circle, with shape (N, 3).
         :rtype: np.ndarray
         """
-        v, w = gram_schmidt(self.normal / np.linalg.norm(self.normal))
+        normal = Vector3D(*self.normal)
+        normal = normal.normalize()
+        v, w = gram_schmidt(normal)
+        v = np.array([v.x, v.y, v.z])
+        w = np.array([w.x, w.y, w.z])
         angles = np.linspace(0, 2 * np.pi, res)
         return self.center + self.radius * np.outer(np.cos(angles), v) + self.radius * np.outer(np.sin(angles), w)
     

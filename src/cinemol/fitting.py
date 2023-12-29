@@ -5,47 +5,83 @@ Source: https://stackoverflow.com/questions/74812556/computing-quick-convex-hull
 """
 import typing as ty 
 
-import numpy as np
+from cinemol.geometry import Point2D  
 
-def process(S: np.ndarray, P: np.ndarray, a: int, b: int) -> ty.Tuple[int, ...]:
+def argmin(vals: ty.List[float]) -> int:
     """
-    Process the points in P that are on the right side of the line from a to b.
+    Returns the index of the minimum value in a list of floats.
     
-    :param np.ndarray S: The set of points.
-    :param np.ndarray P: The set of indices of points to process.
-    :param int a: The index of the first point of the line.
-    :param int b: The index of the second point of the line.
-    :return: The indices of the points in P that are on the right side of the line from a to b.
-    :rtype: ty.Tuple[int, ...]
+    :param list[float] vals: The list of floats.
+    :return: The index of the minimum value in the list.
+    :rtype: int
     """
-    # Find the point c that is furthest from the line from a to b.
-    signed_dist = np.cross(S[P] - S[a], S[b] - S[a])
+    return min(range(len(vals)), key=lambda i: vals[i])
+
+def argmax(vals: ty.List[float]) -> int:
+    """
+    Returns the index of the maximum value in a list of floats.
+    
+    :param list[float] vals: The list of floats.
+    :return: The index of the maximum value in the list.
+    :rtype: int
+    """
+    return max(range(len(vals)), key=lambda i: vals[i])
+
+def arange(n: int) -> ty.List[int]:
+    """
+    Returns a list of integers from 0 to n-1.
+    
+    :param int n: The number of integers to return.
+    :return: A list of integers from 0 to n-1.
+    :rtype: list[int]
+    """
+    return list(range(n))
+
+def process(S: ty.List[Point2D], P: ty.List[int], a: int, b: int) -> ty.List[int]:
+    """
+    Recursively computes the convex hull of a set of points in 2D space.
+    
+    :param list[Point2D] S: The list of points.
+    :param list[int] P: The list of indices of points to consider.
+    :param int a: The index of the first point in the set.
+    :param int b: The index of the second point in the set.
+    :return: The convex hull of the set of points.
+    :rtype: list[int]
+    """
+    # Calculate the signed distance from each point in P to the line between a and b.
+    signed_dist = []
+    for i in P: 
+        signed_dist.append(S[i].subtract_point(S[a]).cross(S[b].subtract_point(S[a])))
+
+    # Find the points in P that are on the positive side of the line between a and b.
     K = [i for s, i in zip(signed_dist, P) if s > 0 and i != a and i != b]
 
-    # If there are no points on the right side, return the line from a to b.
-    if len(K) == 0:
+    # If there are no points on the positive side of the line, return the line.
+    if len(K) == 0: 
         return (a, b)
-
-    # Find the point c that is furthest from the line from a to b.
+    
+    # Find the point in P that is farthest from the line between a and b.
     c = max(zip(signed_dist, P))[1]
 
-    # Process the points on the right side of the line from a to c.
+    # Recursively compute the convex hull of the points on the positive side of the line.
     return process(S, K, a, c)[:-1] + process(S, K, c, b)
 
-def quick_hull_2d(S: np.ndarray) -> np.ndarray:
+def calculate_convex_hull(S) -> ty.List[int]:
     """
-    Compute the convex hull of a set of points in 2D space.
+    Calculates the convex hull of a set of points in 2D space.
     
-    :param np.ndarray S: The set of points.
-    :return: The indices of the points that form the convex hull.
-    :rtype: np.ndarray
+    :param list[Point2D] S: The list of points.
+    :return: The convex hull of the set of points.
+    :rtype: list[int]
     """
-    # Find the indices of the leftmost and rightmost points.
-    a = np.argmin(S[:,0])
-    max_index = np.argmax(S[:,0])
+    # Find the points with the minimum and maximum x-coordinates.
+    a = argmin([p.x for p in S])
 
-    # Process the points on the right side of the line from a to max_index.
+    # Find the point with the maximum x-coordinate. 
+    max_index = argmax([p.x for p in S])
+
+    # Recursively compute the convex hull of the points on the negative side of the line.
     return (
-        process(S, np.arange(S.shape[0]), a, max_index)[:-1] + 
-        process(S, np.arange(S.shape[0]), max_index, a)[:-1]
+        process(S, arange(len(S)), a, max_index)[:-1] + 
+        process(S, arange(len(S)), max_index, a)[:-1]
     )

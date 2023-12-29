@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 import typing as ty
 
-import numpy as np
+from cinemol.geometry import Point2D
 
 # ==============================================================================
 # Color
@@ -217,17 +217,11 @@ class RadialGradient(FillStyle):
     """
     Radial gradient fill style.
     """
-    def __init__(self, center: np.ndarray, radius: float) -> None:
+    def __init__(self, center: Point2D, radius: float) -> None:
         """
-        :param np.ndarray center: The center of the radial gradient.
+        :param Point2D center: The center of the radial gradient.
         :param float radius: The radius of the radial gradient.
         """
-        if center.shape != (2,):
-            raise ValueError(f"Expected center to be 2D, got '{center.shape}'")
-        
-        if isinstance(radius, float) and radius <= 0:
-            raise ValueError(f"Expected radius to be positive float, got '{radius}'")
-
         self.center = center
         self.radius = radius
 
@@ -235,21 +229,12 @@ class LinearGradient(FillStyle):
     """
     Linear gradient fill style.
     """
-    def __init__(self, start: np.ndarray, end: np.ndarray, radius: float) -> None:
+    def __init__(self, start: Point2D, end: Point2D, radius: float) -> None:
         """
-        :param np.ndarray start: The start of the linear gradient.
-        :param np.ndarray end: The end of the linear gradient.
+        :param Point2D start: The start of the linear gradient.
+        :param Point2D end: The end of the linear gradient.
         :param float radius: The radius of the linear gradient.
         """
-        if start.shape != (2,):
-            raise ValueError(f"Expected start to be 2D, got '{start.shape}'")
-        
-        if end.shape != (2,):
-            raise ValueError(f"Expected end to be 2D, got '{end.shape}'")
-        
-        if isinstance(radius, float) and radius <= 0:
-            raise ValueError(f"Expected radius to be positive float, got '{radius}'")   
-
         self.start = start
         self.end = end
         self.radius = radius 
@@ -281,8 +266,8 @@ class Fill:
             return style_str, definition_str
         
         elif isinstance(self.fill_style, RadialGradient):
-            cx = self.fill_style.center[0]
-            cy = self.fill_style.center[1]
+            cx = self.fill_style.center.x
+            cy = self.fill_style.center.y
             r = self.fill_style.radius
 
             style_str = f".{self.reference}{{fill:url(#{self.reference});}}"
@@ -302,10 +287,10 @@ class Fill:
             return style_str, definition_str
         
         elif isinstance(self.fill_style, LinearGradient):
-            x1 = self.fill_style.start[0]
-            y1 = self.fill_style.start[1]
-            x2 = self.fill_style.end[0]
-            y2 = self.fill_style.end[1]
+            x1 = self.fill_style.start.x
+            y1 = self.fill_style.start.y
+            x2 = self.fill_style.end.x
+            y2 = self.fill_style.end.y
             r = self.fill_style.radius
 
             style_str = f".{self.reference}{{fill:url(#{self.reference});}}"
