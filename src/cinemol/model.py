@@ -6,13 +6,14 @@ import typing as ty
 from cinemol.fitting import calculate_convex_hull
 from cinemol.geometry import (
     Point2D, 
+    Point3D,
     Line3D, 
     Sphere, 
     CylinderCapType,
     Cylinder,
     distance_to_line
 )
-from cinemol.style import Color, Fill, FillStyleType, Solid, RadialGradient, LinearGradient
+from cinemol.style import Depiction, Cartoon, Glossy, Fill, Solid, RadialGradient, LinearGradient
 from cinemol.svg import ViewBox, Svg, Circle2D, Polygon2D
 
 # ==============================================================================
@@ -23,17 +24,15 @@ class ModelSphere:
     """
     A node in a scene.
     """
-    def __init__(self, geometry: Sphere, fill_color: Color, fill_style: FillStyleType) -> None:
+    def __init__(self, geometry: Sphere, depiction: Depiction) -> None:
         """
         Initialize a node.
         
         :param Sphere geometry: The geometry of the node.
-        :param Color fill_color: The color of the node.
-        :param FillStyleType fill_style: The fill style of the node.
+        :param Depiction depiction: The depiction of the node.
         """
         self.geometry = geometry
-        self.fill_color = fill_color
-        self.fill_style = fill_style
+        self.depiction = depiction 
     
     def intersects_with(self, other: "ty.Union[ModelSphere, ModelCylinder]") -> bool:
         """
@@ -49,17 +48,15 @@ class ModelCylinder:
     """
     An edge between two nodes.
     """
-    def __init__(self, geometry: Cylinder, fill_color: Color, fill_style: FillStyleType) -> None:
+    def __init__(self, geometry: Cylinder, depiction: Depiction) -> None:
         """
         Initialize an edge.
         
         :param Cylinder geometry: The geometry of the edge.
-        :param Color fill_color: The color of the edge.
-        :param FillStyleType fill_style: The fill style of the edge.
+        :param Depiction depiction: The depiction of the edge.
         """
         self.geometry = geometry
-        self.fill_color = fill_color
-        self.fill_style = fill_style
+        self.depiction = depiction
     
     def intersects_with(self, other: "ty.Union[ModelSphere, ModelCylinder]") -> bool:
         """
@@ -137,7 +134,7 @@ class Scene:
         """
         self.nodes.append(node)
 
-    def calculate_view_box(self, points: ty.List[Point2D], margin: float = 5) -> ViewBox:
+    def calculate_view_box(self, points: ty.List[Point2D], margin: float) -> ViewBox:
         """
         Calculate the view box of the scene.
         
@@ -165,95 +162,154 @@ class Scene:
         height = max_y - min_y
         return ViewBox(min_x, min_y, width, height)
 
-    def draw(self, resolution: int, verbose: bool = False) -> str:
+    def draw(
+        self, 
+        resolution: int, 
+        verbose: bool = False,
+        include_spheres: bool = True,
+        include_cylinders: bool = True,
+        calculate_sphere_spere_intersections: bool = True,
+        calculate_sphere_cylinder_intersections: bool = True,
+        calculate_cylinder_cylinder_intersections: bool = True
+    ) -> str:
         """
         Draw the scene.
 
         :param int resolution: The resolution of the scene.
         :param bool verbose: Whether to print progress.
+        :param bool include_spheres: Whether to include spheres in the scene.
+        :param bool include_cylinders: Whether to include cylinders in the scene.
+        :param bool calculate_sphere_spere_intersections: Whether to calculate sphere-sphere intersections.
+        :param bool calculate_sphere_cylinder_intersections: Whether to calculate sphere-cylinder intersections.
+        :param bool calculate_cylinder_cylinder_intersections: Whether to calculate cylinder-cylinder intersections.
         :return: The SVG string.
         :rtype: str
         """
-        raise NotImplementedError("TODO")
-
-        # if not all(isinstance(node, ModelNode) for node in self.nodes):
-        #     raise ValueError("All scene nodes must be of type ModelNode")
-        
-        # nodes = [node for node in self.nodes if node.visible()]
-
-        # view_box = self.calculate_view_box([node.position_for_sorting() for node in nodes])
-        # svg = Svg(view_box, version=1.0, encoding="UTF-8")
-
-        # nodes = sorted(nodes, key=lambda node: node.position_for_sorting().z, reverse=False)
-
-        # has_spheres = any(isinstance(node, ModelSphere) for node in nodes)
-        # # if ther are spheres (even one), then don't calculate cylinder-cylinder intersections.
-
-        # objects, fills = [], []
-        # for i, node in enumerate(nodes):
-        #     previous_nodes = [previous_node for previous_node in nodes[:i] if node.intersects_with(previous_node)]
-
-        #     if isinstance(node, ModelSphere):
-        #         previous_nodes = [node for node in previous_nodes if isinstance(node, ModelSphere)]
-        #         # NOTE: otherwise some nodes disappear... spheres get cut off by cylinders that are behind it and intersect it.
+        # Make sure only sphere and cylinder geometries are in the scene.
+        nodes = []
+        for node in self.nodes: 
+            if isinstance(node, ModelSphere) and include_spheres:
+                nodes.append(node)
             
-        #     if has_spheres and isinstance(node, ModelCylinder):
-        #         previous_nodes = [node for node in previous_nodes if isinstance(node, ModelSphere)]
-        #         # NOTE: you can't see cylinders intersecting inside spheres anyway.
+            elif isinstance(node, ModelCylinder) and include_cylinders:
+                nodes.append(node)
 
-        #     # Filter previous nodes to see which ones intersect with the current node.
-        #     # TODO 
+        # Get sorting values for nodes. We sort on z-coordinate as we always look at the
+        # scene from the z-axis, towards the origin.
+        sorting_values = []
+        for node in nodes:
+            if isinstance(node, ModelSphere):
+                sorting_values.append(node.geometry.center.z)
 
-        #     # Create outline.
-        #     if isinstance(node, ModelSphere) and len(previous_nodes) == 0:
-        #         outline = Circle2D(f"node-{i}", Point2D(node.geometry.center.x, node.geometry.center.y), node.geometry.radius)
-        #         objects.append(outline)
+            elif isinstance(node, ModelCylinder):
+                start, end = node.geometry.start, node.geometry.end
+                midpoint_z = (start.z + end.z) / 2
+                sorting_values.append(midpoint_z)
 
-        #     else:
-        #         if isinstance(node, ModelCylinder):
-        #             temp_res = int(res / 4)
-        #         else:
-        #             temp_res = res
+        # Sort nodes by sorting values.
+        nodes = [
+            node for _, node 
+            in sorted(
+                zip(sorting_values, nodes), 
+                key=lambda x: x[0], reverse=True
+            )
+        ]
 
-        #         points = get_node_polygon_vertices(node, previous_nodes, temp_res)
-        #         polygon = Polygon2D(f"node-{i}", points)
-        #         objects.append(polygon)
+        # Calculate size of view box. Only use x and y coordinates of node geometries.
+        points = []
+        for node in nodes:
+            if isinstance(node, ModelSphere):
+                point = Point2D(node.geometry.center.x, node.geometry.center.y)
+                points.append(point)
+            
+            elif isinstance(node, ModelCylinder):
+                start, end = node.geometry.start, node.geometry.end
+                midpoint = Point2D((start.x + end.x) / 2, (start.y + end.y) / 2)
+                points.append(midpoint)
 
-        #     # Create outline fill.
-        #     if node.fill_style == FillStyleType.Cartoon:
-        #         fill = Fill(f"node-{i}", node.fill_color, Solid())
-        #         fills.append(fill)
+        view_box = self.calculate_view_box(points, margin=5)
+        svg = Svg(view_box, version=1.0, encoding="UTF-8")
 
-        #     elif node.fill_style == FillStyleType.Glossy:
-                
-        #         if isinstance(node, ModelSphere):
-        #             gradient = RadialGradient(
-        #                 Point2D(node.geometry.center.x, node.geometry.center.y), 
-        #                 node.geometry.radius
-        #             )
-        #             fill = Fill(f"node-{i}", node.fill_color, gradient)
-        #             fills.append(fill)
+        # Calculate 2D shape and fill for each node.
+        objects, fills = [], []
 
-        #         elif isinstance(node, ModelCylinder):
-        #             gradient = LinearGradient(
-        #                 Point2D(node.geometry.start.x, node.geometry.start.y),
-        #                 Point2D(node.geometry.end.x, node.geometry.end.y), 
-        #                 node.geometry.radius
-        #             )
-        #             fill = Fill(f"node-{i}", node.fill_color, gradient)
-        #             fills.append(fill)
+        for i, node in enumerate(nodes):
+            
+            # Create reference tag for node to connect shape to style.
+            reference = f"node-{i}"
 
-        #         else:
-        #             raise ValueError(f"Unknown node type '{type(node)}'")
+            # Calculate which of the previously drawn nodes intersect with the current node.
+            previous_nodes = []
+            for prev_node in nodes[:i]:
 
-        #     else:
-        #         raise ValueError(f"Unknown fill style '{node.fill_style}'")
+                if (
+                    isinstance(node, ModelSphere) and 
+                    isinstance(prev_node, ModelSphere) and 
+                    calculate_sphere_spere_intersections
+                ):
+                    if node.intersects_with(prev_node):
+                        previous_nodes.append(prev_node)
 
-        #     # Only print if verbose is set to True.
-        #     if verb:
-        #         padding = len(str(len(nodes)))
-        #         print(f"{i}".zfill(padding), end="\r")
+                elif (
+                    isinstance(node, ModelSphere) and isinstance(prev_node, ModelCylinder) or
+                    isinstance(node, ModelCylinder) and isinstance(prev_node, ModelSphere)
+                ) and calculate_sphere_cylinder_intersections:
+                    if node.intersects_with(prev_node):
+                        previous_nodes.append(prev_node)
 
-        # svg_str = svg.to_svg(fills, objects)
+                elif (
+                    isinstance(node, ModelCylinder) and 
+                    isinstance(prev_node, ModelCylinder) and 
+                    calculate_cylinder_cylinder_intersections
+                ):
+                    if node.intersects_with(prev_node):
+                        previous_nodes.append(prev_node)
 
-        # return svg_str
+            # Create outline for model spheres with no intersections with previous nodes.
+            if isinstance(node, ModelSphere) and len(previous_nodes) == 0:
+                center = Point2D(node.geometry.center.x, node.geometry.center.y)
+                outline = Circle2D(reference, center, node.geometry.radius)
+                objects.append(outline)
+            
+            # Otherwise, calculate polygon for visible part of node.
+            else:
+                points = get_node_polygon_vertices(node, previous_nodes, resolution)
+                polygon = Polygon2D(reference, points)
+                objects.append(polygon)
+
+            # Create fill for node.
+            if isinstance(node.depiction, Cartoon):
+                fill_color = node.depiction.fill_color
+                stroke_color = node.depiction.outline_color
+                stroke_width = node.depiction.outline_width
+                opacity = node.depiction.opacity
+                style = Solid(fill_color, stroke_color, stroke_width, opacity)
+                fills.append(Fill(reference, style))
+
+            # Glossy style is different for spheres and cylinders.
+            elif isinstance(node.depiction, Glossy) and isinstance(node, ModelSphere):
+                fill_color = node.depiction.fill_color
+                center = Point2D(node.geometry.center.x, node.geometry.center.y)
+                radius = node.geometry.radius
+                opacity = node.depiction.opacity
+                style = RadialGradient(fill_color, center, radius, opacity)
+                fills.append(Fill(reference, style))
+            
+            elif isinstance(node.depiction, Glossy) and isinstance(node, ModelCylinder):
+                fill_color = node.depiction.fill_color
+                start_center = Point2D(node.geometry.start.x, node.geometry.start.y)
+                end_center = Point2D(node.geometry.end.x, node.geometry.end.y)
+                radius = node.geometry.radius
+                opacity = node.depiction.opacity
+                style = LinearGradient(fill_color, start_center, end_center, radius, opacity)
+                fills.append(Fill(reference, style))
+            
+            # Only print if verbose is set to True.
+            if verbose:
+                padding = len(str(len(nodes)))
+                print(f"{i}".zfill(padding), end="\r")
+
+        # Draw the scene.
+        svg_str = svg.to_svg(fills, objects)
+
+        return svg_str

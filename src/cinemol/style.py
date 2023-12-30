@@ -3,7 +3,6 @@ Style module.
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum, auto
 import typing as ty
 
 from cinemol.geometry import Point2D
@@ -191,15 +190,37 @@ class PubChemAtomRadius(AtomRadiusScheme):
 # Art styles    
 # ==============================================================================
     
-class FillStyleType(Enum):
+class Depiction:
     """
-    Fill style types.
+    Abstract base class for depiction styles.
+    """
+    pass
+
+@dataclass
+class Cartoon(Depiction):
+    """
+    Cartoon fill style.
     
-    :cvar Cartoon: Cartoon fill style.
-    :cvar Glossy: Glossy fill style.
+    :param float fill_color: The color of the fill.
+    :param float outline_color: The color of the stroke.
+    :param float outline_width: The width of the stroke.
+    :param float opacity: The opacity of the fill.
     """
-    Cartoon = auto()
-    Glossy = auto()
+    fill_color: Color
+    outline_color: Color = Color(0, 0, 0)
+    outline_width: float = 0.05
+    opacity: float = 1.0
+
+@dataclass 
+class Glossy(Depiction):
+    """
+    Glossy fill style.
+
+    :param float fill_color: The color of the fill.
+    :param float outline_color: The color of the stroke.
+    """
+    fill_color: Color
+    opacity: float = 1.0
     
 class FillStyle:
     """
@@ -211,39 +232,70 @@ class Solid(FillStyle):
     """
     Solid fill style.
     """
-    def __init__(self, stroke_color: Color, stroke_width: float) -> None:
+    def __init__(
+        self, 
+        fill_color: Color,
+        stroke_color: Color, 
+        stroke_width: float,
+        opacity: float
+    ) -> None:
         """
+        :param Color fill_color: The color of the fill.
         :param Color stroke_color: The color of the stroke.
         :param float stroke_width: The width of the stroke.
+        :param float opacity: The opacity of the stroke.
         """
+        self.fill_color = fill_color
         self.stroke_color = stroke_color
         self.stroke_width = stroke_width
+        self.opacity = opacity
 
 class RadialGradient(FillStyle):
     """
     Radial gradient fill style.
     """
-    def __init__(self, center: Point2D, radius: float) -> None:
+    def __init__(
+        self, 
+        fill_color: Color,
+        center: Point2D, 
+        radius: float,
+        opacity: float
+    ) -> None:
         """
+        :param Color fill_color: The color of the radial gradient.
         :param Point2D center: The center of the radial gradient.
         :param float radius: The radius of the radial gradient.
+        :param float opacity: The opacity of the radial gradient.
         """
+        self.fill_color = fill_color
         self.center = center
         self.radius = radius
+        self.opacity = opacity
 
 class LinearGradient(FillStyle):
     """
     Linear gradient fill style.
     """
-    def __init__(self, start: Point2D, end: Point2D, radius: float) -> None:
+    def __init__(
+        self,
+        fill_color: Color,
+        start: Point2D, 
+        end: Point2D, 
+        radius: float,
+        opacity: float
+    ) -> None:
         """
+        :param Color fill_color: The color of the linear gradient.
         :param Point2D start: The start of the linear gradient.
         :param Point2D end: The end of the linear gradient.
         :param float radius: The radius of the linear gradient.
+        :param float opacity: The opacity of the linear gradient.
         """
+        self.fill_color = fill_color
         self.start = start
         self.end = end
         self.radius = radius 
+        self.opacity = opacity
 
 @dataclass
 class Fill:
@@ -251,7 +303,6 @@ class Fill:
     Fill style.
     """
     reference: str 
-    fill_color: Color
     fill_style: FillStyle
 
     def to_svg(self) -> ty.Tuple[str, ty.Optional[str]]:
@@ -262,15 +313,13 @@ class Fill:
                  the style string, the second string is the definition string.
         :rtype: str, str
         """
-        if not isinstance(self.fill_style, FillStyle):
-            raise TypeError(f"Expected FillStyle, got {type(self.fill_style)}")
-
         if isinstance(self.fill_style, Solid):
-            fill_color = self.fill_color.to_hex()
+            fill_color = self.fill_style.fill_color.to_hex()
             stroke_color = self.fill_style.stroke_color.to_hex()
             stroke_width = self.fill_style.stroke_width
-            
-            style_str = f".{self.reference}{{fill:{fill_color};stroke:{stroke_color};stroke-width:{stroke_width:.3f}px;}}"
+            opacity = self.fill_style.opacity
+        
+            style_str = f".{self.reference}{{fill:{fill_color};stroke:{stroke_color};stroke-width:{stroke_width:.3f}px;opacity:{opacity};}}" 
             definition_str = None
 
             return style_str, definition_str
@@ -288,9 +337,10 @@ class Fill:
                     f" r=\"{r:.3f}\" fx=\"{cx:.3f}\" fy=\"{cy:.3f}\""
                     " gradientTransform=\"matrix(1,0,0,1,0,0)\""
                     " gradientUnits=\"userSpaceOnUse\""
+                    f" opacity=\"{self.fill_style.opacity}\""
                 ">"
-                f"<stop offset=\"0.00\" stop-color=\"{self.fill_color.to_hex()}\"/>"
-                f"<stop offset=\"1.00\" stop-color=\"{self.fill_color.diffuse(0.5).to_hex()}\"/>"
+                f"<stop offset=\"0.00\" stop-color=\"{self.fill_style.fill_color.to_hex()}\"/>"
+                f"<stop offset=\"1.00\" stop-color=\"{self.fill_style.fill_color.diffuse(0.5).to_hex()}\"/>"
                 "</radialGradient>"
             )
         
@@ -311,9 +361,10 @@ class Fill:
                     f" x2=\"{x2:.3f}\" y2=\"{y2:.3f}\""
                     " gradientUnits=\"userSpaceOnUse\""
                     " spreadMethod=\"reflect\""
+                    f" opacity=\"{self.fill_style.opacity}\""
                 ">"
-                f"<stop offset=\"0.00\" stop-color=\"{self.fill_color.to_hex()}\"/>"
-                f"<stop offset=\"1.00\" stop-color=\"{self.fill_color.diffuse(0.5).to_hex()}\"/>"
+                f"<stop offset=\"0.00\" stop-color=\"{self.fill_style.fill_color.to_hex()}\"/>"
+                f"<stop offset=\"1.00\" stop-color=\"{self.fill_style.fill_color.diffuse(0.5).to_hex()}\"/>"
                 "</linearGradient>"
             )
         
