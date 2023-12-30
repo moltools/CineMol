@@ -172,6 +172,16 @@ class Point3D:
         :rtype: Point3D
         """
         return Point3D((self.x + other.x) / 2, (self.y + other.y) / 2, (self.z + other.z) / 2)
+    
+    def translate(self, vector: "Vector3D") -> "Point3D":
+        """
+        Adds a vector to this point.
+        
+        :param Vector3D vector: The vector to add to this point.
+        :return: A new point with the coordinates of the sum.
+        :rtype: Point3D
+        """
+        return Point3D(self.x + vector.x, self.y + vector.y, self.z + vector.z)
 
 # ==============================================================================
 # Helper functions
@@ -427,13 +437,12 @@ def get_points_on_surface_sphere(
                 points.append(Point3D(x, y, z))
                 continue
 
-            if z > 0:
+            if z > sphere.center.z:
                 points.append(Point3D(x, y, z))
     
     return points
 
 def get_points_on_surface_cap(
-    self, 
     cap_type: CylinderCapType,
     center_cap: Point3D, 
     radius_cap: float,
@@ -467,14 +476,10 @@ def get_points_on_surface_cap(
         return points
     
     else:
-        raise ValueError(f"Unknown cap type: '{self}'")
+        raise ValueError(f"Unknown cap type: '{cap_type}'")
     
 
-def get_points_on_surface_cylinder(
-    cylinder: Cylinder, 
-    cap_type: CylinderCapType,
-    resolution: int
-) -> ty.List[Point3D]:
+def get_points_on_surface_cylinder(cylinder: Cylinder, resolution: int) -> ty.List[Point3D]:
     """
     Generate points on the surface of the cylinder.
     
@@ -491,8 +496,12 @@ def get_points_on_surface_cylinder(
         circle = Circle3D(center, cylinder.radius, normal)
         points.extend(get_points_on_circumference_circle_3d(circle, resolution))
 
-    points.extend(get_points_on_surface_cap(cap_type, cylinder.start, cylinder.radius, normal, cylinder.end, resolution))
-    points.extend(get_points_on_surface_cap(cap_type, cylinder.end, cylinder.radius, normal, cylinder.start, resolution))
+    # Get points on the caps.
+    cap_type = cylinder.cap_type
+    cap_points = get_points_on_surface_cap(cap_type, cylinder.start, cylinder.radius, normal, cylinder.end, resolution)
+    points.extend(cap_points)
+    cap_points = get_points_on_surface_cap(cap_type, cylinder.end, cylinder.radius, normal, cylinder.start, resolution)
+    points.extend(cap_points)
 
     return points
 
@@ -511,22 +520,18 @@ def point_is_inside_sphere(sphere: Sphere, point: Point3D) -> bool:
     """
     return sphere.center.calculate_distance(point) <= sphere.radius
 
-def point_is_inside_cylinder(
-    cylinder: Cylinder, 
-    cap_type: CylinderCapType, 
-    point: Point3D
-) -> bool:
+def point_is_inside_cylinder(cylinder: Cylinder, point: Point3D) -> bool:
     """
     Check if a point is inside the cylinder.
     
     :param Cylinder cylinder: The cylinder to check.
-    :param CylinderCapType cap_type: The type of the cap.
     :param Point3D point: The point to check.
     :return: True if the point is inside the cylinder, False otherwise.
     :rtype: bool
     """
     line = Line3D(cylinder.start, cylinder.end)
-    dist = distance_to_line(point, line)
+    dist = distance_to_line(line, point)
+    cap_type = cylinder.cap_type
 
     if cap_type == CylinderCapType.Round:
         return dist <= cylinder.radius
@@ -543,3 +548,55 @@ def point_is_inside_cylinder(
     
     else:
         raise ValueError(f"Unknown cap type: '{cap_type}'")
+    
+# ==============================================================================
+# Check if shapes intersect
+# ==============================================================================
+    
+def sphere_intersects_with_sphere(sphere1: Sphere, sphere2: Sphere) -> bool:
+    """
+    Check if two spheres intersect.
+
+    :param Sphere sphere1: The first sphere.
+    :param Sphere sphere2: The second sphere.
+    :return: True if the spheres intersect, False otherwise.
+    :rtype: bool
+    """
+    c1, r1 = sphere1.center, sphere1.radius
+    c2, r2 = sphere2.center, sphere2.radius
+    return c1.calculate_distance(c2) <= r1 + r2
+
+def sphere_intersects_with_cylinder(sphere: Sphere, cylinder: Cylinder) -> bool:
+    """
+    Check if a sphere intersects with a cylinder.
+    
+    :param Sphere sphere: The sphere.
+    :param Cylinder cylinder: The cylinder.
+    :return: True if the sphere intersects with the cylinder, False otherwise.
+    :rtype: bool
+    """
+    d = sphere.radius + cylinder.radius
+    return (
+        sphere.center.calculate_distance(cylinder.start) <= d or 
+        sphere.center.calculate_distance(cylinder.end) <= d
+    )
+
+def cylinder_intersects_with_cylinder(cylinder1: Cylinder, cylinder2: Cylinder) -> bool:
+    """
+    Check if two cylinders intersect.
+
+    :param Cylinder cylinder1: The first cylinder.
+    :param Cylinder cylinder2: The second cylinder.
+    :return: True if the cylinders intersect, False otherwise.
+    :rtype: bool
+    """
+    # TODO: currently a hack to check if start/end is same, but not really checking 
+    #       if they intersect at any other position along the cylinder's direction.
+    
+    d = cylinder1.radius + cylinder2.radius
+    return (
+        cylinder1.start.calculate_distance(cylinder2.start) <= d or 
+        cylinder1.start.calculate_distance(cylinder2.end) <= d or 
+        cylinder1.end.calculate_distance(cylinder2.start) <= d or
+        cylinder1.end.calculate_distance(cylinder2.end) <= d
+    )

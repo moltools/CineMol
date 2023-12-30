@@ -6,12 +6,15 @@ import typing as ty
 from cinemol.fitting import calculate_convex_hull
 from cinemol.geometry import (
     Point2D, 
-    Point3D,
-    Line3D, 
     Sphere, 
-    CylinderCapType,
     Cylinder,
-    distance_to_line
+    sphere_intersects_with_sphere,
+    sphere_intersects_with_cylinder,
+    cylinder_intersects_with_cylinder,
+    get_points_on_surface_sphere,
+    get_points_on_surface_cylinder,
+    point_is_inside_sphere,
+    point_is_inside_cylinder  
 )
 from cinemol.style import Depiction, Cartoon, Glossy, Fill, Solid, RadialGradient, LinearGradient
 from cinemol.svg import ViewBox, Svg, Circle2D, Polygon2D
@@ -33,16 +36,6 @@ class ModelSphere:
         """
         self.geometry = geometry
         self.depiction = depiction 
-    
-    def intersects_with(self, other: "ty.Union[ModelSphere, ModelCylinder]") -> bool:
-        """
-        Check whether the node intersects with another node.
-        
-        :param ty.Union[ModelSphere, ModelCylinder] other: The other node.
-        :return: Whether the node intersects with the other node.
-        :rtype: bool
-        """
-        raise NotImplementedError("TODO")
 
 class ModelCylinder:
     """
@@ -57,19 +50,9 @@ class ModelCylinder:
         """
         self.geometry = geometry
         self.depiction = depiction
-    
-    def intersects_with(self, other: "ty.Union[ModelSphere, ModelCylinder]") -> bool:
-        """
-        Check whether the node intersects with another node.
-        
-        :param ty.Union[ModelSphere, ModelCylinder] other: The other node.
-        :return: Whether the node intersects with the other node.
-        :rtype: bool
-        """
-        raise NotImplementedError("TODO")
 
 # ==============================================================================
-# Create visible polygon
+# Create visible 2D polygon from node geometry
 # ==============================================================================
 
 def get_node_polygon_vertices(
@@ -86,21 +69,36 @@ def get_node_polygon_vertices(
     :return: The vertices of the polygon.
     :rtype: ty.List[Point2D]
     """
-    raise NotImplementedError("TODO")
+    # Generate points on surface of node geometry.
+    if isinstance(this, ModelSphere):
+        points = get_points_on_surface_sphere(this.geometry, resolution, resolution, filter_for_pov=True)
+    
+    elif isinstance(this, ModelCylinder):
+        points = get_points_on_surface_cylinder(this.geometry, resolution)
 
-    # def is_visible(point) -> bool:
-    #     return all([not node.point_is_inside(point) for node in others])
+    else:
+        # If node is not a sphere or cylinder (i.e., unsupported geometry), return empty list. 
+        return []
 
-    # points = this.generate_points_on_surface(resolution) # [N, 3]
+    # Check if point is visible (i.e, not inside any other node geometry).
+    visible_points = []
+    for point in points:
+        for node in others:
+            if isinstance(node, ModelSphere) and point_is_inside_sphere(node.geometry, point): break 
+            elif isinstance(node, ModelCylinder) and point_is_inside_cylinder(node.geometry, point): break
+        else:
+            # Convert point to 2D point by ignoring z-coordinate.
+            visible_points.append(Point2D(point.x, point.y))    
 
-    # visible = [Point2D(point.x, point.y) for point in points if is_visible(point)]
+    # If no visible points, return empty list.
+    if len(visible_points) == 0: 
+        return []
 
-    # if len(visible) > 0:
-    #     inds = calculate_convex_hull(visible)
-    #     verts = [visible[ind] for ind in inds]
-    #     return verts
-    # else:
-    #     return []
+    # Calculate convex hull of visible points.
+    inds = calculate_convex_hull(visible_points)
+    verts = [visible_points[ind] for ind in inds]
+    
+    return verts
 
 # ==============================================================================
 # Draw scene
@@ -168,9 +166,12 @@ class Scene:
         verbose: bool = False,
         include_spheres: bool = True,
         include_cylinders: bool = True,
-        calculate_sphere_spere_intersections: bool = True,
+        calculate_sphere_sphere_intersections: bool = True,
         calculate_sphere_cylinder_intersections: bool = True,
-        calculate_cylinder_cylinder_intersections: bool = True
+        calculate_cylinder_sphere_intersections: bool = True,
+        calculate_cylinder_cylinder_intersections: bool = True,
+        svg_version: float = 1.0,
+        svg_encoding: str = "UTF-8"
     ) -> str:
         """
         Draw the scene.
@@ -211,7 +212,7 @@ class Scene:
             node for _, node 
             in sorted(
                 zip(sorting_values, nodes), 
-                key=lambda x: x[0], reverse=True
+                key=lambda x: x[0], reverse=False
             )
         ]
 
@@ -228,7 +229,7 @@ class Scene:
                 points.append(midpoint)
 
         view_box = self.calculate_view_box(points, margin=5)
-        svg = Svg(view_box, version=1.0, encoding="UTF-8")
+        svg = Svg(view_box, svg_version, svg_encoding)
 
         # Calculate 2D shape and fill for each node.
         objects, fills = [], []
@@ -245,16 +246,23 @@ class Scene:
                 if (
                     isinstance(node, ModelSphere) and 
                     isinstance(prev_node, ModelSphere) and 
-                    calculate_sphere_spere_intersections
+                    calculate_sphere_sphere_intersections
                 ):
-                    if node.intersects_with(prev_node):
+                    if sphere_intersects_with_sphere(node.geometry, prev_node.geometry):
                         previous_nodes.append(prev_node)
 
                 elif (
-                    isinstance(node, ModelSphere) and isinstance(prev_node, ModelCylinder) or
-                    isinstance(node, ModelCylinder) and isinstance(prev_node, ModelSphere)
+                    isinstance(node, ModelSphere) and 
+                    isinstance(prev_node, ModelCylinder)
                 ) and calculate_sphere_cylinder_intersections:
-                    if node.intersects_with(prev_node):
+                    if sphere_intersects_with_cylinder(node.geometry, prev_node.geometry):
+                        previous_nodes.append(prev_node)
+            
+                elif (
+                    isinstance(node, ModelCylinder) and 
+                    isinstance(prev_node, ModelSphere)
+                ) and calculate_cylinder_sphere_intersections:
+                    if sphere_intersects_with_cylinder(prev_node.geometry, node.geometry):
                         previous_nodes.append(prev_node)
 
                 elif (
@@ -262,7 +270,7 @@ class Scene:
                     isinstance(prev_node, ModelCylinder) and 
                     calculate_cylinder_cylinder_intersections
                 ):
-                    if node.intersects_with(prev_node):
+                    if cylinder_intersects_with_cylinder(node.geometry, prev_node.geometry):
                         previous_nodes.append(prev_node)
 
             # Create outline for model spheres with no intersections with previous nodes.

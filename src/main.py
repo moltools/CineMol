@@ -11,15 +11,27 @@ def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Draw a ball-and-stick represention of a  molecule using CineMol and RDKit.")
     parser.add_argument("-i", "--input", type=str, required=True, help="Input file path to SDF file.")
     parser.add_argument("-o", "--output", type=str, required=True, help="Output file path to SVG file.")
-    parser.add_argument("-res", "--resolution", type=int, default=30, help="Resolution of SVG model.")
+    parser.add_argument("-d", "--depiction", type=str, required=True, choices=["spacefilling", "ballandstick", "tube", "wireframe"], help="Depiction style.")
+    parser.add_argument("-r", "--resolution", type=int, default=30, help="Resolution of SVG model.")
     return parser.parse_args()
 
 def main() -> None:
     args = cli()
     mol = Chem.MolFromMolFile(args.input, removeHs=False)
 
+    if args.depiction == "spacefilling":
+        depiction = Style.SpaceFilling
+    elif args.depiction == "ballandstick":
+        depiction = Style.BallAndStick
+    elif args.depiction == "tube":
+        depiction = Style.Tube
+    elif args.depiction == "wireframe":
+        depiction = Style.Wireframe
+    else:
+        raise ValueError(f"Unknown depiction style: '{args.depiction}'")
+
     t0 = time()
-    svg_str = draw_molecule(mol, Style.BallAndStick, args.resolution)
+    svg_str = draw_molecule(mol, depiction, args.resolution)
     print(f"Time taken to generate SVG: {(time() - t0) * 1000:.3f} ms")
 
     with open(args.output, "w") as file_open:
