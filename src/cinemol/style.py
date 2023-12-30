@@ -211,7 +211,13 @@ class Solid(FillStyle):
     """
     Solid fill style.
     """
-    pass
+    def __init__(self, stroke_color: Color, stroke_width: float) -> None:
+        """
+        :param Color stroke_color: The color of the stroke.
+        :param float stroke_width: The width of the stroke.
+        """
+        self.stroke_color = stroke_color
+        self.stroke_width = stroke_width
 
 class RadialGradient(FillStyle):
     """
@@ -260,7 +266,11 @@ class Fill:
             raise TypeError(f"Expected FillStyle, got {type(self.fill_style)}")
 
         if isinstance(self.fill_style, Solid):
-            style_str = f".{self.reference}{{fill:{self.fill_color.to_hex()};stroke:black;stroke-width:0.05px;}}"
+            fill_color = self.fill_color.to_hex()
+            stroke_color = self.fill_style.stroke_color.to_hex()
+            stroke_width = self.fill_style.stroke_width
+            
+            style_str = f".{self.reference}{{fill:{fill_color};stroke:{stroke_color};stroke-width:{stroke_width:.3f}px;}}"
             definition_str = None
 
             return style_str, definition_str

@@ -5,7 +5,7 @@ from time import time
 from rdkit import Chem
 
 from cinemol.geometry import Point3D
-from cinemol.shapes import Sphere, Cylinder, CapType
+from cinemol.geometry import Sphere, Cylinder, CapType
 from cinemol.model import Scene, ModelSphere, ModelCylinder
 from cinemol.style import CoreyPaulingKoltungAtomColor, PubChemAtomRadius, FillStyleType
 
