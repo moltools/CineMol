@@ -38,7 +38,7 @@ class Color:
         :return: The string representation of the color.
         :rtype: str
         """
-        return f"rgb({self.r},{self.g},{self.b}"
+        return f"rgb({self.r},{self.g},{self.b})"
     
     def to_hex(self) -> str:
         """
@@ -124,6 +124,7 @@ class CoreyPaulingKoltungAtomColor(AtomColoringScheme):
     Sr = Color(  0, 100,   0) # Dark green
     Ba = Color(  0, 100,   0) # Dark green
     Ra = Color(  0, 100,   0) # Dark green
+    Cd = Color(170,  51, 106) # Dark pink 
 
     def get_color(self, atom_symbol: str) -> Color:
         """

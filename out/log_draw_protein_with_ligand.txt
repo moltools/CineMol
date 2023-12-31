@@ -1,0 +1,2 @@
+runtime (ms): 676.0601997375488
+ligand smiles: O
