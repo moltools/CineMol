@@ -60,13 +60,13 @@ def main() -> None:
     if b.GetBeginAtom().GetPDBResidueInfo().GetIsHeteroAtom()
     ^ b.GetEndAtom().GetPDBResidueInfo().GetIsHeteroAtom()}
     [mol.RemoveBond(*b) for b in bonds_to_cleave];
-    hetatm_frags = [f for f in rdmolops.GetMolFrags(mol, asMols=True)
+    ligands = [f for f in rdmolops.GetMolFrags(mol, asMols=True)
     if f.GetNumAtoms()
     and f.GetAtomWithIdx(0).GetPDBResidueInfo().GetIsHeteroAtom()]
 
-    # ligand = max(hetatm_frags, key=lambda x: x.GetNumAtoms()) # Get largest fragment.
+    # ligand = max(ligands, key=lambda x: x.GetNumAtoms()) # Get largest fragment.
 
-    for ligand in hetatm_frags:
+    for ligand in ligands:
         ligand_coordinates = ligand.GetConformer().GetPositions()
 
         # Add ligand to scene.
@@ -93,7 +93,9 @@ def main() -> None:
     runtime_ms =(time() - t0) * 1000 # Runtime in milliseconds.
     print(f"runtime (ms): {runtime_ms}")
     log_open.write(f"runtime (ms): {runtime_ms}\n")
-    log_open.write(f"ligand smiles: {Chem.MolToSmiles(ligand)}")
+
+    for i, ligand in enumerate(ligands):
+        log_open.write(f"ligand {i} smiles: {Chem.MolToSmiles(ligand)}\n")
     
     with open(os.path.join(args.output, "cinemol_protein_with_ligand.svg"), "w") as file_open:
         file_open.write(svg_str)
