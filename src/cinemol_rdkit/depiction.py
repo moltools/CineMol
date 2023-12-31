@@ -8,3 +8,7 @@ class Style(Enum):
     BallAndStick = auto()
     Tube = auto()
     Wireframe = auto()
+
+class Look(Enum):
+    Cartoon = auto()
+    Glossy = auto()

@@ -182,6 +182,35 @@ class Point3D:
         :rtype: Point3D
         """
         return Point3D(self.x + vector.x, self.y + vector.y, self.z + vector.z)
+    
+    def rotate(
+        self, 
+        x: float = 0.0, 
+        y: float = 0.0, 
+        z: float = 0.0
+    ) -> "Point3D":
+        """
+        Rotates this point around the origin.
+        
+        :param float x: The clockwise rotation around the x-axis.
+        :param float y: The clockwise rotation around the y-axis.
+        :param float z: The clockwise rotation around the z-axis.
+        :return: A new point with the coordinates of the rotated point.
+        :rtype: Point3D
+        """
+        # Rotate around x-axis.
+        y1 = self.y * math.cos(x) - self.z * math.sin(x)
+        z1 = self.y * math.sin(x) + self.z * math.cos(x)
+
+        # Rotate around y-axis.
+        x2 = self.x * math.cos(y) + z1 * math.sin(y)
+        z2 = -self.x * math.sin(y) + z1 * math.cos(y)
+
+        # Rotate around z-axis.
+        x3 = x2 * math.cos(z) - y1 * math.sin(z)
+        y3 = x2 * math.sin(z) + y1 * math.cos(z)
+
+        return Point3D(x3, y3, z2)
 
 # ==============================================================================
 # Helper functions
@@ -321,6 +350,40 @@ def distance_to_line(line: Line3D, point: Point3D) -> float:
     h = max(s, t, 0.0) 
     c = point.create_vector(line.start).cross(d).length() 
     return math.sqrt(h * h + c * c) # Pythagorean theorem.
+
+# ==============================================================================
+# Get perpendicular lines
+# ============================================================================== 
+
+def get_perpendicular_lines(line: Line3D, width: float, num_lines: int) -> ty.List[Line3D]:
+    """
+    Split current line into multiple perpendicular lines.
+
+    :param Line3D line: The line to split.
+    :param float width: The spacing between the lines.
+    :param int num_lines: The number of lines to split the line into.
+    :return: The perpendicular lines.
+    :rtype: ty.List[Line3D]
+    """
+    if num_lines == 1:
+        return [line]
+
+    # Ignore z-axis and get a vector perpendicular to the line to translate start and end points on.
+    v = Vector3D(line.end.y - line.start.y, line.start.x - line.end.x, 0.0).normalize()
+
+    # Get new start and end points, but centroid of starts and ends should always be original start and end.
+    start = line.start.translate(v.multiply(-width * (num_lines - 1) / 2))
+    end = line.end.translate(v.multiply(-width * (num_lines - 1) / 2))
+
+    # Get new lines.
+    lines = []
+    for _ in range(num_lines):
+        lines.append(Line3D(start, end))
+        start = start.translate(v.multiply(width))
+        end = end.translate(v.multiply(width))
+    
+    return lines
+    
 
 # ==============================================================================
 # Generate points based on shape

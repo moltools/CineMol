@@ -174,5 +174,4 @@ dmypy.json
 cython_debug/
 
 # Project folders
-out/
 __target__/

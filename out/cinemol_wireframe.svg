@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-11.074 -7.365 22.707 15.783">
+<defs>
+<style>
+.node-0{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-1{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-2{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-3{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-4{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-5{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-6{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-7{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-8{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-9{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-10{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-11{stroke:#ff0000;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-12{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-13{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-14{stroke:#ff0000;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-15{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-16{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-17{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-18{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-19{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-20{stroke:#ff0000;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-21{stroke:#0000ff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-22{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-23{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-24{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-25{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-26{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-27{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-28{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-29{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-30{stroke:#0000ff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-31{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-32{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-33{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-34{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-35{stroke:#0000ff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-36{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-37{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-38{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-39{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-40{stroke:#0000ff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-41{stroke:#0000ff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-42{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-43{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-44{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-45{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-46{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-47{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-48{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-49{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-50{stroke:#ff0000;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-51{stroke:#ffff00;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-52{stroke:#0000ff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-53{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-54{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-55{stroke:#ffff00;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-56{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-57{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-58{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-59{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-60{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-61{stroke:#ff0000;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-62{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-63{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-64{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-65{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-66{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-67{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-68{stroke:#505050;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-69{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-70{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+.node-71{stroke:#ffffff;stroke-width:0.050px;opacity:1.0;stroke-cap="round";stroke-linecap="round";stroke-linejoin="round";}
+</style>
+
+</defs>
+<line class="node-0" x1="-2.331" y1="2.555" x2="-2.084" y2="2.378"/>
+<line class="node-1" x1="2.662" y1="-1.115" x2="2.423" y2="-0.965"/>
+<line class="node-2" x1="-2.577" y1="2.731" x2="-2.331" y2="2.555"/>
+<line class="node-3" x1="-3.082" y1="0.264" x2="-2.996" y2="0.193"/>
+<line class="node-4" x1="2.902" y1="-1.266" x2="2.662" y2="-1.115"/>
+<line class="node-5" x1="-3.089" y1="2.872" x2="-3.601" y2="3.012"/>
+<line class="node-6" x1="3.106" y1="1.279" x2="2.644" y2="1.421"/>
+<line class="node-7" x1="3.174" y1="-1.727" x2="3.445" y2="-2.189"/>
+<line class="node-8" x1="-2.577" y1="2.731" x2="-3.089" y2="2.872"/>
+<line class="node-9" x1="0.502" y1="-1.196" x2="0.436" y2="-1.011"/>
+<line class="node-10" x1="2.902" y1="-1.266" x2="3.174" y2="-1.727"/>
+<line class="node-11" x1="-2.284" y1="-2.545" x2="-2.101" y2="-2.186"/>
+<line class="node-12" x1="-2.577" y1="2.731" x2="-2.322" y2="3.189"/>
+<line class="node-13" x1="3.567" y1="1.137" x2="3.106" y2="1.279"/>
+<line class="node-14" x1="-5.352" y1="1.076" x2="-5.833" y2="1.026"/>
+<line class="node-15" x1="-2.322" y1="3.189" x2="-2.067" y2="3.647"/>
+<line class="node-16" x1="2.902" y1="-1.266" x2="3.868" y2="-0.195"/>
+<line class="node-17" x1="-5.833" y1="1.026" x2="-6.315" y2="0.976"/>
+<line class="node-18" x1="-3.167" y1="0.336" x2="-3.082" y2="0.264"/>
+<line class="node-19" x1="3.868" y1="-0.195" x2="3.567" y2="1.137"/>
+<line class="node-20" x1="-5.352" y1="1.076" x2="-4.991" y2="0.617"/>
+<line class="node-21" x1="0.568" y1="-1.381" x2="0.502" y2="-1.196"/>
+<line class="node-22" x1="3.567" y1="1.137" x2="4.462" y2="2.129"/>
+<line class="node-23" x1="-2.101" y1="-2.186" x2="-1.918" y2="-1.826"/>
+<line class="node-24" x1="4.348" y1="2.652" x2="4.234" y2="3.174"/>
+<line class="node-25" x1="-2.567" y1="1.668" x2="-2.577" y2="2.731"/>
+<line class="node-26" x1="1.873" y1="-1.611" x2="2.902" y2="-1.266"/>
+<line class="node-27" x1="4.462" y1="2.129" x2="4.348" y2="2.652"/>
+<line class="node-28" x1="-4.991" y1="0.617" x2="-4.630" y2="0.158"/>
+<line class="node-29" x1="-3.167" y1="0.336" x2="-4.630" y2="0.158"/>
+<line class="node-30" x1="0.568" y1="-1.381" x2="1.220" y2="-1.496"/>
+<line class="node-31" x1="-2.823" y1="-0.200" x2="-3.167" y2="0.336"/>
+<line class="node-32" x1="3.868" y1="-0.195" x2="5.046" y2="-0.556"/>
+<line class="node-33" x1="-2.198" y1="-1.282" x2="-1.918" y2="-1.826"/>
+<line class="node-34" x1="-2.567" y1="1.668" x2="-3.167" y2="0.336"/>
+<line class="node-35" x1="0.568" y1="-1.381" x2="-0.023" y2="-1.507"/>
+<line class="node-36" x1="4.462" y1="2.129" x2="5.649" y2="1.779"/>
+<line class="node-37" x1="1.220" y1="-1.496" x2="1.873" y2="-1.611"/>
+<line class="node-38" x1="-4.873" y1="-0.270" x2="-4.630" y2="0.158"/>
+<line class="node-39" x1="-0.614" y1="-1.633" x2="-1.918" y2="-1.826"/>
+<line class="node-40" x1="-2.478" y1="-0.737" x2="-2.823" y2="-0.200"/>
+<line class="node-41" x1="-2.478" y1="-0.737" x2="-2.198" y2="-1.282"/>
+<line class="node-42" x1="5.046" y1="-0.556" x2="5.164" y2="-1.077"/>
+<line class="node-43" x1="-1.684" y1="1.449" x2="-2.567" y2="1.668"/>
+<line class="node-44" x1="5.164" y1="-1.077" x2="5.282" y2="-1.598"/>
+<line class="node-45" x1="-0.023" y1="-1.507" x2="-0.614" y2="-1.633"/>
+<line class="node-46" x1="5.046" y1="-0.556" x2="5.941" y2="0.436"/>
+<line class="node-47" x1="5.649" y1="1.779" x2="5.997" y2="2.165"/>
+<line class="node-48" x1="2.016" y1="-1.826" x2="1.873" y2="-1.611"/>
+<line class="node-49" x1="5.941" y1="0.436" x2="5.649" y2="1.779"/>
+<line class="node-50" x1="-5.116" y1="-0.697" x2="-4.873" y2="-0.270"/>
+<line class="node-51" x1="-0.802" y1="1.231" x2="-1.684" y2="1.449"/>
+<line class="node-52" x1="-2.478" y1="-0.737" x2="-1.894" y2="-0.577"/>
+<line class="node-53" x1="5.997" y1="2.165" x2="6.345" y2="2.551"/>
+<line class="node-54" x1="5.941" y1="0.436" x2="6.402" y2="0.300"/>
+<line class="node-55" x1="-0.802" y1="1.231" x2="-1.056" y2="0.407"/>
+<line class="node-56" x1="-0.614" y1="-1.633" x2="-0.533" y2="-2.046"/>
+<line class="node-57" x1="-2.567" y1="1.668" x2="-3.219" y2="2.222"/>
+<line class="node-58" x1="-1.310" y1="-0.418" x2="-0.614" y2="-1.633"/>
+<line class="node-59" x1="6.402" y1="0.300" x2="6.864" y2="0.163"/>
+<line class="node-60" x1="-1.894" y1="-0.577" x2="-1.310" y2="-0.418"/>
+<line class="node-61" x1="2.160" y1="-2.041" x2="2.016" y2="-1.826"/>
+<line class="node-62" x1="-1.056" y1="0.407" x2="-1.310" y2="-0.418"/>
+<line class="node-63" x1="-0.533" y1="-2.046" x2="-0.451" y2="-2.458"/>
+<line class="node-64" x1="-3.732" y1="2.390" x2="-4.245" y2="2.557"/>
+<line class="node-65" x1="-3.219" y1="2.222" x2="-3.732" y2="2.390"/>
+<line class="node-66" x1="-1.310" y1="-0.418" x2="-1.413" y2="-0.451"/>
+<line class="node-67" x1="-3.219" y1="2.222" x2="-2.946" y2="2.657"/>
+<line class="node-68" x1="-3.219" y1="2.222" x2="-3.242" y2="1.849"/>
+<line class="node-69" x1="-2.946" y1="2.657" x2="-2.672" y2="3.092"/>
+<line class="node-70" x1="-1.413" y1="-0.451" x2="-1.517" y2="-0.485"/>
+<line class="node-71" x1="-3.242" y1="1.849" x2="-3.265" y2="1.476"/>
+</svg>

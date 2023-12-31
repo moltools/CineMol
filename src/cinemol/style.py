@@ -95,7 +95,7 @@ class CoreyPaulingKoltungAtomColor(AtomColoringScheme):
     Source: https://en.wikipedia.org/wiki/CPK_coloring
     """
     H  = Color(255, 255, 255) # White
-    C  = Color( 48,  48,  48) # Dark gray
+    C  = Color( 80, 80,   80) # Dark gray
     N  = Color(  0,   0, 255) # Blue
     O  = Color(255,   0,   0) # Red
     P  = Color(255, 165,   0) # Orange
@@ -228,6 +228,25 @@ class FillStyle:
     """
     pass
 
+class Wire(FillStyle):
+    """
+    Wire fill style.
+    """
+    def __init__(
+        self, 
+        stroke_color: Color, 
+        stroke_width: float, 
+        opacity: float
+    ) -> None:
+        """
+        :param Color stroke_color: The color of the stroke.
+        :param float stroke_width: The width of the stroke.
+        :param float opacity: The opacity of the stroke.
+        """
+        self.stroke_color = stroke_color
+        self.stroke_width = stroke_width
+        self.opacity = opacity
+
 class Solid(FillStyle):
     """
     Solid fill style.
@@ -281,20 +300,17 @@ class LinearGradient(FillStyle):
         fill_color: Color,
         start: Point2D, 
         end: Point2D, 
-        radius: float,
         opacity: float
     ) -> None:
         """
         :param Color fill_color: The color of the linear gradient.
         :param Point2D start: The start of the linear gradient.
         :param Point2D end: The end of the linear gradient.
-        :param float radius: The radius of the linear gradient.
         :param float opacity: The opacity of the linear gradient.
         """
         self.fill_color = fill_color
         self.start = start
         self.end = end
-        self.radius = radius 
         self.opacity = opacity
 
 @dataclass
@@ -313,7 +329,17 @@ class Fill:
                  the style string, the second string is the definition string.
         :rtype: str, str
         """
-        if isinstance(self.fill_style, Solid):
+        if isinstance(self.fill_style, Wire):
+            stroke_color = self.fill_style.stroke_color.to_hex()
+            stroke_width = self.fill_style.stroke_width
+            opacity = self.fill_style.opacity
+
+            style_str = f".{self.reference}{{stroke:{stroke_color};stroke-width:{stroke_width:.3f}px;opacity:{opacity};stroke-cap=\"round\";stroke-linecap=\"round\";stroke-linejoin=\"round\";}}" 
+            definition_str = None
+
+            return style_str, definition_str
+
+        elif isinstance(self.fill_style, Solid):
             fill_color = self.fill_style.fill_color.to_hex()
             stroke_color = self.fill_style.stroke_color.to_hex()
             stroke_width = self.fill_style.stroke_width
@@ -340,18 +366,18 @@ class Fill:
                     f" opacity=\"{self.fill_style.opacity}\""
                 ">"
                 f"<stop offset=\"0.00\" stop-color=\"{self.fill_style.fill_color.to_hex()}\"/>"
-                f"<stop offset=\"1.00\" stop-color=\"{self.fill_style.fill_color.diffuse(0.5).to_hex()}\"/>"
+                f"<stop offset=\"1.00\" stop-color=\"{self.fill_style.fill_color.diffuse(0.75).to_hex()}\"/>"
                 "</radialGradient>"
             )
         
             return style_str, definition_str
         
         elif isinstance(self.fill_style, LinearGradient):
-            x1 = self.fill_style.start.x
-            y1 = self.fill_style.start.y
-            x2 = self.fill_style.end.x
-            y2 = self.fill_style.end.y
-            r = self.fill_style.radius
+            multiplier = 3.0 # Makes linear gradient look better.
+            x1 = self.fill_style.start.x * multiplier
+            y1 = self.fill_style.start.y * multiplier
+            x2 = self.fill_style.end.x * multiplier
+            y2 = self.fill_style.end.y * multiplier
 
             style_str = f".{self.reference}{{fill:url(#{self.reference});}}"
             definition_str = (
@@ -361,10 +387,11 @@ class Fill:
                     f" x2=\"{x2:.3f}\" y2=\"{y2:.3f}\""
                     " gradientUnits=\"userSpaceOnUse\""
                     " spreadMethod=\"reflect\""
+                    " gradientTransform=\"rotate(90)\""
                     f" opacity=\"{self.fill_style.opacity}\""
                 ">"
                 f"<stop offset=\"0.00\" stop-color=\"{self.fill_style.fill_color.to_hex()}\"/>"
-                f"<stop offset=\"1.00\" stop-color=\"{self.fill_style.fill_color.diffuse(0.5).to_hex()}\"/>"
+                f"<stop offset=\"1.00\" stop-color=\"{self.fill_style.fill_color.diffuse(0.75).to_hex()}\"/>"
                 "</linearGradient>"
             )
         
