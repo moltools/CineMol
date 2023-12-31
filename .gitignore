@@ -175,3 +175,4 @@ cython_debug/
 
 # Project folders
 __target__/
+out/

@@ -335,7 +335,7 @@ class Fill:
             stroke_width = self.fill_style.stroke_width
             opacity = self.fill_style.opacity
 
-            style_str = f".{self.reference}{{stroke:{stroke_color};stroke-width:{stroke_width:.3f}px;opacity:{opacity};stroke-cap=\"round\";stroke-linecap=\"round\";stroke-linejoin=\"round\";}}" 
+            style_str = f".{self.reference}{{stroke:{stroke_color};stroke-width:{stroke_width:.3f}px;stroke-opacity:{opacity};stroke-linecap:round;stroke-linejoin:round;}}"
             definition_str = None
 
             return style_str, definition_str
