@@ -1,3 +1,5 @@
+@import "react-toastify/dist/ReactToastify.css";
+
 :root {
     --app-background-color: white;
 }
@@ -59,25 +61,40 @@ body {
 .sidebar {
     position: absolute;
     top: 60px;
-    left: -15vw;
+    left: -250px;
     height: 100%;
-    width: 15vw;
+    width: 250px;
     transition: left 0.3s ease-in-out;
     background-color: lightgray;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 1.0);
 }
 
 .sidebar-toggle {
     position: absolute;
-    top: 20%;
-    right: -60px;
-    height: 60px;
-    width: 60px;
+    top: 45%;
+    right: -30px;
+    height: 30px;
+    width: 30px;
     z-index: 1;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    background-color: lightgray;
+    cursor: pointer;
+}
+
+.sidebar-toggle-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 20px;
+    width: 20px;
+    background-color: lightgray;
 }
 
 .content {
     position: absolute;
-    top: 60px;
+    top: 50px;
     left: 0;
     right: 0;
     height: 100%;
@@ -90,6 +107,52 @@ body {
 }
 
 .content.open {
-    left: 15vw;
+    left: 250px;
+}
+
+.version {
+    padding: 10px;
+    text-align: center;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.square-button {
+    width: 100%; 
+    height: 50px;
+    padding: 10px;
+    text-align: left;
+    font-family: Arial, Helvetica, sans-serif;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.square-button:hover {
+    background-color: white;
+}
+
+.square-button:active {
+    background-color: #2f6eb5;
+    transform: translateY(2px);
+}
+
+.square-button span {
+    margin-left: 10px;
 }
   
+
+/* =============================================================================
+   Customize toast
+   ========================================================================== */
+
+.Toastify__toast {
+    border-radius: 5;
+    padding: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
+    background-color: lightgray;
+    color: black;
+}

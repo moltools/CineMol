@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 
 const WorkSpace = () => {
-    const [sidebarOpen, setSideBarOpen] = useState(false);
+    const [sidebarOpen, setSideBarOpen] = useState(true);
     const handleViewSidebar = () => { setSideBarOpen(!sidebarOpen); };
 
     return (

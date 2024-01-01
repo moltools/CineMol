@@ -7,9 +7,7 @@ const Header = () => {
                 <img src="/logo.png" alt="logo" />
             </div>
             <h1 className="title">
-                <text>
-                    CineMol
-                </text>
+                CineMol
             </h1>
         </header>
     );
