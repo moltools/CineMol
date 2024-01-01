@@ -66,7 +66,7 @@ def process(S: ty.List[Point2D], P: ty.List[int], a: int, b: int) -> ty.List[int
     # Recursively compute the convex hull of the points on the positive side of the line.
     return process(S, K, a, c)[:-1] + process(S, K, c, b)
 
-def calculate_convex_hull(S) -> ty.List[int]:
+def calculate_convex_hull(S: ty.List[Point2D]) -> ty.List[int]:
     """
     Calculates the convex hull of a set of points in 2D space.
     
