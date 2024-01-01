@@ -7,3 +7,89 @@ body {
     margin: 0;
     background-color: var(--app-background-color);
 }
+
+.app {
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* =============================================================================
+   Header
+   ========================================================================== */
+
+.header {
+    padding: 20px;
+    height: 50px;
+    background-color: #FFFFFF;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
+
+    /* Header should always be on top of app content. */
+    position: relative;
+    z-index: 9999;
+
+    /* Position logo and title side by side. */
+    display: flex;
+}
+
+.logo {
+    display: flex;
+    align-items: left;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
+}
+
+.logo img {
+    height: 50px;
+    width: auto;
+}
+
+.title {
+    font-size: 2.0rem;
+    font-weight: 500;
+    margin-left: 10px;
+    margin-top: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =============================================================================
+   Sidebar
+
+   Source: https://codesandbox.io/p/sandbox/collapsible-sidebar-nj5x6?file=%2Fsrc%2Fstyles.css%3A31%2C16
+   ========================================================================== */
+
+.sidebar {
+    position: absolute;
+    top: 60px;
+    left: -15vw;
+    height: 100%;
+    width: 15vw;
+    transition: left 0.3s ease-in-out;
+    background-color: lightgray;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 20%;
+    right: -60px;
+    height: 60px;
+    width: 60px;
+    z-index: 1;
+}
+
+.content {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    height: 100%;
+    transition: left 0.3s ease-in-out;
+    background-color: lightgray;
+}
+
+.sidebar.open {
+    left: 0;
+}
+
+.content.open {
+    left: 15vw;
+}
+  
