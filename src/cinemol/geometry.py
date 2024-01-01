@@ -477,20 +477,20 @@ def get_points_on_surface_sphere(
     :param Sphere sphere: The sphere.
     :param int num_phi: The resolution of the sphere in the phi direction.
     :param int num_theta: The resolution of the sphere in the theta direction.
-    :param bool filter_for_pov: Whether to filter points that are not visible 
-        from the point of view along z-axis towards origin.
+    :param ty.Optional[Vector3D] filter_for_pov: If True, only return points 
+        that are on the surface of the sphere we can see from POV positive z-axis towards origin.
     :return: The points on the surface of the sphere.
     :rtype: ty.List[Point3D]
     """
-    phis = [2 * math.pi * i / num_phi for i in range(num_phi)]
-    thetas = [math.pi * i / num_theta for i in range(num_theta)]
+    phis = [2 * math.pi * i / num_phi for i in range(num_phi + 1)]
+    thetas = [math.pi * i / num_theta for i in range(num_theta + 1)]
 
     cx, cy, cz = sphere.center.x, sphere.center.y, sphere.center.z
     r = sphere.radius
     
     points = []
-    for phi in phis:
-        for theta in thetas:
+    for theta in thetas:
+        for phi in phis:
             x = cx + r * math.sin(theta) * math.cos(phi)
             y = cy + r * math.sin(theta) * math.sin(phi)
             z = cz + r * math.cos(theta)
@@ -500,7 +500,8 @@ def get_points_on_surface_sphere(
                 points.append(Point3D(x, y, z))
                 continue
 
-            if z > sphere.center.z:
+            # Check if point is on the surface of the sphere we can see.
+            if z >= sphere.center.z:
                 points.append(Point3D(x, y, z))
     
     return points

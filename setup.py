@@ -7,7 +7,7 @@ setuptools.setup(
     author_email="david.meijer@wur.nl",
     install_requires=[],
     package_dir={"": "src"},
-    packages=["cinemol", "cinemol_rdkit"],
+    packages=["cinemol"],
     python_requires=">=3.10",
     entry_points={"console_scripts": ["cinemol = main:main"]}
 )
