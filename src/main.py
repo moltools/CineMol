@@ -6,10 +6,9 @@ Usage:             cinemol -h
 import argparse 
 from time import time
 
-from rdkit import Chem
-
 from cinemol.version import version
-from cinemol.chemistry import Style, Look, Atom, Bond, draw_molecule
+from cinemol.chemistry import Style, Look, draw_molecule
+from cinemol.parsers import parse_sdf
 
 def cli() -> argparse.Namespace:
     """
@@ -23,7 +22,7 @@ def cli() -> argparse.Namespace:
     parser.add_argument("-o", type=str, required=True, help="Output file path to SVG file.")
     parser.add_argument("-s", type=str, required=False, default="ballandstick", choices=["spacefilling", "ballandstick", "tube", "wireframe"], help="Depiction style (default: ballandstick).")
     parser.add_argument("-l", type=str, required=False, default="cartoon", choices=["cartoon", "glossy"], help="Look of the depiction (default: cartoon).")
-    parser.add_argument("-r", type=int, default=50, help="Resolution of SVG model (default: 50).")
+    parser.add_argument("-r", type=int, default=30, help="Resolution of SVG model (default: 50).")
     parser.add_argument("-rx", type=int, default=0.0, help="Rotation over x-axis (default: 0.0).")
     parser.add_argument("-ry", type=int, default=0.0, help="Rotation over y-axis (default: 0.0).")
     parser.add_argument("-rz", type=int, default=0.0, help="Rotation over z-axis (default: 0.0).")
@@ -43,22 +42,9 @@ def main() -> None:
     """
     args = cli()
 
-    # Parse molecule from SDF file, and kekulize it.
-    mol = Chem.MolFromMolFile(args.i, removeHs=not args.hs)
-    pos = mol.GetConformer().GetPositions()
-    Chem.Kekulize(mol)
-    
-    # Parse atoms.
-    atoms = []
-    for atom in mol.GetAtoms():
-        x, y, z = pos[atom.GetIdx()]
-        atoms.append(Atom(atom.GetIdx(), atom.GetSymbol(), (x, y, z)))
-
-    # Parse bonds.
-    bonds = []
-    for bond in mol.GetBonds():
-        bond_order = int(bond.GetBondTypeAsDouble())
-        bonds.append(Bond(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), bond_order))
+    # Parse SDF file.
+    sdf_str = open(args.i, "r").read()
+    atoms, bonds = parse_sdf(sdf_str, args.hs)
     
     # Draw molecule, timed.
     t0 = time()

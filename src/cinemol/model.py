@@ -93,7 +93,7 @@ def get_node_polygon_vertices(
         points = get_points_on_surface_sphere(this.geometry, resolution, resolution, filter_for_pov=True)
     
     elif isinstance(this, ModelCylinder):
-        points = get_points_on_surface_cylinder(this.geometry, resolution)
+        points = get_points_on_surface_cylinder(this.geometry, int(resolution // 2.0))
 
     else:
         # If node is not a sphere or cylinder (i.e., unsupported geometries), return empty list. 
@@ -183,9 +183,9 @@ class Scene:
         self, 
         resolution: int, 
         verbose: bool = False,
-        rotation_over_x_axis: bool = 0.0,
-        rotation_over_y_axis: bool = 0.0,
-        rotation_over_z_axis: bool = 0.0,
+        rotation_over_x_axis: float = 0.0,
+        rotation_over_y_axis: float = 0.0,
+        rotation_over_z_axis: float = 0.0,
         include_spheres: bool = True,
         include_cylinders: bool = True,
         include_wires: bool = True,
