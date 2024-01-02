@@ -17,8 +17,6 @@ pip install .
 ## Usage Python
 
 ```python
-import os
-
 from cinemol.parsers import parse_sdf 
 from cinemol.drawer import draw_molecule
 
