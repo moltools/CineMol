@@ -6,12 +6,20 @@ Usage:          python3 draw_explanation_algorithm.py -h
 import argparse 
 import os
 import typing as ty
+import math
 
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np 
 
-from cinemol.geometry import Point2D, Point3D, Sphere, get_points_on_surface_sphere 
+from cinemol.geometry import (
+    Point2D, Point3D, Line3D, Circle3D, Plane3D, Sphere, Cylinder, CylinderCapType,
+    get_points_on_line_3d,
+    get_points_on_circumference_circle_3d,
+    same_side_of_plane,
+    point_is_inside_cylinder,
+    point_is_inside_sphere
+)
 from cinemol.fitting import calculate_convex_hull
 
 # ==============================================================================
@@ -26,8 +34,9 @@ def cli() -> argparse.Namespace:
     :rtype: argparse.Namespace
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("-out", type=str, required=True, help="Path to output dir.")
-    parser.add_argument("-dpi", type=int, required=False, default=300, help="DPI of output images.")
+    parser.add_argument("-o", type=str, required=True, help="Path to output dir.")
+    parser.add_argument("-d", type=int, required=False, default=300, help="DPI of output images.")
+    parser.add_argument("--t", action="store_true", required=False, help="Transparent background.")
     return parser.parse_args()
 
 # ==============================================================================
@@ -98,24 +107,6 @@ def get_axes_2d() -> plt.Axes:
 
     return ax
 
-def plot_sphere_surface_3d(ax: Axes3D, sphere: Sphere, color: str, alpha: float) -> None:
-    """
-    Plot sphere surface in 3D.
-
-    :param Axes3D ax: Axes to plot on.
-    :param Sphere sphere: Sphere to plot.
-    :param str color: Color of sphere.
-    :param float alpha: Alpha of sphere.
-    """
-    u = np.linspace(0, 2 * np.pi, 100)
-    v = np.linspace(0, np.pi, 100)
-    cx, cy, cz = sphere.center.x, sphere.center.y, sphere.center.z
-    radius = sphere.radius
-    x = cx + radius * np.outer(np.cos(u), np.sin(v))
-    y = cy + radius * np.outer(np.sin(u), np.sin(v))
-    z = cz + radius * np.outer(np.ones(np.size(u)), np.cos(v))
-    ax.plot_surface(x, y, z, color=color, alpha=alpha)
-
 def plot_points_3d(ax: Axes3D, points: ty.List[Point3D], color: ty.Union[ty.List[str], str]) -> None:
     """
     Plot points in 3D.
@@ -125,175 +116,296 @@ def plot_points_3d(ax: Axes3D, points: ty.List[Point3D], color: ty.Union[ty.List
     :param ty.Union[ty.List[str], str] color: Color of points.
     """
     points = np.array([[point.x, point.y, point.z] for point in points])
-    ax.scatter(points[:, 0], points[:, 1], points[:, 2], color=color, s=1)
+    ax.scatter(points[:, 0], points[:, 1], points[:, 2], color=color, s=0.01)
 
-def plot_points_2d(ax: plt.Axes, points: ty.List[Point3D], color: ty.Union[ty.List[str], str]) -> None:
+def plot_points_2d(ax: plt.Axes, points: ty.List[Point2D], color: ty.Union[ty.List[str], str], alpha: float = 1.0) -> None:
     """
     Plot points in 2D.
     
     :param plt.Axes ax: Axes to plot on.
-    :param ty.List[Point3D] points: Points to plot.
+    :param ty.List[Point2D] points: Points to plot.
     :param ty.Union[ty.List[str], str] color: Color of points.
     """
-    points = np.array([[point.x, point.z] for point in points])
-    ax.scatter(points[:, 0], points[:, 1], color=color, s=1)
+    points = np.array([[point.x, point.y] for point in points])
+    ax.scatter(points[:, 0], points[:, 1], color=color, s=0.01, alpha=alpha)
 
-def save_plot_3d(ax: Axes3D, path: str, dpi: int) -> None:
+def save_plot_3d(ax: Axes3D, path: str, dpi: int, transparent_background: bool) -> None:
     """
     Save plot.
     
     :param Axes3D ax: Axes to plot on.
     :param str path: Path to save plot to.
     :param int dpi: DPI of output image.
+    :param bool transparent_background: Transparent background.
     """
     ax.set_box_aspect([1, 1, 1])
     plt.tight_layout()
-    plt.savefig(path, dpi=dpi, transparent=True)
+    plt.savefig(path, dpi=dpi, transparent=transparent_background)
     plt.clf()
 
-def save_plot_2d(path: str, dpi: int) -> None:
+def save_plot_2d(path: str, dpi: int, transparent_background: bool) -> None:
     """
     Save plot.
     
     :param str path: Path to save plot to.
     :param int dpi: DPI of output image.
+    :param bool transparent_background: Transparent background.
     """
     plt.gca().set_aspect("equal")
     plt.tight_layout()
-    plt.savefig(path, dpi=dpi, transparent=True)
+    plt.savefig(path, dpi=dpi, transparent=transparent_background)
     plt.clf()
+
+# ==============================================================================
+# Redefining these functions here because orientation axes system of matplotlib 
+# is different than for SVG.
+# ==============================================================================
+
+def get_points_on_surface_sphere(
+    sphere: Sphere, 
+    num_phi: int, 
+    num_theta: int,
+    filter_for_pov: bool = True
+) -> ty.List[Point3D]:
+    """
+    Generate points on the surface of a sphere.
+    
+    :param Sphere sphere: The sphere.
+    :param int num_phi: The resolution of the sphere in the phi direction.
+    :param int num_theta: The resolution of the sphere in the theta direction.
+    :param ty.Optional[Vector3D] filter_for_pov: If True, only return points 
+        that are on the surface of the sphere we can see from POV positive z-axis towards origin.
+    :return: The points on the surface of the sphere.
+    :rtype: ty.List[Point3D]
+    """
+    phis = [2 * math.pi * i / num_phi for i in range(num_phi + 1)]
+    thetas = [math.pi * i / num_theta for i in range(num_theta + 1)]
+
+    cx, cy, cz = sphere.center.x, sphere.center.y, sphere.center.z
+    r = sphere.radius
+    
+    points = []
+    for theta in thetas:
+        for phi in phis:
+            x = cx + r * math.sin(theta) * math.cos(phi)
+            y = cy + r * math.sin(theta) * math.sin(phi)
+            z = cz + r * math.cos(theta)
+
+            # Only add points that are on the surface of the sphere we can see.
+            if not filter_for_pov:
+                points.append(Point3D(x, y, z))
+                continue
+
+            # Check if point is on the surface of the sphere we can see.
+            if y <= sphere.center.y:
+                points.append(Point3D(x, y, z))
+    
+    return points
+
+def get_points_on_surface_cap(
+    cap_type: CylinderCapType,
+    center_cap: Point3D, 
+    radius_cap: float,
+    normal_cap: Point3D,
+    center_cylinder: Point3D, 
+    resolution: int,
+) -> ty.List[Point3D]:
+    """
+    Generate points on the surface of the cap.
+    
+    :param CylinderCapType cap_type: The type of the cap.
+    :param Point3D center_cap: The center of the cap.
+    :param float radius_cap: The radius of the cap.
+    :param Vector3D normal_cap: The normal vector of the cap.
+    :param Point3D center_cylinder: The center of the cylinder.
+    :param int resolution: The resolution of the cap.
+    :return: The points on the surface of the cap.
+    :rtype: ty.List[Point3D]
+    """
+    if cap_type == CylinderCapType.NoCap:
+        return []
+    
+    elif cap_type == CylinderCapType.Flat:
+        circle = Circle3D(center_cap, radius_cap, normal_cap)
+        return get_points_on_circumference_circle_3d(circle, resolution)
+    
+    elif cap_type == CylinderCapType.Round:
+        sphere = Sphere(center_cap, radius_cap)
+        plane = Plane3D(center_cap, normal_cap)
+        points = get_points_on_surface_sphere(sphere, resolution, resolution, filter_for_pov=False)
+        points = [point for point in points if not same_side_of_plane(plane, center_cylinder, point)]
+        return points
+    
+    else:
+        raise ValueError(f"Unknown cap type: '{cap_type}'")
+
+def get_points_on_surface_cylinder(cylinder: Cylinder, resolution: int) -> ty.List[Point3D]:
+    """
+    Generate points on the surface of the cylinder.
+    
+    :param Cylinder cylinder: The cylinder.
+    :param int resolution: The resolution of the cylinder.
+    :return: The points on the surface of the cylinder. 
+    :rtype: ty.List[Point3D]
+    """
+    normal = cylinder.end.create_vector(cylinder.start).normalize()
+    centers = get_points_on_line_3d(Line3D(cylinder.start, cylinder.end), resolution)
+
+    points = []
+    for center in centers:
+        circle = Circle3D(center, cylinder.radius, normal)
+        points.extend(get_points_on_circumference_circle_3d(circle, resolution))
+
+    # Get points on the caps.
+    cap_resolution = max(int(resolution // 4), 2)
+    cap_type = cylinder.cap_type
+    cap_points = get_points_on_surface_cap(cap_type, cylinder.start, cylinder.radius, normal, cylinder.end, cap_resolution)
+    points.extend(cap_points)
+    cap_points = get_points_on_surface_cap(cap_type, cylinder.end, cylinder.radius, normal, cylinder.start, cap_resolution)
+    points.extend(cap_points)
+
+    return points
 
 # ==============================================================================
 # Steps of the algorithm explained visually
 # ==============================================================================
 
-def step1(path: str, dpi: int) -> None:
-    """
-    Step 1 of the algorithm.
-    
-    :param str path: Path to save image to.
-    :param int dpi: DPI of output image.
-    """
-    ax = get_axes_3d()
-    plot_sphere_surface_3d(ax, Sphere(Point3D(0.0, 0.0, 0.0), 0.75), "blue", 0.25)
-    plot_sphere_surface_3d(ax, Sphere(Point3D(0.25, 0.0, 0.5), 0.75), "red", 0.25)
-    save_plot_3d(ax, path, dpi)
-
-def step2(path: str, dpi: int) -> ty.List[Point3D]:
-    """
-    Step 2 of the algorithm.
-    
-    :param str path: Path to save image to.
-    :param int dpi: DPI of output image.
-    :return: Visible points.
-    :rtype: ty.List[Point3D]
-    """
-    ax = get_axes_3d()
-    sphere1 = Sphere(Point3D(0.0, 0.0, 0.0), 0.75)
-    sphere2 = Sphere(Point3D(0.25, 0.0, 0.5), 0.75)
-    plot_sphere_surface_3d(ax, sphere1, "blue", 0.25)
-    plot_sphere_surface_3d(ax, sphere2, "red", 0.25)
-
-    num_phis, num_thetas = 15, 15
-    points = get_points_on_surface_sphere(sphere1, num_phis, num_thetas, filter_for_pov=False)
-    points = [p for p in points if p.y <= sphere1.center.y]
-    visible_points, colors = [], []
-    for point in points:
-        dist = point.calculate_distance(sphere2.center)
-        if dist <= sphere2.radius:
-            colors.append("red")
-        else:
-            colors.append("black")
-            visible_points.append(point)
-
-    plot_points_3d(ax, points, colors)
-    save_plot_3d(ax, path, dpi)
-    return visible_points
-
-def step3(path: str, dpi: int, visible_points: ty.List[Point3D]) -> None:
-    """
-    Step 3 of the algorithm.
-    
-    :param str path: Path to save image to.
-    :param int dpi: DPI of output image.
-    :param ty.List[Point3D] visible_points: Visible points.
-    """
-    ax = get_axes_2d()
-    plot_points_2d(ax, visible_points, "black")
-    save_plot_2d(path, dpi)
-
-def step4(path: str, dpi: int, visible_points: ty.List[Point3D]) -> ty.List[Point2D]:
-    """
-    Step 4 of the algorithm.
-
-    :param str path: Path to save image to.
-    :param int dpi: DPI of output image.
-    :param ty.List[Point3D] visible_points: Visible points.
-    :return: Convex hull.
-    :rtype: ty.List[Point2D]
-    """
-    ax = get_axes_2d()
-    plot_points_2d(ax, visible_points, "black")
-
-    # Calculate convex hull.
-    points = [Point2D(point.x, point.z) for point in visible_points]
-    convex_hull = calculate_convex_hull(points)
-    hull = [points[i] for i in convex_hull]
-
-    # Add hull as line segments.
-    for i in range(len(hull) - 1):
-        ax.plot([hull[i].x, hull[i + 1].x], [hull[i].y, hull[i + 1].y], color="blue", linewidth=2)
-    ax.plot([hull[-1].x, hull[0].x], [hull[-1].y, hull[0].y], color="blue", linewidth=2)
-
-    save_plot_2d(path, dpi) 
-
-    return hull 
-
-def step5(path: str, dpi: int, hull: ty.List[Point2D]) -> None:
-    """
-    Step 5 of the algorithm.
-    
-    :param str path: Path to save image to.
-    :param int dpi: DPI of output image.
-    :param ty.List[Point2D] hull: Hull.
-    """
-    ax = get_axes_2d()
-
-    # Plot sphere 2 as circle on x/y axis.
-    sphere = Sphere(Point3D(0.25, 0.0, 0.5), 0.75)
-    circle = plt.Circle((sphere.center.x, sphere.center.z), sphere.radius, color="red", fill=True)
-    ax.add_artist(circle)
-
-    # Plot hull as polygon on top of sphere.
-    x = [point.x for point in hull]
-    y = [point.y for point in hull]
-    ax.fill(x, y, color="blue", alpha=1.0)
-
-    save_plot_2d(path, dpi)
-
 def main() -> None:
-    """
-    Main function.
-    """
     args = cli()
-    os.makedirs(args.out, exist_ok=True)
+
+    pov_z = 15.0
+    resolution = 100
 
     # Step 1.
-    step1(os.path.join(args.out, "step1.png"), args.dpi)
+    ax = get_axes_3d()
+
+    cylinder1 = Cylinder(Point3D(0.0, -1.5, 0.3), Point3D(1.0, 0.0, 1.0), 0.2, CylinderCapType.Round)
+    cylinder2 = Cylinder(Point3D(-0.1, -1.5, 0.3), Point3D(-1.0, 0.0, 1.5), 0.15, CylinderCapType.Round)
+    sphere1 = Sphere(Point3D(1.0, 0.0, 1.0), 0.5)
+    sphere2 = Sphere(Point3D(1.4, -0.2, 0.8), 0.3)
+
+    points1 = get_points_on_surface_cylinder(cylinder1, resolution)
+    points2 = get_points_on_surface_cylinder(cylinder2, resolution)
+    points3 = get_points_on_surface_sphere(sphere1, resolution, resolution, filter_for_pov=False)
+    points4 = get_points_on_surface_sphere(sphere2, resolution, int(resolution // 2.0), filter_for_pov=False)
+
+    plot_points_3d(ax, points1, "black")
+    plot_points_3d(ax, points2, "black")
+    plot_points_3d(ax, points3, "black")
+    plot_points_3d(ax, points4, "black")
+
+    save_plot_3d(ax, os.path.join(args.o, "step1.png"), args.d, args.t)
+    plt.clf()
 
     # Step 2.
-    visible_points = step2(os.path.join(args.out, "step2.png"), args.dpi)
+    ax = get_axes_3d()
+
+    filter_for_pov = True
+    points1 = get_points_on_surface_cylinder(cylinder1, resolution)
+    points2 = get_points_on_surface_cylinder(cylinder2, resolution)
+    points3 = get_points_on_surface_sphere(sphere1, resolution, resolution, filter_for_pov=filter_for_pov)
+    points4 = get_points_on_surface_sphere(sphere2, resolution, int(resolution // 2.0), filter_for_pov=filter_for_pov)
+
+    points1 = [point for point in points1 if not point_is_inside_sphere(sphere1, point)]
+    points2 = [point for point in points2 if not point_is_inside_cylinder(cylinder1, point)]
+    points4 = [point for point in points4 if not point_is_inside_sphere(sphere1, point)]
+
+    plot_points_3d(ax, points1, "black")
+    plot_points_3d(ax, points2, "black")
+    plot_points_3d(ax, points3, "black")
+    plot_points_3d(ax, points4, "black")
+
+    save_plot_3d(ax, os.path.join(args.o, "step2.png"), args.d, args.t)
+    plt.clf()
 
     # Step 3.
-    step3(os.path.join(args.out, "step3.png"), args.dpi, visible_points)
+    ax = get_axes_3d()
+
+    def apply_perspective(points: ty.List[Point3D]) -> ty.List[Point3D]:
+        new_points = []
+        for point in points:
+            s = pov_z / (pov_z - point.z)
+            x = point.x * s
+            y = point.y * s
+            z = point.z * s
+            new_points.append(Point3D(x, y, z))
+        return new_points
+    
+    points1 = apply_perspective(points1)
+    points2 = apply_perspective(points2)
+    points3 = apply_perspective(points3)
+    points4 = apply_perspective(points4)
+
+    plot_points_3d(ax, points1, "black")
+    plot_points_3d(ax, points2, "black")
+    plot_points_3d(ax, points3, "black")
+    plot_points_3d(ax, points4, "black")
+
+    save_plot_3d(ax, os.path.join(args.o, "step3.png"), args.d, args.t)
+    plt.clf()
 
     # Step 4.
-    hull = step4(os.path.join(args.out, "step4.png"), args.dpi, visible_points)
+    ax = get_axes_2d()
+
+    plot_points_2d(ax, [Point2D(point.x, point.z) for point in points1], "black")
+    plot_points_2d(ax, [Point2D(point.x, point.z) for point in points2], "black")
+    plot_points_2d(ax, [Point2D(point.x, point.z) for point in points3], "black")
+    plot_points_2d(ax, [Point2D(point.x, point.z) for point in points4], "black")
+
+    save_plot_2d(os.path.join(args.o, "step4.png"), args.d, args.t)
+    plt.clf()
 
     # Step 5.
-    step5(os.path.join(args.out, "step5.png"), args.dpi, hull)
+    ax = get_axes_2d()
 
-    exit(0)
+    points1 = [Point2D(point.x, point.z) for point in points1]
+    points2 = [Point2D(point.x, point.z) for point in points2]
+    points3 = [Point2D(point.x, point.z) for point in points3]
+    points4 = [Point2D(point.x, point.z) for point in points4]
+
+    # Calculate convex hull.
+    hull1 = calculate_convex_hull(points1)
+    points1 = [points1[i] for i in hull1]
+    hull2 = calculate_convex_hull(points2)
+    points2 = [points2[i] for i in hull2]
+    hull3 = calculate_convex_hull(points3)
+    points3 = [points3[i] for i in hull3]
+    hull4 = calculate_convex_hull(points4)
+    points4 = [points4[i] for i in hull4]
+
+    # Draw hulls in order from furthest away to nearest.
+    def draw_outline_hull(hull: ty.List[Point2D], color) -> None:
+        for i in range(len(hull) - 1):
+            ax.plot([hull[i].x, hull[i + 1].x], [hull[i].y, hull[i + 1].y], color=color, linewidth=2)
+        ax.plot([hull[-1].x, hull[0].x], [hull[-1].y, hull[0].y], color=color, linewidth=2)
+
+    plot_points_2d(ax, points1, "black", alpha=0.2)
+    plot_points_2d(ax, points2, "black", alpha=0.2)
+    plot_points_2d(ax, points3, "black", alpha=0.2)
+    plot_points_2d(ax, points4, "black", alpha=0.2)
+
+    draw_outline_hull(points3, "black")
+    draw_outline_hull(points4, "black")
+    draw_outline_hull(points1, "black")
+    draw_outline_hull(points2, "black")
+
+    save_plot_2d(os.path.join(args.o, "step5.png"), args.d, args.t)
+    plt.clf()
+
+    # Step 6.
+    ax = get_axes_2d()
+
+    def draw_filled_hull(hull: ty.List[Point2D], color) -> None:
+        x = [point.x for point in hull]
+        y = [point.y for point in hull]
+        ax.fill(x, y, color=color, alpha=1.0)
+    
+    draw_filled_hull(points3, "blue")
+    draw_filled_hull(points4, "black")
+    draw_filled_hull(points1, "red")
+    draw_filled_hull(points2, "green")
+
+    save_plot_2d(os.path.join(args.o, "step6"), args.d, args.t)
 
 if __name__ == "__main__":
     main()

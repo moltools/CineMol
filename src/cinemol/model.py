@@ -6,6 +6,7 @@ import typing as ty
 from cinemol.fitting import calculate_convex_hull
 from cinemol.geometry import (
     Point2D, 
+    Point3D,
     Sphere, 
     Cylinder,
     Line3D,
@@ -197,7 +198,8 @@ class Scene:
         calculate_cylinder_sphere_intersections: bool = True,
         calculate_cylinder_cylinder_intersections: bool = True,
         svg_version: float = 1.0,
-        svg_encoding: str = "UTF-8"
+        svg_encoding: str = "UTF-8",
+        scale: float = 1.0
     ) -> str:
         """
         Draw the scene.
@@ -213,6 +215,9 @@ class Scene:
         :param bool calculate_sphere_spere_intersections: Whether to calculate sphere-sphere intersections.
         :param bool calculate_sphere_cylinder_intersections: Whether to calculate sphere-cylinder intersections.
         :param bool calculate_cylinder_cylinder_intersections: Whether to calculate cylinder-cylinder intersections.
+        :param float svg_version: The version of the SVG document.
+        :param str svg_encoding: The encoding of the SVG document.
+        :param float scale: The scale of the scene.
         :return: The SVG string.
         :rtype: str
         """
@@ -221,16 +226,60 @@ class Scene:
         for node in self.nodes: 
             if isinstance(node, ModelSphere) and include_spheres:
                 node.geometry.center = node.geometry.center.rotate(rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis)
+                
+                if scale is not None:
+                    node.geometry.radius *= scale
+                    node.geometry.center = Point3D(
+                        node.geometry.center.x * scale,
+                        node.geometry.center.y * scale,
+                        node.geometry.center.z * scale
+                    )
+
+                    if isinstance(node.depiction, Cartoon):
+                        node.depiction.outline_width *= scale
+
                 nodes.append(node)
             
             elif isinstance(node, ModelCylinder) and include_cylinders:
                 node.geometry.start = node.geometry.start.rotate(rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis)
                 node.geometry.end = node.geometry.end.rotate(rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis)
+
+                if scale is not None:
+                    node.geometry.radius *= scale
+                    node.geometry.start = Point3D(
+                        node.geometry.start.x * scale,
+                        node.geometry.start.y * scale,
+                        node.geometry.start.z * scale
+                    )
+                    node.geometry.end = Point3D(
+                        node.geometry.end.x * scale,
+                        node.geometry.end.y * scale,
+                        node.geometry.end.z * scale
+                    )
+
+                    if isinstance(node.depiction, Cartoon):
+                        node.depiction.outline_width *= scale
+
                 nodes.append(node)
 
             elif isinstance(node, ModelWire) and include_wires:
                 node.geometry.start = node.geometry.start.rotate(rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis)
                 node.geometry.end = node.geometry.end.rotate(rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis)
+
+                if scale is not None:
+                    node.geometry.start = Point3D(
+                        node.geometry.start.x * scale,
+                        node.geometry.start.y * scale,
+                        node.geometry.start.z * scale
+                    )
+                    node.geometry.end = Point3D(
+                        node.geometry.end.x * scale,
+                        node.geometry.end.y * scale,
+                        node.geometry.end.z * scale
+                    )
+
+                    node.width *= scale
+
                 nodes.append(node)
 
         # Get sorting values for nodes. We sort on z-coordinate as we always look at the
@@ -251,7 +300,10 @@ class Scene:
                 sorting_values.append(midpoint_z)
 
         # Get maximum z-coordinate of nodes for pov and add margin to it.
-        pov_z = max(sorting_values) + 15
+        focal_length = 10
+        if scale is not None:
+            focal_length *= scale
+        pov_z = max(sorting_values) + focal_length 
 
         # Sort nodes by sorting values.
         nodes = [
@@ -262,25 +314,8 @@ class Scene:
             )
         ]
 
-        # Calculate size of view box. Only use x and y coordinates of node geometries.
-        points = []
-        for node in nodes:
-            if isinstance(node, ModelSphere):
-                point = Point2D(node.geometry.center.x, node.geometry.center.y)
-                points.append(point)
-            
-            elif isinstance(node, ModelCylinder):
-                start, end = node.geometry.start, node.geometry.end
-                midpoint = Point2D((start.x + end.x) / 2, (start.y + end.y) / 2)
-                points.append(midpoint)
-
-            elif isinstance(node, ModelWire):
-                start, end = node.geometry.start, node.geometry.end
-                midpoint = Point2D((start.x + end.x) / 2, (start.y + end.y) / 2)
-                points.append(midpoint)
-
-        view_box = self.calculate_view_box(points, margin=5)
-        svg = Svg(view_box, None, svg_version, svg_encoding)
+        # Keep track of reference points for determining viewbox later on.
+        ref_points = []
 
         # Calculate 2D shape and fill for each node.
         objects, fills = [], []
@@ -335,6 +370,7 @@ class Scene:
                 start = Point2D(start_x, start_y)
                 end = Point2D(end_x, end_y)
                 line = Line2D(reference, start, end)
+                ref_points.extend([start, end])
                 objects.append(line)
 
             # Create outline for model spheres with no intersections with previous nodes.
@@ -349,6 +385,7 @@ class Scene:
             else:
                 points = get_node_polygon_vertices(node, pov_z, previous_nodes, resolution)
                 polygon = Polygon2D(reference, points)
+                ref_points.extend(points)
                 objects.append(polygon)
 
             # Create style.
@@ -395,6 +432,10 @@ class Scene:
             if verbose:
                 padding = len(str(len(nodes)))
                 print(f"{i}".zfill(padding), end="\r")
+
+        # Calculate view box.
+        view_box = self.calculate_view_box(ref_points, 5.0)
+        svg = Svg(view_box, None, svg_version, svg_encoding)
 
         # Draw the scene.
         svg_str = svg.to_svg(fills, objects)

@@ -23,6 +23,7 @@ def cli() -> argparse.Namespace:
     parser.add_argument("-s", type=str, required=False, default="ballandstick", choices=["spacefilling", "ballandstick", "tube", "wireframe"], help="Depiction style (default: ballandstick).")
     parser.add_argument("-l", type=str, required=False, default="cartoon", choices=["cartoon", "glossy"], help="Look of the depiction (default: cartoon).")
     parser.add_argument("-r", type=int, default=30, help="Resolution of SVG model (default: 50).")
+    parser.add_argument("-sc", type=float, default=1.0, help="Scale of the model (default: 1.0).")
     parser.add_argument("-rx", type=int, default=0.0, help="Rotation over x-axis (default: 0.0).")
     parser.add_argument("-ry", type=int, default=0.0, help="Rotation over y-axis (default: 0.0).")
     parser.add_argument("-rz", type=int, default=0.0, help="Rotation over z-axis (default: 0.0).")
@@ -48,7 +49,7 @@ def main() -> None:
     
     # Draw molecule, timed.
     t0 = time()
-    svg_str = draw_molecule(atoms, bonds, args.s, args.l, args.r, args.rx, args.ry, args.rz, args.vb)
+    svg_str = draw_molecule(atoms, bonds, args.s, args.l, args.r, args.rx, args.ry, args.rz, args.vb, args.sc)
     runtime = (time() - t0) * 1000 # Runtime in milliseconds.
 
     if args.vb:

@@ -512,7 +512,8 @@ def get_points_on_surface_cap(
     radius_cap: float,
     normal_cap: Point3D,
     center_cylinder: Point3D, 
-    resolution: int
+    resolution: int,
+    filter_for_pov: bool = True
 ) -> ty.List[Point3D]:
     """
     Generate points on the surface of the cap.
@@ -522,6 +523,9 @@ def get_points_on_surface_cap(
     :param float radius_cap: The radius of the cap.
     :param Vector3D normal_cap: The normal vector of the cap.
     :param Point3D center_cylinder: The center of the cylinder.
+    :param int resolution: The resolution of the cap.
+    :param bool filter_for_pov: If True, only return points that are on the visible surface of the cap
+        (i.e. the surface of the cap we can see from POV positive z-axis towards origin).
     :return: The points on the surface of the cap.
     :rtype: ty.List[Point3D]
     """
@@ -535,18 +539,14 @@ def get_points_on_surface_cap(
     elif cap_type == CylinderCapType.Round:
         sphere = Sphere(center_cap, radius_cap)
         plane = Plane3D(center_cap, normal_cap)
-        points = get_points_on_surface_sphere(sphere, resolution, resolution)
+        points = get_points_on_surface_sphere(sphere, resolution, resolution, filter_for_pov=filter_for_pov)
         points = [point for point in points if not same_side_of_plane(plane, center_cylinder, point)]
         return points
     
     else:
         raise ValueError(f"Unknown cap type: '{cap_type}'")
 
-def get_points_on_surface_cylinder(
-    cylinder: Cylinder, 
-    resolution: int,
-    filter_for_pov: bool = True
-) -> ty.List[Point3D]:
+def get_points_on_surface_cylinder(cylinder: Cylinder, resolution: int,) -> ty.List[Point3D]:
     """
     Generate points on the surface of the cylinder.
     
@@ -556,25 +556,18 @@ def get_points_on_surface_cylinder(
     :rtype: ty.List[Point3D]
     """
     normal = cylinder.end.create_vector(cylinder.start).normalize()
-    centers = get_points_on_line_3d(Line3D(cylinder.start, cylinder.end), max(int(resolution // 2), 2))
+    centers = get_points_on_line_3d(Line3D(cylinder.start, cylinder.end), resolution)
 
     points = []
     for center in centers:
         circle = Circle3D(center, cylinder.radius, normal)
-        
-        for p in get_points_on_circumference_circle_3d(circle, resolution):
-            if not filter_for_pov:
-                points.append(p)
-                continue
-
-            if p.z >= center.z:
-                points.append(p)
+        points.extend(get_points_on_circumference_circle_3d(circle, resolution))
 
     # Get points on the caps.
     cap_type = cylinder.cap_type
-    cap_points = get_points_on_surface_cap(cap_type, cylinder.start, cylinder.radius, normal, cylinder.end, resolution)
+    cap_points = get_points_on_surface_cap(cap_type, cylinder.start, cylinder.radius, normal, cylinder.end, resolution, False)
     points.extend(cap_points)
-    cap_points = get_points_on_surface_cap(cap_type, cylinder.end, cylinder.radius, normal, cylinder.start, resolution)
+    cap_points = get_points_on_surface_cap(cap_type, cylinder.end, cylinder.radius, normal, cylinder.start, resolution, False)
     points.extend(cap_points)
 
     return points

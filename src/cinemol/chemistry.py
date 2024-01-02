@@ -77,7 +77,8 @@ def draw_molecule(
     rotation_over_x_axis: float = 0.0,
     rotation_over_y_axis: float = 0.0,
     rotation_over_z_axis: float = 0.0,
-    verbose: bool = False
+    verbose: bool = False,
+    scale: float = 1.0
 ) -> str:
     """
     Draw a molecule using the given atoms and bonds.
@@ -91,6 +92,7 @@ def draw_molecule(
     :param float rotation_over_y_axis: The rotation over the y-axis.
     :param float rotation_over_z_axis: The rotation over the z-axis.
     :param bool verbose: Whether to print verbose output.
+    :param float scale: The scale of the model and viewbox.
     :return: The drawn molecule as an SVG string.
     :rtype: str
     """
@@ -281,5 +283,6 @@ def draw_molecule(
         calculate_sphere_sphere_intersections=calculate_sphere_sphere_intersections,
         calculate_sphere_cylinder_intersections=calculate_sphere_cylinder_intersections,
         calculate_cylinder_sphere_intersections=calculate_cylinder_sphere_intersections,
-        calculate_cylinder_cylinder_intersections=calculate_cylinder_cylinder_intersections
+        calculate_cylinder_cylinder_intersections=calculate_cylinder_cylinder_intersections,
+        scale=scale
     )
