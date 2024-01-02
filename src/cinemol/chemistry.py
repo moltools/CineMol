@@ -185,7 +185,6 @@ def draw_molecule(
         if style == Style.BallAndStick:
             include_spheres = True
             include_cylinders = True
-            calculate_sphere_cylinder_intersections = True 
             calculate_cylinder_sphere_intersections = True
             cap_type = CylinderCapType.NoCap 
 

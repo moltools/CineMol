@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import typing as ty
 
 from cinemol.geometry import Point2D
-from cinemol.style import Fill 
+from cinemol.style import Fill, Color
 
 class Shape2D(ABC):
     """
@@ -128,10 +128,12 @@ class Svg:
     An SVG document.
     
     :param ViewBox view_box: The view box of the SVG document.
+    :param ty.Optional[Color] background_color: The background color of the SVG document.
     :param float version: The version of the SVG document.
     :param str encoding: The encoding of the SVG document.
     """
     view_box: ViewBox  
+    background_color: ty.Optional[Color] = None
     version: float = 1.0
     encoding: str = "UTF-8"
 
@@ -142,8 +144,17 @@ class Svg:
         :return: The header of the SVG document.
         :rtype: str
         """
+        x = self.view_box.min_x
+        y = self.view_box.min_y
+
+        if self.background_color is not None:
+            background = f"<rect x=\"{x:.3f}\" y=\"{y:.3f}\" width=\"100%\" height=\"100%\" fill=\"{self.background_color.to_hex()}\"/>"
+        else:
+            background = ""
+
         return f"<?xml version=\"{self.version}\" encoding=\"{self.encoding}\"?>\n" +\
-               f"<svg xmlns=\"http://www.w3.org/2000/svg\" {self.view_box.to_svg()}>"
+               f"<svg xmlns=\"http://www.w3.org/2000/svg\" {self.view_box.to_svg()}>" + background
+               
     
     def footer(self) -> str:
         """

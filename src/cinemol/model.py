@@ -280,7 +280,7 @@ class Scene:
                 points.append(midpoint)
 
         view_box = self.calculate_view_box(points, margin=5)
-        svg = Svg(view_box, svg_version, svg_encoding)
+        svg = Svg(view_box, None, svg_version, svg_encoding)
 
         # Calculate 2D shape and fill for each node.
         objects, fills = [], []

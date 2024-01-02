@@ -402,7 +402,7 @@ def get_points_on_line_3d(line: Line3D, num_points: int) -> ty.List[Point3D]:
     e_cx, e_cy, e_cz = line.end.x, line.end.y, line.end.z
 
     points = []
-    for i in range(num_points):
+    for i in range(num_points + 1):
         i /= num_points 
         point = Point3D(
             s_cx + (e_cx - s_cx) * i,
