@@ -17,10 +17,15 @@ pip install .
 ## Usage Python
 
 ```python
+import os
+
 from cinemol.parsers import parse_sdf 
 from cinemol.drawer import draw_molecule
 
-atoms, bonds = parse_sdf('path/to/your/molecule.sdf')
+with open('path/to/your/molecule.sdf', 'r') as f:
+    sdf_str = f.read()
+
+atoms, bonds = parse_sdf(sdf_str)
 svg_str = draw_molecule(atoms, bonds)
 ```
 
