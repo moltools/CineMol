@@ -8,7 +8,7 @@
 
 CineMol is a direct-to-SVG small molecule drawer. 
 
-You can install CineMol with pip from the source of this repository:
+You can install CineMol with pip from the root of this repository:
 
 ```bash
 pip install .
