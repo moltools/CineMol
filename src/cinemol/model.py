@@ -76,6 +76,7 @@ class ModelWire:
 
 def get_node_polygon_vertices(
     this: ty.Union[ModelSphere, ModelCylinder, ModelWire], 
+    pov_z: float,
     others: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]], 
     resolution: int
 ) -> ty.List[Point2D]:
@@ -83,6 +84,7 @@ def get_node_polygon_vertices(
     Get the vertices of the polygon that represents the visible part of the node.
     
     :param ty.Union[ModelSphere, ModelCylinder, ModelWire] this: The node to get the vertices of.
+    :param float pov_z: The z-coordinate of the point of view.
     :param ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]] others: The other nodes in the scene.
     :param int resolution: The resolution of the polygon.
     :return: The vertices of the polygon.
@@ -106,8 +108,9 @@ def get_node_polygon_vertices(
             if isinstance(node, ModelSphere) and point_is_inside_sphere(node.geometry, point): break 
             elif isinstance(node, ModelCylinder) and point_is_inside_cylinder(node.geometry, point): break
         else:
-            # Convert point to 2D point by ignoring z-coordinate.
-            visible_points.append(Point2D(point.x, point.y))    
+            s = pov_z / (pov_z - point.z)
+            x, y = point.x * s, point.y * s 
+            visible_points.append(Point2D(x, y))
 
     # If no visible points, return empty list.
     if len(visible_points) == 0: 
@@ -247,6 +250,9 @@ class Scene:
                 midpoint_z = (start.z + end.z) / 2
                 sorting_values.append(midpoint_z)
 
+        # Get maximum z-coordinate of nodes for pov and add margin to it.
+        pov_z = max(sorting_values) + 15
+
         # Sort nodes by sorting values.
         nodes = [
             node for _, node 
@@ -322,20 +328,26 @@ class Scene:
                             previous_nodes.append(prev_node)     
 
             if isinstance(node, ModelWire):
-                start = Point2D(node.geometry.start.x, node.geometry.start.y)
-                end = Point2D(node.geometry.end.x, node.geometry.end.y)
+                start_s = pov_z / (pov_z - node.geometry.start.z)
+                start_x, start_y = node.geometry.start.x * start_s, node.geometry.start.y * start_s
+                end_s = pov_z / (pov_z - node.geometry.end.z)
+                end_x, end_y = node.geometry.end.x * end_s, node.geometry.end.y * end_s
+                start = Point2D(start_x, start_y)
+                end = Point2D(end_x, end_y)
                 line = Line2D(reference, start, end)
                 objects.append(line)
 
             # Create outline for model spheres with no intersections with previous nodes.
-            elif isinstance(node, ModelSphere) and len(previous_nodes) == 0:
-                center = Point2D(node.geometry.center.x, node.geometry.center.y)
-                outline = Circle2D(reference, center, node.geometry.radius)
-                objects.append(outline)
+            # elif isinstance(node, ModelSphere) and len(previous_nodes) == 0:
+            #     s = pov_z / (pov_z - node.geometry.center.z)
+            #     x, y = node.geometry.center.x * s, node.geometry.center.y * s
+            #     proj_radius = node.geometry.radius * s
+            #     outline = Circle2D(reference, Point2D(x, y), proj_radius)
+            #     objects.append(outline)
             
             # Otherwise, calculate polygon for visible part of node.
             else:
-                points = get_node_polygon_vertices(node, previous_nodes, resolution)
+                points = get_node_polygon_vertices(node, pov_z, previous_nodes, resolution)
                 polygon = Polygon2D(reference, points)
                 objects.append(polygon)
 
@@ -357,17 +369,23 @@ class Scene:
 
             # Glossy style is different for spheres and cylinders.
             elif isinstance(node.depiction, Glossy) and isinstance(node, ModelSphere):
+                s = pov_z / (pov_z - node.geometry.center.z)
+                x, y = node.geometry.center.x * s, node.geometry.center.y * s
                 fill_color = node.depiction.fill_color
-                center = Point2D(node.geometry.center.x, node.geometry.center.y)
+                center = Point2D(x, y)
                 radius = node.geometry.radius
                 opacity = node.depiction.opacity
                 style = RadialGradient(fill_color, center, radius, opacity)
                 fills.append(Fill(reference, style))
             
             elif isinstance(node.depiction, Glossy) and isinstance(node, ModelCylinder):
+                start_s = pov_z / (pov_z - node.geometry.start.z)
+                start_x, start_y = node.geometry.start.x * start_s, node.geometry.start.y * start_s
+                end_s = pov_z / (pov_z - node.geometry.end.z)
+                end_x, end_y = node.geometry.end.x * end_s, node.geometry.end.y * end_s
                 fill_color = node.depiction.fill_color
-                start_center = Point2D(node.geometry.start.x, node.geometry.start.y)
-                end_center = Point2D(node.geometry.end.x, node.geometry.end.y)
+                start_center = Point2D(start_x, start_y)
+                end_center = Point2D(end_x, end_y)
                 radius = node.geometry.radius
                 opacity = node.depiction.opacity
                 style = LinearGradient(fill_color, start_center, end_center, opacity)
