@@ -61,7 +61,7 @@ See `src/cinemol/chemistry.py` for more options.
 ## Usage CLI
 
 ```bash
-cinemol -i path/to/your/molecule.sdf -o path/to/your/molecule.svg
+cinemol -i path/to/your/molecule.sdf -o path/to/your/molecule.svg -s tube -l glossy -r 100 -sc 10.0
 ```
 
 Run `cinemol -h` for more options.
