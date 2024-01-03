@@ -32,7 +32,6 @@ def cli() -> argparse.Namespace:
     Command-line interface.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", type=str, help="Path to input PDB file.")
     parser.add_argument("-o", type=str, help="Path to output SVG file.")
     return parser.parse_args()
 
@@ -106,7 +105,7 @@ def main() -> None:
         bonds.append(Bond(start_index, end_index, int(bond.GetBondTypeAsDouble())))
 
     # Draw molecule.
-    svg_str = draw_molecule(atoms, bonds, Style.Tube, Look.Glossy, 50, rotation_over_y_axis=45.0)
+    svg_str = draw_molecule(atoms, bonds, Style.Tube, Look.Glossy, 50, rotation_over_y_axis=45.0, scale=10.0)
 
     # Write SVG to file.
     with open(args.o, "w") as f:

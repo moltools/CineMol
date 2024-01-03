@@ -59,7 +59,7 @@ def main() -> None:
     backbone_smarts = r"C1C(OC(CC1)(CCCCCCCC=C(C)C))CC"
     matched = find_substructure(mol, backbone_smarts)
     
-    mol = generate_conformer(mol, 250)
+    mol = generate_conformer(mol, 50)
     confs = [conf for conf in mol.GetConformers()]
 
     # Align conformers.
@@ -70,7 +70,6 @@ def main() -> None:
 
     offset = 0
     for conf in confs:
-
         for atom in mol.GetAtoms():
             if atom.GetSymbol() == "H": continue
             atom_index = atom.GetIdx()
@@ -80,14 +79,14 @@ def main() -> None:
             if bond.GetBeginAtom().GetSymbol() == "H" or bond.GetEndAtom().GetSymbol() == "H": continue
             start_index = bond.GetBeginAtomIdx()
             end_index = bond.GetEndAtomIdx()
-            if start_index in matched and end_index in matched: color = (, 0, 255)
+            if start_index in matched and end_index in matched: color = (230,  25,  75)
             else: color = (120, 120, 120)
-            bonds.append(Bond(start_index + offset, end_index + offset, int(bond.GetBondTypeAsDouble()), color=color, opacity=0.1))
+            bonds.append(Bond(start_index + offset, end_index + offset, int(bond.GetBondTypeAsDouble()), color=color, opacity=0.5))
 
         offset = len(atoms)
 
     # Draw conformers.
-    svg_str = draw_molecule(atoms, bonds, Style.Wireframe, Look.Glossy, 50, verbose=True)
+    svg_str = draw_molecule(atoms, bonds, Style.Wireframe, Look.Glossy, 50, verbose=True, scale=10.0)
 
     # Write SVG file.
     with open(args.o, "w") as f:
