@@ -107,23 +107,14 @@ See `Scene` in `src/cinemol/model.py` if you want direct access to the drawing s
 
 ## Examples
 
-<table>
-  <tr>
-    <td>Highlighted amino acids in daptomycin conformer ([src](./figures/figure3a.py))</td>
-  </tr>
-  <tr>
-    <td><img src="svgs/daptomycin.svg" width=200 height=125></td>
-  </tr>
-  <tr>
-    <td>Three aligned conformers of benzylphenol ([src](./figures/figure3b.py))</td>
-  </tr>
-  <tr>
-    <td><img src="svgs/conformers.svg" width=200 height=125></td>
-  </tr>
-  <tr>
-    <td>Wireframe model of lysozome [9LYZ](https://www.rcsb.org/structure/9lyz) with space-filling model of bound ligand trisaccharide NAM-NAG-NAM ([src](./figures/figure3c.py))</td>
-  </tr>
-  <tr>
-    <td><img src="svgs/protein_with_ligand.svg" width=200 height=125></td>
-  </tr>
- </table>
+Highlighted amino acids in daptomycin conformer ([src](./figures/figure3a.py)):
+
+<img src="svgs/daptomycin.svg" width=200 height=125>
+
+Three aligned conformers of benzylphenol ([src](/figures/figure3b.py)):
+
+<img src="svgs/conformers.svg" width=200 height=125>
+
+Wireframe model of lysozome [9LYZ](https://www.rcsb.org/structure/9lyz) with space-filling model of bound ligand trisaccharide NAM-NAG-NAM ([src](figures/figure3c.py)):
+
+<img src="svgs/protein_with_ligand.svg" width=200 height=125>
