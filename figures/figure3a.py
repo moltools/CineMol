@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Description:    Generate and draw a daptomycin conformer and highlight individual amino acids.
-Usage:          python figure3a.py
+Usage:          python figure3a.py -o figure3a.svg
 """
 import argparse
 import typing as ty

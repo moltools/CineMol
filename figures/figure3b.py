@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Description:    Generate two conformers, align them and draw them.
-Usage:          python figure3b.py
+Usage:          python figure3b.py -o figure3b.svg
 """
 import argparse
 import typing as ty
