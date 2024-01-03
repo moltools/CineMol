@@ -109,12 +109,12 @@ See `Scene` in `src/cinemol/model.py` if you want direct access to the drawing s
 
 Highlighted amino acids in daptomycin conformer ([src](./figures/figure3a.py)):
 
-<img src="svgs/daptomycin.svg" width=200 height=125>
+<img src="svgs/daptomycin.svg" width=250>
 
 Three aligned conformers of benzylphenol ([src](/figures/figure3b.py)):
 
-<img src="svgs/conformers.svg" width=200 height=125>
+<img src="svgs/conformers.svg" width=250>
 
 Wireframe model of lysozome [9LYZ](https://www.rcsb.org/structure/9lyz) with space-filling model of bound ligand trisaccharide NAM-NAG-NAM ([src](figures/figure3c.py)):
 
-<img src="svgs/protein_with_ligand.svg" width=200 height=125>
+<img src="svgs/protein_with_ligand.svg" width=250>
