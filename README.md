@@ -130,4 +130,6 @@ Initialize a `Bond` object:
 * `radius`: radius of bond (float). If not supplied, 0.2 is used. 
 * `opacity`: opacity of bond (float between 0.0 and 1.0). If not supplied, 1.0 is used.
 
+### Fine-grained control
+
 See `Scene` in `src/cinemol/model.py` if you want direct access to the drawing scene. The scene can be giving various objects for drawing (e.g., `ModelSphere`, `ModelCylinder` ,`ModelWire`). The `draw_molecule` function is a convenience function on top of `Scene` that creates a scene, adds the molecule to the scene, and draws the scene to an SVG string. 
