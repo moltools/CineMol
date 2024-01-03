@@ -19,10 +19,23 @@ pip install .
 ## Usage CLI
 
 ```bash
-cinemol -i path/to/your/molecule.sdf -o path/to/your/molecule.svg -s tube -l glossy -r 100 -sc 10.0
+cinemol -i path/to/your/molecule.sdf -o path/to/your/molecule.svg -s tube -l glossy -r 100 -sc 10.0 --hs
 ```
 
-Run `cinemol -h` for more options.
+Command line options:
+
+* `-i`: input file path to SDF file (str).
+* `-o`: output file path to SVG file (str).
+* `-s`: style (`spacefilling`/`ballandstick`/`tube`/`wireframe`) (str).
+* `-l`: look (`cartoon`/`glossy`) (str).
+* `-r`: resolution of the SVG that determines the number of points to be drawn on the sphere and cylinder geometries in order to approximate them (int).
+* `-sc`: scales radii, coordinates, and strokes by this factor (float).
+* `-rx`: rotation over the x-axis in degrees (float).
+* `-ry`: rotation over the y-axis in degrees (float).
+* `-rz`: rotation over the z-axis in degrees (float).
+* `--hs`: show hydrogens (bool).
+* `--vb`: verbose (bool).
+* `-v`: print version to stdout.
 
 ### Styling options
 
@@ -92,7 +105,7 @@ Options for `draw_molecule`:
 * `bonds`: list of `Bond` objects
 * `style`: `Style` enum (`SpaceFilling`/`BallAndStick`/`Tube`/`Wireframe`)
 * `look`: `Look` enum (`Cartoon`/`Glossy`)
-* `resolution`: resolution of the SVG in number of points to be drawn on the sphere and cylinder geometries in order to approximate them.
+* `resolution`: resolution of the SVG that determines the number of points to be drawn on the sphere and cylinder geometries in order to approximate them (int).
 * `rotation_over_x_axis`: rotation over the x-axis in degrees (float).
 * `rotation_over_y_axis`: rotation over the y-axis in degrees (float).
 * `rotation_over_z_axis`: rotation over the z-axis in degrees (float).

@@ -27,8 +27,8 @@ def cli() -> argparse.Namespace:
     parser.add_argument("-rx", type=int, default=0.0, help="Rotation over x-axis (default: 0.0).")
     parser.add_argument("-ry", type=int, default=0.0, help="Rotation over y-axis (default: 0.0).")
     parser.add_argument("-rz", type=int, default=0.0, help="Rotation over z-axis (default: 0.0).")
-    parser.add_argument("-hs", action="store_true", help="Include hydrogens (default: False).")
-    parser.add_argument("-vb", action="store_true", help="Verbose mode (default: False).")
+    parser.add_argument("--hs", action="store_true", help="Include hydrogens (default: False).")
+    parser.add_argument("--vb", action="store_true", help="Verbose mode (default: False).")
     parser.add_argument("-v", action="version", version=f"CineMol {version}")
     args = parser.parse_args()
 
