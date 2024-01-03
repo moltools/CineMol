@@ -53,7 +53,10 @@ def main() -> None:
     runtime = (time() - t0) * 1000 # Runtime in milliseconds.
 
     if args.vb:
-        print(f"Time taken to generate SVG: {runtime:.3f} ms")
+        print(f"SVG written out to: {args.o}")
+        print(f"> Time taken to generate SVG: {runtime:.3f} ms")
+        print(f"> Size of SVG: {len(svg_str) / 1000:.3f} kb")
+
 
     with open(args.o, "w") as file_open:
         file_open.write(svg_str)

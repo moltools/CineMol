@@ -8,4 +8,5 @@ dependencies:
   - pip: 
     - matplotlib
     - numpy
+    - rdkit
     - -e .

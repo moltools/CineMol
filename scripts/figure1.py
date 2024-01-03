@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Description:    Draw step-wise explanation of the algorithm.
-Usage:          python3 draw_explanation_algorithm.py -h 
+Usage:          python3 figure1.py -o /path/to/output/dir [-d resolution] [--t]
 """
 import argparse 
 import os
@@ -271,6 +271,9 @@ def get_points_on_surface_cylinder(cylinder: Cylinder, resolution: int) -> ty.Li
 # ==============================================================================
 
 def main() -> None:
+    """
+    Driver function.
+    """
     args = cli()
 
     pov_z = 15.0
