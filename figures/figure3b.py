@@ -10,7 +10,13 @@ from enum import Enum
 from rdkit import Chem 
 from rdkit.Chem import AllChem
 
-from cinemol.chemistry import Style, Look, Atom, Bond, draw_molecule
+from cinemol.style import (
+    Color, 
+    Glossy,
+    PubChemAtomRadius as RADIUS 
+)
+from cinemol.geometry import Point3D, Line3D, Sphere, Cylinder, CylinderCapType, get_perpendicular_lines
+from cinemol.model import Scene, ModelCylinder, ModelSphere
 
 def cli() -> argparse.Namespace:
     """
@@ -54,43 +60,66 @@ def main() -> None:
     args = cli()
 
     # Parse molecule.
-    mol = Chem.MolFromSmiles(r"C[C@@H]1[C@@H](O[C@@](C([C@H]1OC)(C)C)([C@@H](C)C[C@H](C)[C@@H]([C@@]2([C@H](O2)[C@@H](C)C=C(C)C)C)O)O)CC(=O)O")
-    
-    backbone_smarts = r"C1C(OC(CC1)(CCCCCCCC=C(C)C))CC"
-    matched = find_substructure(mol, backbone_smarts)
+    mol = Chem.MolFromSmiles(r"C1=CC=C(C=C1)CC2=CC=CC=C2O")
     
     mol = generate_conformer(mol, 50)
     confs = [conf for conf in mol.GetConformers()]
 
+    Chem.Kekulize(mol)
+
     # Align conformers.
     AllChem.AlignMolConformers(mol, atomIds=range(mol.GetNumAtoms()), RMSlist=[0, 1])
 
-    # Draw conformers.
-    atoms, bonds = [], []
+    # Draw example.
+    scene = Scene()
 
-    offset = 0
-    for conf in confs:
+    def draw_conformer(conf: Chem.Conformer, color: ty.Tuple[int, int, int]) -> None:
         for atom in mol.GetAtoms():
-            if atom.GetSymbol() == "H": continue
-            atom_index = atom.GetIdx()
-            atoms.append(Atom(atom_index + offset, atom.GetSymbol(), conf.GetAtomPosition(atom_index)))
+            if atom.GetSymbol() == "H": 
+                continue
+            
+            atom_symbol = atom.GetSymbol()
+            atom_coordinates = Point3D(*conf.GetAtomPosition(atom.GetIdx()))
+            atom_radius = RADIUS().to_angstrom(atom_symbol) / 4.0
+
+            sphere = Sphere(atom_coordinates, atom_radius)
+            depiction = Glossy(color)
+            scene.add_node(ModelSphere(sphere, depiction))
 
         for bond in mol.GetBonds():
-            if bond.GetBeginAtom().GetSymbol() == "H" or bond.GetEndAtom().GetSymbol() == "H": continue
+            if bond.GetBeginAtom().GetSymbol() == "H" or bond.GetEndAtom().GetSymbol() == "H": 
+                continue
+
             start_index = bond.GetBeginAtomIdx()
+            start_coordinates = Point3D(*conf.GetAtomPosition(start_index))
             end_index = bond.GetEndAtomIdx()
-            if start_index in matched and end_index in matched: color = (230,  25,  75)
-            else: color = (120, 120, 120)
-            bonds.append(Bond(start_index + offset, end_index + offset, int(bond.GetBondTypeAsDouble()), color=color, opacity=0.5))
+            end_coordinates = Point3D(*conf.GetAtomPosition(end_index))
 
-        offset = len(atoms)
+            bond_order = int(bond.GetBondTypeAsDouble())
+            temp_bond_radius = 0.2 / bond_order
+            line = Line3D(start_coordinates, end_coordinates)
+            lines = get_perpendicular_lines(line, temp_bond_radius * (bond_order + 1), bond_order)
 
-    # Draw conformers.
-    svg_str = draw_molecule(atoms, bonds, Style.Wireframe, Look.Glossy, 50, verbose=True, scale=10.0)
+            for line in lines:
+                cylinder = Cylinder(line.start, line.end, 0.1, CylinderCapType.NoCap)
+                depiction = Glossy(color)
+                scene.add_node(ModelCylinder(cylinder, depiction))
+
+    draw_conformer(confs[15], Color(230,  25,  75))
+    draw_conformer(confs[10], Color( 60, 180,  75))
+    draw_conformer(confs[20], Color(  0, 130, 200))
+
+    # Draw example.
+    svg_str = scene.draw(
+        resolution=150,
+        verbose=True,
+        scale=10.0,
+        filter_nodes_for_intersecting=False # We have cyliners intersecting at other places than just start and end.
+    )
 
     # Write SVG file.
     with open(args.o, "w") as f:
-        f.write(svg_str)    
+        f.write(svg_str)
 
     exit(0)
 

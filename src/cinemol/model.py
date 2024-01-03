@@ -199,7 +199,9 @@ class Scene:
         calculate_cylinder_cylinder_intersections: bool = True,
         svg_version: float = 1.0,
         svg_encoding: str = "UTF-8",
-        scale: float = 1.0
+        scale: float = 1.0,
+        focal_length: float = 10.0,
+        filter_nodes_for_intersecting: bool = True
     ) -> str:
         """
         Draw the scene.
@@ -218,6 +220,8 @@ class Scene:
         :param float svg_version: The version of the SVG document.
         :param str svg_encoding: The encoding of the SVG document.
         :param float scale: The scale of the scene.
+        :param float focal_length: The focal length of the scene.
+        :param bool filter_nodes_for_intersecting: Whether to filter nodes for intersecting nodes when calculatng polygons.
         :return: The SVG string.
         :rtype: str
         """
@@ -300,7 +304,6 @@ class Scene:
                 sorting_values.append(midpoint_z)
 
         # Get maximum z-coordinate of nodes for pov and add margin to it.
-        focal_length = 10
         if scale is not None:
             focal_length *= scale
         pov_z = max(sorting_values) + focal_length 
@@ -331,6 +334,10 @@ class Scene:
             # Wireframe is drawn as a line and has no intersections with previous nodes.
             if not isinstance(node, ModelWire):
                 for prev_node in nodes[:i]:
+
+                    if not filter_nodes_for_intersecting:
+                        previous_nodes.append(prev_node)
+                        continue
 
                     if (
                         isinstance(node, ModelSphere) and 

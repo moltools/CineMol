@@ -14,7 +14,7 @@ def cli() -> argparse.Namespace:
     :rtype: argparse.Namespace
     """
     parser = argparse.ArgumentParser(description="Draw space-filling, ball-and-stick, and tube representations of a molecule.")
-    parser.add_argument("-i", type=str, required=True, help="Input file path to SDF file.")
+    parser.add_argument("-i", type=str, required=True, help="Input file path to 'penicillin_G.sdf' SDF file.")
     parser.add_argument("-o", type=str, required=True, help="Output file path to output directory.")
     return parser.parse_args()
 

@@ -40,6 +40,19 @@ class Color:
         """
         return f"rgb({self.r},{self.g},{self.b})"
     
+    def __eq__(self, other: ty.Any) -> bool:
+        """
+        Check if self is equal to other.
+
+        :param ty.Any other: Another object.
+        :return: If self is equal to other.
+        :rtype: bool
+        """
+        if not isinstance(other, Color):
+            return False
+        
+        return (self.r == other.r) and (self.g == other.g) and (self.b == other.b)
+    
     def to_hex(self) -> str:
         """
         Convert color to a hex string.
