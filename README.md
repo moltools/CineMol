@@ -99,36 +99,7 @@ bonds = [
 svg_str = draw_molecule(atoms, bonds, style=Style.Tube, look=Look.Glossy, resolution=100, scale=10.0)
 ```
 
-Options for `draw_molecule`:
-
-* `atoms`: list of `Atom` objects
-* `bonds`: list of `Bond` objects
-* `style`: `Style` enum (`SpaceFilling`/`BallAndStick`/`Tube`/`Wireframe`)
-* `look`: `Look` enum (`Cartoon`/`Glossy`)
-* `resolution`: resolution of the SVG that determines the number of points to be drawn on the sphere and cylinder geometries in order to approximate them (int).
-* `rotation_over_x_axis`: rotation over the x-axis in degrees (float).
-* `rotation_over_y_axis`: rotation over the y-axis in degrees (float).
-* `rotation_over_z_axis`: rotation over the z-axis in degrees (float).
-* `verbose`: print drawing progress to stdout (bool).
-* `scale`: scales radii, coordinates, and strokes by this factor (float).
-
-Initialize an `Atom` object:
-
-* `index`: index of the atom in the molecule (int). Used to look up bond coordinates.
-* `symbol`: element symbol (str).
-* `coordinates`: 3D coordinates of the atom (enumerable of three floats as x, y, z coordinates).
-* `radius`: radius of the atom (float). If not supplied, PubChem radius is used based on atom symbol (for PuBchem radii, see `src/cinemol/style.py`).
-* `color`: color of atom (enumerable of three ints as r, g, b values). If not supplied, CPK color is used based on atom symbol (for CPK colors, see `src/cinemol/style.py`).
-* `opacity`: opacity of atom (float between 0.0 and 1.0). If not supplied, 1.0 is used.
-
-Initialize a `Bond` object:
-
-* `start_index`: index of the start atom in the molecule (int). Used to look up bond coordinates.
-* `end_index`: index of the end atom in the molecule (int). Used to look up bond coordinates.
-* `order`: bond order (int). If not supplied, 1 is used.
-* `color`: color of bond (enumerable of three ints as r, g, b values). If not supplied, color is used from nearest atom.
-* `radius`: radius of bond (float). If not supplied, 0.2 is used. 
-* `opacity`: opacity of bond (float between 0.0 and 1.0). If not supplied, 1.0 is used.
+See `src/cinemol/chemistry.py` for the `Atom` and `Bond` classes, and for more options for `draw_molecule`.
 
 ### Fine-grained control
 
