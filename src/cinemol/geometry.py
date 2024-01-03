@@ -197,6 +197,8 @@ class Point3D:
         :param float z: The clockwise rotation around the z-axis.
         :return: A new point with the coordinates of the rotated point.
         :rtype: Point3D
+
+        Note x, y, z and in radians.
         """
         # Rotate around x-axis.
         y1 = self.y * math.cos(x) - self.z * math.sin(x)
