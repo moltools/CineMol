@@ -8,6 +8,8 @@
 
 CineMol is a direct-to-SVG small molecule drawer. 
 
+You can try out CineMol online [here](https://moltools.bioinformatics.nl/cinemol).
+
 ## Installation
 
 You can install CineMol with pip from the root of this repository:
@@ -30,6 +32,7 @@ Command line options:
 * `-l`: look (`cartoon`/`glossy`) (str).
 * `-r`: resolution of the SVG that determines the number of points to be drawn on the sphere and cylinder geometries in order to approximate them (int).
 * `-sc`: scales radii, coordinates, and strokes by this factor (float).
+* `-fl`: focal length of the camera in angstrom (float).
 * `-rx`: rotation over the x-axis in degrees (float).
 * `-ry`: rotation over the y-axis in degrees (float).
 * `-rz`: rotation over the z-axis in degrees (float).
@@ -74,6 +77,8 @@ A penicillin G conformer, [retrieved from PubChem](https://pubchem.ncbi.nlm.nih.
   </tr>
  </table>
 
+ You can find the script to generate these figures [here](./examples/draw_all_depictions_for_molecule.py)
+
 ## Usage Python
 
 ```python
@@ -96,7 +101,8 @@ bonds = [
 ]
 
 # Draw molecule to SVG string:
-svg_str = draw_molecule(atoms, bonds, style=Style.Tube, look=Look.Glossy, resolution=100, scale=10.0)
+svg = draw_molecule(atoms=atoms, bonds=bonds, style=Style.Tube, look=Look.Glossy, resolution=100, scale=10.0)
+svg_str = svg.to_svg()
 ```
 
 See `src/cinemol/chemistry.py` for the `Atom` and `Bond` classes, and for more options for `draw_molecule`.
@@ -107,14 +113,14 @@ See `Scene` in `src/cinemol/model.py` if you want direct access to the drawing s
 
 ## Examples
 
-Highlighted amino acids in daptomycin conformer ([src](./figures/figure3a.py)):
+Highlighted amino acids in daptomycin conformer ([src](./examples/draw_substructure_highlights.py)):
 
 <img src="svgs/daptomycin.svg" width=250>
 
-Three aligned conformers of benzylphenol ([src](/figures/figure3b.py)):
+Three aligned conformers of benzylphenol ([src](/examples/draw_superimposed_conformers.py)):
 
 <img src="svgs/conformers.svg" width=250>
 
-Wireframe model of lysozome [9LYZ](https://www.rcsb.org/structure/9lyz) with space-filling model of bound ligand trisaccharide NAM-NAG-NAM ([src](figures/figure3c.py)):
+Wireframe model of lysozome [9LYZ](https://www.rcsb.org/structure/9lyz) with space-filling model of bound ligand trisaccharide NAM-NAG-NAM ([src](examples/draw_protein_with_ligands.py)):
 
 <img src="svgs/protein_with_ligand.svg" width=250>

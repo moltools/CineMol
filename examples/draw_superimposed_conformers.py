@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-Description:    Generate two conformers, align them and draw them.
-Usage:          python figure3b.py -o figure3b.svg
+Description:    Generate multiple conformers, align three of them and draw.
+Usage:          python draw_superimposed_conformers.py -o model.svg
 """
 import argparse
 import typing as ty
@@ -110,13 +110,15 @@ def main() -> None:
     draw_conformer(confs[20], Color(  0, 130, 200))
 
     # Draw example.
-    svg_str = scene.draw(
+    svg = scene.draw(
         resolution=150,
         verbose=True,
         scale=15.0,
         rotation_over_z_axis=-1.5,
         filter_nodes_for_intersecting=False # We have cyliners intersecting at other places than just start and end.
     )
+
+    svg_str = svg.to_svg()
 
     # Write SVG file.
     with open(args.o, "w") as f:

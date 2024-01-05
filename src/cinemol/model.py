@@ -19,7 +19,7 @@ from cinemol.geometry import (
     point_is_inside_cylinder
 )
 from cinemol.style import Color, Depiction, Cartoon, Glossy, Fill, Wire, Solid, RadialGradient, LinearGradient
-from cinemol.svg import ViewBox, Svg, Circle2D, Polygon2D, Line2D
+from cinemol.svg import ViewBox, Svg, Polygon2D, Line2D
 
 # ==============================================================================
 # Model nodes
@@ -186,7 +186,7 @@ class Scene:
     def draw(
         self, 
         resolution: int, 
-        verbose: bool = False,
+        view_box: ty.Optional[ViewBox] = None,
         rotation_over_x_axis: float = 0.0,
         rotation_over_y_axis: float = 0.0,
         rotation_over_z_axis: float = 0.0,
@@ -197,37 +197,32 @@ class Scene:
         calculate_sphere_cylinder_intersections: bool = True,
         calculate_cylinder_sphere_intersections: bool = True,
         calculate_cylinder_cylinder_intersections: bool = True,
-        svg_version: float = 1.0,
-        svg_encoding: str = "UTF-8",
+        filter_nodes_for_intersecting: bool = True,
         scale: float = 1.0,
         focal_length: float = 10.0,
-        filter_nodes_for_intersecting: bool = True,
-        view_box: ty.Optional[ViewBox] = None,
-        return_as_objects: bool = False
-    ) -> ty.Union[ty.Tuple[Svg, ty.List[Fill], ty.List[ty.Union[Polygon2D, Line2D]]], str]:
+        verbose: bool = False,
+    ) -> Svg:
         """
         Draw the scene.
 
         :param int resolution: The resolution of the scene.
-        :param bool verbose: Whether to print progress.
+        :param ty.Optional[ViewBox] view_box: The view box of the scene.
         :param float rotation_over_x_axis: The rotation over the x-axis.
         :param float rotation_over_y_axis: The rotation over the y-axis.
         :param float rotation_over_z_axis: The rotation over the z-axis.
         :param bool include_spheres: Whether to include spheres in the scene.
         :param bool include_cylinders: Whether to include cylinders in the scene.
         :param bool include_wires: Whether to include wires in the scene.
-        :param bool calculate_sphere_spere_intersections: Whether to calculate sphere-sphere intersections.
-        :param bool calculate_sphere_cylinder_intersections: Whether to calculate sphere-cylinder intersections.
-        :param bool calculate_cylinder_cylinder_intersections: Whether to calculate cylinder-cylinder intersections.
-        :param float svg_version: The version of the SVG document.
-        :param str svg_encoding: The encoding of the SVG document.
+        :param bool calculate_sphere_sphere_intersections: Whether to calculate intersections between spheres.
+        :param bool calculate_sphere_cylinder_intersections: Whether to calculate intersections between spheres and cylinders.
+        :param bool calculate_cylinder_sphere_intersections: Whether to calculate intersections between cylinders and spheres.
+        :param bool calculate_cylinder_cylinder_intersections: Whether to calculate intersections between cylinders.
+        :param bool filter_nodes_for_intersecting: Whether to filter nodes for intersecting nodes.
         :param float scale: The scale of the scene.
         :param float focal_length: The focal length of the scene.
-        :param bool filter_nodes_for_intersecting: Whether to filter nodes for intersecting nodes when calculatng polygons.
-        :param ty.Optional[ViewBox] view_box: The view box of the scene. If None, the view box is calculated.
-        :param bool return_as_objects: Whether to return the scene as objects instead of a string.
-        :return: The scene, as objects or drawn and represented as SVG string.
-        :rtype: ty.Union[ty.Tuple[Svg, ty.List[Fill], ty.List[ty.Union[Polygon2D, Line2D]]], str]
+        :param bool verbose: Whether to print progress.
+        :return: The scene as Svg.
+        :rtype: Svg
         """
         # Filter geometries.
         nodes = []
@@ -322,7 +317,8 @@ class Scene:
         ]
 
         # Keep track of reference points for determining viewbox later on.
-        ref_points = []
+        if view_box is None:
+            ref_points = []
 
         # Calculate 2D shape and fill for each node.
         objects, fills = [], []
@@ -373,6 +369,7 @@ class Scene:
                         if cylinder_intersects_with_cylinder(node.geometry, prev_node.geometry):
                             previous_nodes.append(prev_node)     
 
+            # Calculate line for wire.
             if isinstance(node, ModelWire):
                 start_s = pov_z / (pov_z - node.geometry.start.z)
                 start_x, start_y = node.geometry.start.x * start_s, node.geometry.start.y * start_s
@@ -381,22 +378,20 @@ class Scene:
                 start = Point2D(start_x, start_y)
                 end = Point2D(end_x, end_y)
                 line = Line2D(reference, start, end)
-                ref_points.extend([start, end])
-                objects.append(line)
+                
+                if view_box is None:
+                    ref_points.extend([start, end])
 
-            # Create outline for model spheres with no intersections with previous nodes.
-            # elif isinstance(node, ModelSphere) and len(previous_nodes) == 0:
-            #     s = pov_z / (pov_z - node.geometry.center.z)
-            #     x, y = node.geometry.center.x * s, node.geometry.center.y * s
-            #     proj_radius = node.geometry.radius * s
-            #     outline = Circle2D(reference, Point2D(x, y), proj_radius)
-            #     objects.append(outline)
+                objects.append(line)
             
             # Otherwise, calculate polygon for visible part of node.
             else:
                 points = get_node_polygon_vertices(node, pov_z, previous_nodes, resolution)
                 polygon = Polygon2D(reference, points)
-                ref_points.extend(points)
+
+                if view_box is None:
+                    ref_points.extend(points)
+
                 objects.append(polygon)
 
             # Create style.
@@ -448,12 +443,6 @@ class Scene:
         if view_box is None:
             view_box = self.calculate_view_box(ref_points, 5.0)
             
-        svg = Svg(view_box, None, svg_version, svg_encoding)
+        svg = Svg(view_box=view_box, fills=fills, objects=objects)
 
-        # Draw the scene.
-        if return_as_objects:
-            return svg, fills, objects
-
-        else:
-            svg_str = svg.to_svg(fills, objects)
-            return svg_str
+        return svg

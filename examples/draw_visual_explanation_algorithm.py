@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Description:    Draw step-wise explanation of the algorithm.
-Usage:          python3 figure1.py -o /path/to/output/dir [-d resolution] [--t]
+Usage:          python3 draw_visual_explanation_algorithm.py -o /path/to/output/dir [-d resolution] [--t]
 """
 import argparse 
 import os

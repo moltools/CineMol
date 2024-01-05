@@ -122,20 +122,33 @@ class ViewBox:
         """
         return f"viewBox=\"{self.min_x:.3f} {self.min_y:.3f} {self.width:.3f} {self.height:.3f}\""
     
-@dataclass 
 class Svg:
     """
     An SVG document.
-    
-    :param ViewBox view_box: The view box of the SVG document.
-    :param ty.Optional[Color] background_color: The background color of the SVG document.
-    :param float version: The version of the SVG document.
-    :param str encoding: The encoding of the SVG document.
     """
-    view_box: ViewBox  
-    background_color: ty.Optional[Color] = None
-    version: float = 1.0
-    encoding: str = "UTF-8"
+    def __init__(
+        self,
+        view_box: ViewBox,
+        background_color: ty.Optional[Color] = None,
+        version: float = 1.0,
+        encoding: str = "UTF-8",
+        fills: ty.List[Fill] = [],
+        objects: ty.List[Shape2D] = []
+    ):
+        """
+        :param ViewBox view_box: The view box of the SVG document.
+        :param ty.Optional[Color] background_color: The background color of the SVG document.
+        :param float version: The version of the SVG document.
+        :param str encoding: The encoding of the SVG document.
+        :param ty.List[Fill] fills: The fills of the SVG document.
+        :param ty.List[Shape2D] objects: The objects of the SVG document.
+        """
+        self.view_box = view_box
+        self.background_color = background_color
+        self.version = version
+        self.encoding = encoding
+        self.fills = fills
+        self.objects = objects
 
     def header(self) -> str:
         """
@@ -154,7 +167,6 @@ class Svg:
 
         return f"<?xml version=\"{self.version}\" encoding=\"{self.encoding}\"?>\n" +\
                f"<svg xmlns=\"http://www.w3.org/2000/svg\" {self.view_box.to_svg()}>" + background
-               
     
     def footer(self) -> str:
         """
@@ -165,7 +177,7 @@ class Svg:
         """
         return "</svg>"
     
-    def to_svg(self, fills: ty.List[Fill], objects: ty.List[Shape2D]) -> str:
+    def to_svg(self) -> str:
         """
         Return the SVG representation of the SVG document.
         
@@ -178,7 +190,7 @@ class Svg:
         footer = self.footer()
         
         styles, definitions = [], []
-        for fill in fills:
+        for fill in self.fills:
             style, definition = fill.to_svg()
             
             if style is not None: # Should never be None.
@@ -189,6 +201,6 @@ class Svg:
 
         styles = "\n".join(styles)
         definitions = "\n".join(definitions)
-        objects = "\n".join([object.to_svg() for object in objects])
+        objects = "\n".join([object.to_svg() for object in self.objects])
 
         return f"{header}\n<defs>\n<style>\n{styles}\n</style>\n{definitions}\n</defs>\n{objects}\n{footer}"

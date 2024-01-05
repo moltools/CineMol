@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 import typing as ty
 
+from cinemol.svg import Svg, ViewBox 
 from cinemol.model import Scene, ModelCylinder, ModelSphere, ModelWire
 from cinemol.geometry import Point3D, Line3D, Sphere, Cylinder, CylinderCapType, get_perpendicular_lines
 from cinemol.style import Color, Cartoon, Glossy, CoreyPaulingKoltungAtomColor as CPK, PubChemAtomRadius
@@ -74,29 +75,50 @@ def draw_molecule(
     style: Style,
     look: Look,
     resolution: int, 
+    view_box: ty.Optional[ty.Tuple[float, float, float, float]] = None,
     rotation_over_x_axis: float = 0.0,
     rotation_over_y_axis: float = 0.0,
     rotation_over_z_axis: float = 0.0,
+    scale: float = 1.0,
+    focal_length: float = 10.0,
+    exclude_atoms: ty.Optional[ty.List[str]] = None,
     verbose: bool = False,
-    scale: float = 1.0
-) -> str:
+) -> Svg:
     """
     Draw a molecule using the given atoms and bonds.
     
-    :param ty.List[Atom] atoms: The atoms to draw.
-    :param ty.List[Bond] bonds: The bonds to draw.
+    :param ty.List[Atom] atoms: The atoms in the molecule.
+    :param ty.List[Bond] bonds: The bonds in the molecule.
     :param Style style: The style of the depiction.
     :param Look look: The look of the depiction.
-    :param int resolution: The resolution of the SVG model.
-    :param float rotation_over_x_axis: The rotation over the x-axis.
-    :param float rotation_over_y_axis: The rotation over the y-axis.
-    :param float rotation_over_z_axis: The rotation over the z-axis.
+    :param int resolution: The resolution of the depiction.
+    :param ty.Optional[ty.Tuple[float, float, float, float]] view_box: The view box of the depiction.
+    :param float rotation_over_x_axis: The rotation over the x-axis of the depiction.
+    :param float rotation_over_y_axis: The rotation over the y-axis of the depiction.
+    :param float rotation_over_z_axis: The rotation over the z-axis of the depiction.
+    :param float scale: The scale of the depiction.
+    :param float focal_length: The focal length of the depiction.
+    :param ty.Optional[ty.List[str]] exclude_atoms: The atoms to exclude from the depiction (list of atom symbols).
     :param bool verbose: Whether to print verbose output.
-    :param float scale: The scale of the model and viewbox.
-    :return: The drawn molecule as an SVG string.
-    :rtype: str
+    :return: The SVG of the depiction.
+    :rtype: Svg
     """
-    scene = Scene()
+    if exclude_atoms is not None:
+        filtered_atoms, filtered_bonds, exclude_inds = [], [], []
+        
+        for atom in atoms:
+            if atom.symbol not in exclude_atoms:
+                filtered_atoms.append(atom)
+            else:
+                exclude_inds.append(atom.index)
+
+        for bond in bonds:
+            if bond.start_index not in exclude_inds and bond.end_index not in exclude_inds:
+                filtered_bonds.append(bond)
+
+        atoms, bonds = filtered_atoms, filtered_bonds
+
+    scene = Scene(nodes=[])  # Define empty scene explicitly to prevent memory leak. 
     atom_map = {atom.index: atom for atom in atoms}
 
     # Default settings for drawing.
@@ -271,9 +293,9 @@ def draw_molecule(
         raise ValueError(f"Unknown style: '{style}'")
 
     # Draw scene.
-    return scene.draw(
+    svg = scene.draw(
         resolution=resolution, 
-        verbose=verbose, 
+        view_box=ViewBox(*view_box) if view_box is not None else None,
         rotation_over_x_axis=rotation_over_x_axis,
         rotation_over_y_axis=rotation_over_y_axis,
         rotation_over_z_axis=rotation_over_z_axis,
@@ -284,5 +306,10 @@ def draw_molecule(
         calculate_sphere_cylinder_intersections=calculate_sphere_cylinder_intersections,
         calculate_cylinder_sphere_intersections=calculate_cylinder_sphere_intersections,
         calculate_cylinder_cylinder_intersections=calculate_cylinder_cylinder_intersections,
-        scale=scale
+        filter_nodes_for_intersecting = True,
+        scale=scale,
+        focal_length=focal_length,
+        verbose=verbose, 
     )
+
+    return svg

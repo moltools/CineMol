@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Description:    Draw a protein as wireframe, with ligands as space-filling.
-Usage:          python figure3c.py -o figure3c.svg
+Usage:          python draw_protein_with_ligands.py -o model.svg
 """
 import argparse
 
@@ -71,7 +71,7 @@ def main() -> None:
                         scene.add_node(ModelSphere(sphere, depiction))
 
     # Draw scene.
-    svg_str = scene.draw(
+    svg = scene.draw(
         verbose=True,
         resolution=100, 
         include_spheres=True, 
@@ -82,6 +82,8 @@ def main() -> None:
         rotation_over_z_axis=0.5,
         focal_length=100.0,
     )
+
+    svg_str = svg.to_svg()
 
     # Write SVG to file.
     with open(args.o, "w") as f:
