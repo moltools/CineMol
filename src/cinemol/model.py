@@ -202,7 +202,8 @@ class Scene:
         scale: float = 1.0,
         focal_length: float = 10.0,
         filter_nodes_for_intersecting: bool = True,
-        view_box: ty.Optional[ViewBox] = None
+        view_box: ty.Optional[ViewBox] = None,
+        return_as_object: bool = False
     ) -> str:
         """
         Draw the scene.
@@ -224,6 +225,7 @@ class Scene:
         :param float focal_length: The focal length of the scene.
         :param bool filter_nodes_for_intersecting: Whether to filter nodes for intersecting nodes when calculatng polygons.
         :param ty.Optional[ViewBox] view_box: The view box of the scene. If None, the view box is calculated.
+        :param bool return_as_object: Whether to return the scene as an object instead of a string.
         :return: The SVG string.
         :rtype: str
         """
@@ -449,6 +451,9 @@ class Scene:
         svg = Svg(view_box, None, svg_version, svg_encoding)
 
         # Draw the scene.
-        svg_str = svg.to_svg(fills, objects)
+        if return_as_object:
+            return svg
 
-        return svg_str
+        else:
+            svg_str = svg.to_svg(fills, objects)
+            return svg_str
