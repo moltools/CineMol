@@ -113,7 +113,8 @@ def main() -> None:
     svg_str = scene.draw(
         resolution=150,
         verbose=True,
-        scale=10.0,
+        scale=15.0,
+        rotation_over_z_axis=-1.5,
         filter_nodes_for_intersecting=False # We have cyliners intersecting at other places than just start and end.
     )
 

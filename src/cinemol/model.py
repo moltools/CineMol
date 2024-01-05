@@ -201,7 +201,8 @@ class Scene:
         svg_encoding: str = "UTF-8",
         scale: float = 1.0,
         focal_length: float = 10.0,
-        filter_nodes_for_intersecting: bool = True
+        filter_nodes_for_intersecting: bool = True,
+        view_box: ty.Optional[ViewBox] = None
     ) -> str:
         """
         Draw the scene.
@@ -222,6 +223,7 @@ class Scene:
         :param float scale: The scale of the scene.
         :param float focal_length: The focal length of the scene.
         :param bool filter_nodes_for_intersecting: Whether to filter nodes for intersecting nodes when calculatng polygons.
+        :param ty.Optional[ViewBox] view_box: The view box of the scene. If None, the view box is calculated.
         :return: The SVG string.
         :rtype: str
         """
@@ -441,7 +443,9 @@ class Scene:
                 print(f"{i}".zfill(padding), end="\r")
 
         # Calculate view box.
-        view_box = self.calculate_view_box(ref_points, 5.0)
+        if view_box is None:
+            view_box = self.calculate_view_box(ref_points, 5.0)
+            
         svg = Svg(view_box, None, svg_version, svg_encoding)
 
         # Draw the scene.
