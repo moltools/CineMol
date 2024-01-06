@@ -8,7 +8,7 @@
 
 CineMol is a direct-to-SVG small molecule drawer. 
 
-You can try out CineMol online [here](https://moltools.bioinformatics.nl/cinemol).
+You can try out CineMol online [here](https://moltools.bioinformatics.nl/).
 
 ## Installation
 
