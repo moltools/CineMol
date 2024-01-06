@@ -75,6 +75,7 @@ def draw_molecule(
     style: Style,
     look: Look,
     resolution: int, 
+    window: ty.Optional[ty.Tuple[float, float]] = None,
     view_box: ty.Optional[ty.Tuple[float, float, float, float]] = None,
     rotation_over_x_axis: float = 0.0,
     rotation_over_y_axis: float = 0.0,
@@ -92,6 +93,7 @@ def draw_molecule(
     :param Style style: The style of the depiction.
     :param Look look: The look of the depiction.
     :param int resolution: The resolution of the depiction.
+    :param ty.Optional[ty.Tuple[float, float]] window: The window of the depiction.
     :param ty.Optional[ty.Tuple[float, float, float, float]] view_box: The view box of the depiction.
     :param float rotation_over_x_axis: The rotation over the x-axis of the depiction.
     :param float rotation_over_y_axis: The rotation over the y-axis of the depiction.
@@ -295,6 +297,7 @@ def draw_molecule(
     # Draw scene.
     svg = scene.draw(
         resolution=resolution, 
+        window=window,
         view_box=ViewBox(*view_box) if view_box is not None else None,
         rotation_over_x_axis=rotation_over_x_axis,
         rotation_over_y_axis=rotation_over_y_axis,

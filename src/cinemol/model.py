@@ -186,6 +186,7 @@ class Scene:
     def draw(
         self, 
         resolution: int, 
+        window: ty.Optional[ty.Tuple[float, float]] = None,
         view_box: ty.Optional[ViewBox] = None,
         rotation_over_x_axis: float = 0.0,
         rotation_over_y_axis: float = 0.0,
@@ -206,6 +207,7 @@ class Scene:
         Draw the scene.
 
         :param int resolution: The resolution of the scene.
+        :param ty.Optional[ty.Tuple[float, float]] window: The window of the scene.
         :param ty.Optional[ViewBox] view_box: The view box of the scene.
         :param float rotation_over_x_axis: The rotation over the x-axis.
         :param float rotation_over_y_axis: The rotation over the y-axis.
@@ -443,6 +445,6 @@ class Scene:
         if view_box is None:
             view_box = self.calculate_view_box(ref_points, 5.0)
             
-        svg = Svg(view_box=view_box, fills=fills, objects=objects)
+        svg = Svg(view_box=view_box, window=window, fills=fills, objects=objects)
 
         return svg

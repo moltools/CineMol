@@ -129,6 +129,7 @@ class Svg:
     def __init__(
         self,
         view_box: ViewBox,
+        window: ty.Optional[ty.Tuple[float, float]] = None,
         background_color: ty.Optional[Color] = None,
         version: float = 1.0,
         encoding: str = "UTF-8",
@@ -137,6 +138,7 @@ class Svg:
     ):
         """
         :param ViewBox view_box: The view box of the SVG document.
+        :param ty.Optional[ty.Tuple[float, float]] window: The window of the SVG document.
         :param ty.Optional[Color] background_color: The background color of the SVG document.
         :param float version: The version of the SVG document.
         :param str encoding: The encoding of the SVG document.
@@ -144,6 +146,7 @@ class Svg:
         :param ty.List[Shape2D] objects: The objects of the SVG document.
         """
         self.view_box = view_box
+        self.window = window
         self.background_color = background_color
         self.version = version
         self.encoding = encoding
@@ -165,9 +168,15 @@ class Svg:
         else:
             background = ""
 
-        return f"<?xml version=\"{self.version}\" encoding=\"{self.encoding}\"?>\n" +\
-               f"<svg xmlns=\"http://www.w3.org/2000/svg\" {self.view_box.to_svg()}>" + background
-    
+        if not self.window:
+            return f"<?xml version=\"{self.version}\" encoding=\"{self.encoding}\"?>\n" +\
+                f"<svg xmlns=\"http://www.w3.org/2000/svg\" {self.view_box.to_svg()}>" + background
+        
+        else:
+            width, height = self.window
+            return f"<?xml version=\"{self.version}\" encoding=\"{self.encoding}\"?>\n" +\
+                f"<svg xmlns=\"http://www.w3.org/2000/svg\" {self.view_box.to_svg()} width=\"{width}\" height=\"{height}\">" + background
+        
     def footer(self) -> str:
         """
         Return the footer of the SVG document.
