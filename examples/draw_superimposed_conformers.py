@@ -5,7 +5,7 @@ Usage:          python draw_superimposed_conformers.py -o model.svg
 """
 import argparse
 import typing as ty
-from enum import Enum
+import time 
 
 from rdkit import Chem 
 from rdkit.Chem import AllChem
@@ -109,6 +109,8 @@ def main() -> None:
     draw_conformer(confs[10], Color( 60, 180,  75))
     draw_conformer(confs[20], Color(  0, 130, 200))
 
+    t0 = time.time()
+
     # Draw example.
     svg = scene.draw(
         resolution=150,
@@ -119,6 +121,13 @@ def main() -> None:
     )
 
     svg_str = svg.to_svg()
+
+    # Time in milliseconds.
+    print(f"Runtime: {1000 * (time.time() - t0)} ms")
+
+    # Get file size in kb.
+    svg_size = len(svg.to_svg()) / 1000
+    print(f"File size: {svg_size} kb")
 
     # Write SVG file.
     with open(args.o, "w") as f:

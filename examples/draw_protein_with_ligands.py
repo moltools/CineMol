@@ -4,6 +4,7 @@ Description:    Draw a protein as wireframe, with ligands as space-filling.
 Usage:          python draw_protein_with_ligands.py -o model.svg
 """
 import argparse
+import time 
 
 from cinemol.style import (
     Color, 
@@ -70,6 +71,8 @@ def main() -> None:
                         depiction = Glossy(atom_color)
                         scene.add_node(ModelSphere(sphere, depiction))
 
+    t0 = time.time()
+
     # Draw scene.
     svg = scene.draw(
         verbose=True,
@@ -84,6 +87,13 @@ def main() -> None:
     )
 
     svg_str = svg.to_svg()
+
+    # Time in milliseconds.
+    print(f"Runtime: {1000 * (time.time() - t0)} ms")
+
+    # Get file size in kb.
+    svg_size = len(svg.to_svg()) / 1000
+    print(f"File size: {svg_size} kb")
 
     # Write SVG to file.
     with open(args.o, "w") as f:

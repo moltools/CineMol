@@ -4,6 +4,7 @@ Description:    Generate and draw a daptomycin conformer and highlight individua
 Usage:          python draw_substructure_highlights.py -o model.svg
 """
 import argparse
+import time
 import typing as ty
 from enum import Enum
 
@@ -104,6 +105,8 @@ def main() -> None:
         start_index, end_index = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
         bonds.append(Bond(start_index, end_index, int(bond.GetBondTypeAsDouble())))
 
+    t0 = time.time()
+
     # Draw molecule.
     svg = draw_molecule(
         atoms=atoms, 
@@ -116,6 +119,13 @@ def main() -> None:
     )
 
     svg_str = svg.to_svg()
+
+    # Time in milliseconds.
+    print(f"Runtime: {1000 * (time.time() - t0)} ms")
+
+    # Get file size in kb.
+    svg_size = len(svg.to_svg()) / 1000
+    print(f"File size: {svg_size} kb")
 
     # Write SVG to file.
     with open(args.o, "w") as f:
