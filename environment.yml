@@ -6,8 +6,7 @@ dependencies:
   - python=3.10
   - pip
   - pip: 
-    - matplotlib
-    - numpy
-    - rdkit
-    - Bio
+    - matplotlib==3.8.2
+    - rdkit==2023.9.3
+    - bio==1.6.0
     - -e .
