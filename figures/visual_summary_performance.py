@@ -1,0 +1,259 @@
+"""
+Description:    Visual summary of the performance results. 
+Usage:          python3 visual_summary_performancy.py -i path/to/performance/results.tsv -o path/to/out/dir
+"""
+import argparse 
+import math 
+from collections import defaultdict
+
+import matplotlib.pyplot as plt
+
+def cli() -> argparse.Namespace:
+    """
+    Command line interface for this script.
+    
+    :return: Namespace of command line arguments.
+    :rtype: argparse.Namespace
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", type=str, required=True, help="Path to input TSV file.")
+    parser.add_argument("-o", type=str, required=True, help="Path to output directory.")
+    return parser.parse_args()
+
+def main() -> None:
+    """
+    Driver function.
+    """
+    args = cli()
+
+    # Parse performance results.
+    data = defaultdict(list)
+    with open(args.i, "r") as file_open:
+        file_open.readline() # Skip header.
+        for line in file_open:
+            # ind, num_heavy_atoms, num_bonds, style, look, runtime, file_size = line.strip().split("\t")
+            ind, *rest = line.strip().split("\t")
+            data[ind].append(rest)
+
+    # Histogram of number of heavy atoms.
+    num_heavy_atoms = [int(data[ind][0][0]) for ind in data]
+    num_bonds = [int(data[ind][0][1]) for ind in data]
+    bins = max(max(max(num_heavy_atoms), max(num_bonds)), 60)
+    plt.hist(num_heavy_atoms, bins=bins, range=(0, bins), edgecolor="red", alpha=0.7, label="Number of heavy atoms", histtype="step")
+    plt.hist(num_bonds, bins=bins, range=(0, bins), edgecolor="blue", alpha=0.7, label="Number of bonds", histtype="step")
+    plt.ylim(0, 300)
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.xlabel("Count")
+    plt.ylabel("Frequency")
+    plt.legend(loc="upper left")
+    plt.savefig(f"{args.o}/atom_and_bound_counts.png", dpi=300, bbox_inches="tight", transparent=True)   
+    plt.clf()
+
+    # Histogram of drawing speed (runtime) for different styles for cartoon look.
+    spacefilling, ballandstick, tube, wireframe = [], [], [], []
+    for ind in data:
+        for item in data[ind]:
+            if item[2] == "SpaceFilling" and item[3] == "Cartoon": spacefilling.append(float(item[4]))
+            elif item[2] == "BallAndStick" and item[3] == "Cartoon": ballandstick.append(float(item[4]))
+            elif item[2] == "Tube" and item[3] == "Cartoon": tube.append(float(item[4]))
+            elif item[2] == "Wireframe" and item[3] == "Cartoon": wireframe.append(float(item[4]))
+    
+    num_bins = max(int(math.ceil(max(max(max(spacefilling), max(ballandstick)), max(max(tube), max(wireframe))))), 140)
+    bin_edges = [i for i in range(0, num_bins + 1, 1)]
+    plt.hist(spacefilling, bins=bin_edges, range=(0, num_bins), edgecolor="red", alpha=0.7, label="Space-filling", histtype="step")
+    plt.hist(ballandstick, bins=bin_edges, range=(0, num_bins), edgecolor="blue", alpha=0.7, label="Ball-and-stick", histtype="step")
+    plt.hist(tube, bins=bin_edges, range=(0, num_bins), edgecolor="green", alpha=0.7, label="Tube", histtype="step")
+    plt.hist(wireframe, bins=bin_edges, range=(0, num_bins), edgecolor="orange", alpha=0.7, label="Wireframe", histtype="step")
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 50) 
+    plt.xlabel("Runtime (milliseconds)")
+    plt.ylabel("Frequency")
+    plt.legend(loc="upper right")
+    plt.savefig(f"{args.o}/speed_cartoon.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()
+
+    # Histogram of drawing speed (runtime) for different styles for glossy look.
+    spacefilling, ballandstick, tube, wireframe = [], [], [], []
+    for ind in data:
+        for item in data[ind]:
+            if item[2] == "SpaceFilling" and item[3] == "Glossy": spacefilling.append(float(item[4]))
+            elif item[2] == "BallAndStick" and item[3] == "Glossy": ballandstick.append(float(item[4]))
+            elif item[2] == "Tube" and item[3] == "Glossy": tube.append(float(item[4]))
+            elif item[2] == "Wireframe" and item[3] == "Glossy": wireframe.append(float(item[4]))
+
+    num_bins = max(int(math.ceil(max(max(max(spacefilling), max(ballandstick)), max(max(tube), max(wireframe))))), 140)
+    bin_edges = [i for i in range(0, num_bins + 1, 1)]
+    plt.hist(spacefilling, bins=bin_edges, range=(0, num_bins), edgecolor="red", alpha=0.7, label="Space-filling", histtype="step")
+    plt.hist(ballandstick, bins=bin_edges, range=(0, num_bins), edgecolor="blue", alpha=0.7, label="Ball-and-stick", histtype="step")
+    plt.hist(tube, bins=bin_edges, range=(0, num_bins), edgecolor="green", alpha=0.7, label="Tube", histtype="step")
+    plt.hist(wireframe, bins=bin_edges, range=(0, num_bins), edgecolor="orange", alpha=0.7, label="Wireframe", histtype="step")
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 50)
+    plt.xlabel("Runtime (milliseconds)")
+    plt.ylabel("Frequency")
+    plt.legend(loc="upper right")
+    plt.savefig(f"{args.o}/speed_glossy.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()
+
+    # Plot average runtime per number of heavy atoms for different styles for cartoon look.
+    def plot_runtime(style: str, look: str, label: str, color: str):
+        spacefilling = defaultdict(list)
+        for ind in data:
+            for item in data[ind]:
+                if item[2] == style and item[3] == look: spacefilling[int(item[0])].append(float(item[4]))
+
+        num_bins = 50
+        bins = [i for i in range(1, num_bins + 1, 1)]
+        bin_heights = [0 for _ in range(num_bins)]
+        bin_yerrs = [0 for _ in range(num_bins)]
+        for i in range(0, num_bins):
+            bin = i + 1
+            values = spacefilling[bin]
+            if len(values) == 0: continue
+            avg = sum(values) / len(values)
+            std = math.sqrt(sum([(value - avg)**2 for value in values]) / len(values))
+            bin_heights[i] = avg
+            bin_yerrs[i] = std 
+            
+        # Plot avg runtime vs. number of heavy atoms for every style for Cartoon.
+        non_zero = [i for i in range(len(bin_heights)) if bin_heights[i] != 0]
+        bins = [bins[i] for i in non_zero]
+        bin_heights = [bin_heights[i] for i in non_zero]
+        plt.plot(bins, bin_heights, color=color, label=label)
+        plt.fill_between(bins, [bin_heights[i] - bin_yerrs[i] for i in range(len(bin_heights))], [bin_heights[i] + bin_yerrs[i] for i in range(len(bin_heights))], color=color, alpha=0.2)
+    
+    plot_runtime("SpaceFilling", "Cartoon", "Space-filling", "red")
+    plot_runtime("BallAndStick", "Cartoon", "Ball-and-stick", "blue")
+    plot_runtime("Tube", "Cartoon", "Tube", "green")
+    plot_runtime("Wireframe", "Cartoon", "Wireframe", "orange")
+    
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 1200)
+    plt.xlim(0, 50)
+    plt.xlabel("Number of heavy atoms")
+    plt.ylabel("Runtime (milliseconds)")
+    plt.legend(loc="upper left")
+    plt.savefig(f"{args.o}/speed_cartoon_per_atom.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()
+    
+    # Plot average runtime per number of heavy atoms for different styles for glossy look.
+    plot_runtime("SpaceFilling", "Glossy", "Space-filling", "red")
+    plot_runtime("BallAndStick", "Glossy", "Ball-and-stick", "blue")
+    plot_runtime("Tube", "Glossy", "Tube", "green")
+    plot_runtime("Wireframe", "Glossy", "Wireframe", "orange")
+
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 1200)
+    plt.xlim(0, 50)
+    plt.xlabel("Number of heavy atoms")
+    plt.ylabel("Runtime (milliseconds)")
+    plt.legend(loc="upper left")
+    plt.savefig(f"{args.o}/speed_glossy_per_atom.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()
+
+    # Histogram of file sizes (kb) for different styles for cartoon look.
+    spacefilling, ballandstick, tube, wireframe = [], [], [], []
+    for ind in data:
+        for item in data[ind]:
+            if item[2] == "SpaceFilling" and item[3] == "Cartoon": spacefilling.append(float(item[5]))
+            elif item[2] == "BallAndStick" and item[3] == "Cartoon": ballandstick.append(float(item[5]))
+            elif item[2] == "Tube" and item[3] == "Cartoon": tube.append(float(item[5]))
+            elif item[2] == "Wireframe" and item[3] == "Cartoon": wireframe.append(float(item[5]))
+    
+    num_bins = max(int(math.ceil(max(max(max(spacefilling), max(ballandstick)), max(max(tube), max(wireframe))))), 140)
+    bin_edges = [i for i in range(0, num_bins + 1, 1)]
+    plt.hist(spacefilling, bins=bin_edges, range=(0, num_bins), edgecolor="red", alpha=0.7, label="Space-filling", histtype="step")
+    plt.hist(ballandstick, bins=bin_edges, range=(0, num_bins), edgecolor="blue", alpha=0.7, label="Ball-and-stick", histtype="step")
+    plt.hist(tube, bins=bin_edges, range=(0, num_bins), edgecolor="green", alpha=0.7, label="Tube", histtype="step")
+    plt.hist(wireframe, bins=bin_edges, range=(0, num_bins), edgecolor="orange", alpha=0.7, label="Wireframe", histtype="step")
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 800)
+    plt.xlabel("File size (kilobytes)")
+    plt.ylabel("Frequency")
+    plt.legend(loc="upper right")
+    plt.savefig(f"{args.o}/cartoon_file_size.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()
+
+    # Histogram of file sizes (kb) for different styles for glossy look.
+    spacefilling, ballandstick, tube, wireframe = [], [], [], []
+    for ind in data:
+        for item in data[ind]:
+            if item[2] == "SpaceFilling" and item[3] == "Glossy": spacefilling.append(float(item[5]))
+            elif item[2] == "BallAndStick" and item[3] == "Glossy": ballandstick.append(float(item[5]))
+            elif item[2] == "Tube" and item[3] == "Glossy": tube.append(float(item[5]))
+            elif item[2] == "Wireframe" and item[3] == "Glossy": wireframe.append(float(item[5]))
+    
+    num_bins = max(int(math.ceil(max(max(max(spacefilling), max(ballandstick)), max(max(tube), max(wireframe))))), 140)
+    bin_edges = [i for i in range(0, num_bins + 1, 1)]
+    plt.hist(spacefilling, bins=bin_edges, range=(0, num_bins), edgecolor="red", alpha=0.7, label="Space-filling", histtype="step")
+    plt.hist(ballandstick, bins=bin_edges, range=(0, num_bins), edgecolor="blue", alpha=0.7, label="Ball-and-stick", histtype="step")
+    plt.hist(tube, bins=bin_edges, range=(0, num_bins), edgecolor="green", alpha=0.7, label="Tube", histtype="step")
+    plt.hist(wireframe, bins=bin_edges, range=(0, num_bins), edgecolor="orange", alpha=0.7, label="Wireframe", histtype="step")
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 800)
+    plt.xlabel("File size (kilobytes)")
+    plt.ylabel("Frequency")
+    plt.legend(loc="upper right")
+    plt.savefig(f"{args.o}/glossy_file_size.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()
+
+    # Plot average file size per number of heavy atoms for different styles for cartoon look.
+    def plot_runtime(style: str, look: str, label: str, color: str):
+        spacefilling = defaultdict(list)
+        for ind in data:
+            for item in data[ind]:
+                if item[2] == style and item[3] == look: spacefilling[int(item[0])].append(float(item[5]))
+
+        num_bins = 50
+        bins = [i for i in range(1, num_bins + 1, 1)]
+        bin_heights = [0 for _ in range(num_bins)]
+        bin_yerrs = [0 for _ in range(num_bins)]
+        for i in range(0, num_bins):
+            bin = i + 1
+            values = spacefilling[bin]
+            if len(values) == 0: continue
+            avg = sum(values) / len(values)
+            std = math.sqrt(sum([(value - avg)**2 for value in values]) / len(values))
+            bin_heights[i] = avg
+            bin_yerrs[i] = std 
+            
+        # Plot avg runtime vs. number of heavy atoms for every style for Cartoon.
+        non_zero = [i for i in range(len(bin_heights)) if bin_heights[i] != 0]
+        bins = [bins[i] for i in non_zero]
+        bin_heights = [bin_heights[i] for i in non_zero]
+        plt.plot(bins, bin_heights, color=color, label=label)
+        plt.fill_between(bins, [bin_heights[i] - bin_yerrs[i] for i in range(len(bin_heights))], [bin_heights[i] + bin_yerrs[i] for i in range(len(bin_heights))], color=color, alpha=0.2)
+    
+    plot_runtime("SpaceFilling", "Cartoon", "Space-filling", "red")
+    plot_runtime("BallAndStick", "Cartoon", "Ball-and-stick", "blue")
+    plot_runtime("Tube", "Cartoon", "Tube", "green")
+    plot_runtime("Wireframe", "Cartoon", "Wireframe", "orange")
+
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 150)
+    plt.xlim(0, 50)
+    plt.xlabel("Number of heavy atoms")
+    plt.ylabel("File size (kilobytes)")
+    plt.legend(loc="upper left")
+    plt.savefig(f"{args.o}/file_size_cartoon_per_atom.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()   
+
+    # Plot average file size per number of heavy atoms for different styles for glossy look.
+    plot_runtime("SpaceFilling", "Glossy", "Space-filling", "red")
+    plot_runtime("BallAndStick", "Glossy", "Ball-and-stick", "blue")
+    plot_runtime("Tube", "Glossy", "Tube", "green")
+    plot_runtime("Wireframe", "Glossy", "Wireframe", "orange")
+
+    plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
+    plt.ylim(0, 150)
+    plt.xlim(0, 50)
+    plt.xlabel("Number of heavy atoms")
+    plt.ylabel("File size (kilobytes)")
+    plt.legend(loc="upper left")
+    plt.savefig(f"{args.o}/file_size_glossy_per_atom.png", dpi=300, bbox_inches="tight", transparent=True)
+    plt.clf()
+
+    exit(0)
+
+if __name__ == "__main__":
+    main()
