@@ -1,7 +1,7 @@
 """
 Quickhull algorithm for computing the convex hull of a set of points in 2D space.
 
-Source: https://stackoverflow.com/questions/74812556/computing-quick-convex-hull-using-numba
+Read more about the quickhull algorithm: https://dl.acm.org/doi/abs/10.1145/235815.235821
 """
 import typing as ty 
 
