@@ -51,7 +51,7 @@ def main() -> None:
     plt.yticks(fontsize=fontsize)
     plt.xlabel("Count", fontsize=fontsize)
     plt.ylabel("Frequency", fontsize=fontsize)
-    legend = plt.legend(loc="upper left", fontsize=fontsize)
+    legend = plt.legend(loc="upper left", fontsize=14)
     legend.get_frame().set_alpha(0.25)
     plt.savefig(f"{args.o}/atom_and_bound_counts.png", dpi=300, bbox_inches="tight", transparent=True)   
     plt.clf()
