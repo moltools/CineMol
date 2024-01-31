@@ -1,7 +1,8 @@
 """
 Quickhull algorithm for computing the convex hull of a set of points in 2D space.
 
-Read more about the quickhull algorithm: https://dl.acm.org/doi/abs/10.1145/235815.235821
+Used as source: https://stackoverflow.com/questions/74812556/computing-quick-convex-hull-using-numba
+Read more about the quickhull algorithm: https://surface.syr.edu/eecs_techreports/65/ 
 """
 import typing as ty 
 
@@ -75,13 +76,11 @@ def calculate_convex_hull(S: ty.List[Point2D]) -> ty.List[int]:
     :rtype: list[int]
     """
     # Find the points with the minimum and maximum x-coordinates.
-    a = argmin([p.x for p in S])
-
-    # Find the point with the maximum x-coordinate. 
+    min_index = argmin([p.x for p in S])
     max_index = argmax([p.x for p in S])
 
     # Recursively compute the convex hull of the points on the negative side of the line.
     return (
-        process(S, arange(len(S)), a, max_index)[:-1] + 
-        process(S, arange(len(S)), max_index, a)[:-1]
+        process(S, arange(len(S)), min_index, max_index)[:-1] + 
+        process(S, arange(len(S)), max_index, min_index)[:-1]
     )
