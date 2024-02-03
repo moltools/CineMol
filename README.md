@@ -1,7 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Maintainer](https://img.shields.io/badge/Maintainer-davidmeijer-blue)](https://github.com/davidmeijer)
 [![Generic badge](https://img.shields.io/badge/Version-beta-green.svg)](https://shields.io/)
-[![DOI:10.26434/chemrxiv-2024-bvxr2](http://img.shields.io/badge/DOI-10.26434/chemrxiv-2024-bvxr2-B31B1B.svg)](https://chemrxiv.org/engage/chemrxiv/article-details/65bbb3c966c1381729bd6e27)
+[![arXiv](https://img.shields.io/badge/arXiv-10.26434/chemrxiv-2024-bvxr2-b31b1b.svg)]([https://arxiv.org/abs/1234.56789](https://chemrxiv.org/engage/chemrxiv/article-details/65bbb3c966c1381729bd6e27))
 
 # CineMol
 
