@@ -1,13 +1,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Maintainer](https://img.shields.io/badge/Maintainer-davidmeijer-blue)](https://github.com/davidmeijer)
 [![Generic badge](https://img.shields.io/badge/Version-beta-green.svg)](https://shields.io/)
-[![arXiv](https://img.shields.io/badge/arXiv-10.26434/chemrxiv-2024-bvxr2-b31b1b.svg)]([https://arxiv.org/abs/1234.56789](https://chemrxiv.org/engage/chemrxiv/article-details/65bbb3c966c1381729bd6e27))
 
 # CineMol
 
 <img src="./logo.png" alt="logo" width="100">
 
-CineMol is a direct-to-SVG small molecule drawer. 
+CineMol is a direct-to-SVG small molecule drawer. Read more about CineMol in our [pre-print](https://chemrxiv.org/engage/chemrxiv/article-details/65bbb3c966c1381729bd6e27). 
 
 You can try out CineMol online [here](https://moltools.bioinformatics.nl/cinemol).
 
