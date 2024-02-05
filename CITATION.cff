@@ -11,7 +11,7 @@ authors:
     given-names: Justin J. J.
     orcid: https://orcid.org/0000-0002-9340-5511
 title: "CineMol: a programmatically accessible direct-to-SVG 3D small molecule drawer"
-version: 0.1.0
+version: 1.0.0
 identifiers:
   - type: doi
     value: 10.26434/chemrxiv-2024-bvxr2
