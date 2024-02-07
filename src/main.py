@@ -18,7 +18,7 @@ def cli() -> argparse.Namespace:
     :rtype: argparse.Namespace
     """
     parser = argparse.ArgumentParser(description="Draw a ball-and-stick represention of a  molecule using CineMol and RDKit.")
-    parser.add_argument("-i", type=str, required=True, help="Input file path to SDF file.")
+    parser.add_argument("-i", type=str, required=True, help="Input file path to SDF file. Only the first molecule in the SDF file is drawn.")
     parser.add_argument("-o", type=str, required=True, help="Output file path to SVG file.")
     parser.add_argument("-s", type=str, required=False, default="ballandstick", choices=["spacefilling", "ballandstick", "tube", "wireframe"], help="Depiction style (default: ballandstick).")
     parser.add_argument("-l", type=str, required=False, default="cartoon", choices=["cartoon", "glossy"], help="Look of the depiction (default: cartoon).")

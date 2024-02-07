@@ -13,11 +13,12 @@ def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.L
     """
     atoms, bonds = [], []
 
-    lines = src.split("$$$$\n")[0].split("\n")
+    lines = src.split("\n")
 
-    counts_line = lines[3]
-    atom_count_str, bond_count_str, *_ = counts_line.strip().split()
-    atom_count, bond_count = int(atom_count_str), int(bond_count_str)
+    counts_line = lines[3] # Counts line of the first molecule in the SDF file.
+
+    atom_count = int(counts_line[0:3])
+    bond_count = int(counts_line[3:6])
 
     atom_lines = lines[4:4 + atom_count]
     bond_lines = lines[4 + atom_count:4 + atom_count + bond_count]
@@ -27,15 +28,21 @@ def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.L
     # Parse atom line.
     for atom_line in atom_lines:
         atom_index += 1
-        parts = atom_line.strip().split()
-        x, y, z, atom_symbol = parts[0], parts[1], parts[2], parts[3]
-        x, y, z = float(x), float(y), float(z)
+
+        x = float(atom_line[0:10].strip())
+        y = float(atom_line[10:20].strip())
+        z = float(atom_line[20:30].strip())
+        atom_symbol = atom_line[31:34].strip()
+
         atoms.append(Atom(atom_index, atom_symbol, (x, y, z)))
         
     # Parse bond line.
     for bond_line in bond_lines:
-        parts = bond_line.strip().split()
-        start_index, stop_index, bond_order = parts[0], parts[1], parts[2]
+
+        start_index = int(bond_line[0:3])
+        stop_index = int(bond_line[3:6])
+        bond_order = int(bond_line[6:9])
+        
         bonds.append(Bond(int(start_index), int(stop_index), int(bond_order)))
 
     atom_map = {atom.index: atom for atom in atoms}

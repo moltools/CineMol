@@ -1,8 +1,10 @@
 import setuptools
 
+from src.cinemol.version import version
+
 setuptools.setup(
     name="CineMol",
-    version="1.0.1",
+    version=version,
     author="David Meijer",
     author_email="david.meijer@wur.nl",
     install_requires=[],

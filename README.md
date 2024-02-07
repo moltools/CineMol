@@ -26,7 +26,7 @@ cinemol -i path/to/your/molecule.sdf -o path/to/your/molecule.svg -s tube -l glo
 
 Command line options:
 
-* `-i`: input file path to SDF file (str).
+* `-i`: input file path to SDF file (str). Only the first molecule in the SDF file is drawn.
 * `-o`: output file path to SVG file (str).
 * `-s`: style (`spacefilling`/`ballandstick`/`tube`/`wireframe`) (str).
 * `-l`: look (`cartoon`/`glossy`) (str).
