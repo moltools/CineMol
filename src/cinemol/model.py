@@ -109,8 +109,7 @@ def get_node_polygon_vertices(
             if isinstance(node, ModelSphere) and point_is_inside_sphere(node.geometry, point): break 
             elif isinstance(node, ModelCylinder) and point_is_inside_cylinder(node.geometry, point): break
         else:
-            s = pov_z / (pov_z - point.z)
-            x, y = point.x * s, point.y * s 
+            x, y = point.x, point.y
             visible_points.append(Point2D(x, y))
 
     # If no visible points, return empty list.
@@ -304,11 +303,6 @@ class Scene:
                 midpoint_z = (start.z + end.z) / 2
                 sorting_values.append(midpoint_z)
 
-        # Get maximum z-coordinate of nodes for pov and add margin to it.
-        if scale is not None:
-            focal_length *= scale
-        pov_z = max(sorting_values) + focal_length 
-
         # Sort nodes by sorting values.
         nodes = [
             node for _, node 
@@ -373,10 +367,8 @@ class Scene:
 
             # Calculate line for wire.
             if isinstance(node, ModelWire):
-                start_s = pov_z / (pov_z - node.geometry.start.z)
-                start_x, start_y = node.geometry.start.x * start_s, node.geometry.start.y * start_s
-                end_s = pov_z / (pov_z - node.geometry.end.z)
-                end_x, end_y = node.geometry.end.x * end_s, node.geometry.end.y * end_s
+                start_x, start_y = node.geometry.start.x, node.geometry.start.y 
+                end_x, end_y = node.geometry.end.x, node.geometry.end.y
                 start = Point2D(start_x, start_y)
                 end = Point2D(end_x, end_y)
                 line = Line2D(reference, start, end)
@@ -388,6 +380,7 @@ class Scene:
             
             # Otherwise, calculate polygon for visible part of node.
             else:
+                pov_z = focal_length
                 points = get_node_polygon_vertices(node, pov_z, previous_nodes, resolution)
                 polygon = Polygon2D(reference, points)
 
@@ -414,8 +407,7 @@ class Scene:
 
             # Glossy style is different for spheres and cylinders.
             elif isinstance(node.depiction, Glossy) and isinstance(node, ModelSphere):
-                s = pov_z / (pov_z - node.geometry.center.z)
-                x, y = node.geometry.center.x * s, node.geometry.center.y * s
+                x, y = node.geometry.center.x, node.geometry.center.y
                 fill_color = node.depiction.fill_color
                 center = Point2D(x, y)
                 radius = node.geometry.radius
@@ -424,10 +416,8 @@ class Scene:
                 fills.append(Fill(reference, style))
             
             elif isinstance(node.depiction, Glossy) and isinstance(node, ModelCylinder):
-                start_s = pov_z / (pov_z - node.geometry.start.z)
-                start_x, start_y = node.geometry.start.x * start_s, node.geometry.start.y * start_s
-                end_s = pov_z / (pov_z - node.geometry.end.z)
-                end_x, end_y = node.geometry.end.x * end_s, node.geometry.end.y * end_s
+                start_x, start_y = node.geometry.start.x, node.geometry.start.y
+                end_x, end_y = node.geometry.end.x, node.geometry.end.y
                 fill_color = node.depiction.fill_color
                 start_center = Point2D(start_x, start_y)
                 end_center = Point2D(end_x, end_y)
