@@ -1,14 +1,32 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Command line interface for :mod:`cinemol`.
+
+Why does this file exist, and why not put this in ``__main__``? You might be tempted to import things from ``__main__``
+later, but that will cause problems--the code will get executed twice:
+
+- When you run ``python3 -m cinemol`` python will execute``__main__.py`` as a script.
+  That means there won't be any ``cinemol.__main__`` in ``sys.modules``.
+- When you import __main__ it will get executed again (as a module) because
+  there's no ``cinemol.__main__`` in ``sys.modules``.
+
+.. seealso:: https://click.palletsprojects.com/en/8.1.x/setuptools/#setuptools-integration
 """
-Description:       Main entry point for CineMol command line interface.
-Usage:             cinemol -h
-"""
-import argparse 
+import argparse
+import logging 
 from time import time
 
-from cinemol.version import version
+import click
+
+from cinemol.version import VERSION
 from cinemol.chemistry import Style, Look, draw_molecule
 from cinemol.parsers import parse_sdf
+
+__all__ = [
+    "main"
+]
+
+logger = logging.getLogger(__name__)
 
 def cli() -> argparse.Namespace:
     """
@@ -30,7 +48,7 @@ def cli() -> argparse.Namespace:
     parser.add_argument("-rz", type=int, default=0.0, help="Rotation over z-axis (default: 0.0).")
     parser.add_argument("--hs", action="store_true", help="Include hydrogens (default: False).")
     parser.add_argument("--vb", action="store_true", help="Verbose mode (default: False).")
-    parser.add_argument("-v", action="version", version=f"CineMol {version}")
+    parser.add_argument("-v", action="version", version=f"CineMol {VERSION}")
     args = parser.parse_args()
 
     args.s = {"spacefilling": Style.SpaceFilling, "ballandstick": Style.BallAndStick, "tube": Style.Tube, "wireframe": Style.Wireframe}[args.s]
@@ -38,6 +56,8 @@ def cli() -> argparse.Namespace:
 
     return args 
 
+@click.group()
+@click.version_option()
 def main() -> None:
     """
     Main entry point for CineMol command line interface.

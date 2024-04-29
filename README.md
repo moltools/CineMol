@@ -1,126 +1,176 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Maintainer](https://img.shields.io/badge/Maintainer-davidmeijer-blue)](https://github.com/davidmeijer)
-[![Generic badge](https://img.shields.io/badge/Version-beta-green.svg)](https://shields.io/)
+<p align="center">
+  <img src="./logo.png" height="150">
+</p>
 
-# CineMol
+<h1 align="center">
+  CineMol
+</h1>
 
-<img src="./logo.png" alt="logo" width="100">
+<p align="center">
+    <a href="https://github.com/MolTools/CineMol/actions/workflows/tests.yml">
+        <img alt="Tests" src="https://github.com/MolTools/CineMol/actions/workflows/tests.yml/badge.svg" /></a>
+    <a href="https://pypi.org/project/cinemol">
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/cinemol" /></a>
+    <a href="https://pypi.org/project/cinemol">
+        <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/cinemol" /></a>
+    <a href="https://github.com/MolTools/CineMol/blob/main/LICENSE">
+        <img alt="PyPI - License" src="https://img.shields.io/pypi/l/cinemol" /></a>
+    <a href='https://cinemol.readthedocs.io/en/latest/?badge=latest'>
+        <img src='https://readthedocs.org/projects/cinemol/badge/?version=latest' alt='Documentation Status' /></a>
+    <a href="https://codecov.io/gh/MolTools/CineMol/branch/main">
+        <img src="https://codecov.io/gh/MolTools/CineMol/branch/main/graph/badge.svg" alt="Codecov status" /></a>  
+    <a href="https://github.com/cthoyt/cookiecutter-python-package">
+        <img alt="Cookiecutter template from @cthoyt" src="https://img.shields.io/badge/Cookiecutter-snekpack-blue" /></a>
+    <a href='https://github.com/psf/black'>
+        <img src='https://img.shields.io/badge/code%20style-black-000000.svg' alt='Code style: black' /></a>
+    <a href="https://github.com/MolTools/CineMol/blob/main/.github/CODE_OF_CONDUCT.md">
+        <img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Contributor Covenant"/></a>
+</p>
+
 
 CineMol is a direct-to-SVG small molecule drawer. Read more about CineMol in our [pre-print](https://chemrxiv.org/engage/chemrxiv/article-details/65bbb3c966c1381729bd6e27). 
 
 You can try out CineMol online [here](https://moltools.bioinformatics.nl/cinemol).
 
-## Installation
-
-You can install CineMol with pip from the root of this repository:
+## 💪 Getting Started
 
 ```bash
-pip install .
+cinemol -i examples/data/penicillin_G.sdf -o examples/svgs/cartoon_spacefilling.svg -s spacefilling -l cartoon -r 100 -sc 10.0 --hs --vb
 ```
 
-## Usage CLI
+<p align="center">
+    <img src="examples/svgs/cartoon_spacefilling.svg" width=200 height=125>
+</p>
+
+### Command Line Interface
+
+The cinemol command line tool is automatically installed. It can
+be used from the shell with the `--help` flag to show all subcommands:
+
+```shell
+cinemol --help
+```
+
+## 🚀 Installation
+
+<!-- Uncomment this section after your first ``tox -e finish``
+The most recent release can be installed from
+[PyPI](https://pypi.org/project/cinemol/) with:
+
+```shell
+pip install cinemol
+```
+-->
+
+The most recent code and data can be installed directly from GitHub with:
+
+```shell
+pip install git+https://github.com/MolTools/CineMol.git
+```
+
+## 👐 Contributing
+
+Contributions, whether filing an issue, making a pull request, or forking, are appreciated. See
+[CONTRIBUTING.md](https://github.com/MolTools/CineMol/blob/main/.github/CONTRIBUTING.md) for more information on getting involved.
+
+## 👋 Attribution
+
+### ⚖️ License
+
+The code in this package is licensed under the MIT License.
+
+### 📖 Citation
+
+If you use CineMol in your research, please cite the following pre-print:
+
+```bibtex
+@software{Meijer_CineMol_a_programmatically_2024,
+    author = {Meijer, David and Medema, Marnix H. and Van der Hooft, Justin J. J.},
+    month = feb,
+    title = {{CineMol: a programmatically accessible direct-to-SVG 3D small molecule drawer}},
+    version = {0.0.1-dev},
+    year = {2024}
+}
+```
+
+
+### 🍪 Cookiecutter
+
+This package was created with [@audreyfeldroy](https://github.com/audreyfeldroy)'s
+[cookiecutter](https://github.com/cookiecutter/cookiecutter) package using [@cthoyt](https://github.com/cthoyt)'s
+[cookiecutter-snekpack](https://github.com/cthoyt/cookiecutter-snekpack) template.
+
+## 🛠️ For Developers
+
+<details>
+  <summary>See developer instructions</summary>
+
+The final section of the README is for if you want to get involved by making a code contribution.
+
+### Development Installation
+
+To install in development mode, use the following:
 
 ```bash
-cinemol -i path/to/your/molecule.sdf -o path/to/your/molecule.svg -s tube -l glossy -r 100 -sc 10.0 --hs
+git clone git+https://github.com/MolTools/CineMol.git
+cd CineMol
+pip install -e .
 ```
 
-Command line options:
+### 🥼 Testing
 
-* `-i`: input file path to SDF file (str). Only the first molecule in the SDF file is drawn.
-* `-o`: output file path to SVG file (str).
-* `-s`: style (`spacefilling`/`ballandstick`/`tube`/`wireframe`) (str).
-* `-l`: look (`cartoon`/`glossy`) (str).
-* `-r`: resolution of the SVG that determines the number of points to be drawn on the sphere and cylinder geometries in order to approximate them (int).
-* `-sc`: scales radii, coordinates, and strokes by this factor (float).
-* `-fl`: focal length of the camera in angstrom (float).
-* `-rx`: rotation over the x-axis in degrees (float).
-* `-ry`: rotation over the y-axis in degrees (float).
-* `-rz`: rotation over the z-axis in degrees (float).
-* `--hs`: show hydrogens (bool).
-* `--vb`: verbose (bool).
-* `-v`: print version to stdout.
+After cloning the repository and installing `tox` with `pip install tox`, the unit tests in the `tests/` folder can be
+run reproducibly with:
 
-### Styling options
-
-A penicillin G conformer, [retrieved from PubChem](https://pubchem.ncbi.nlm.nih.gov/compound/Penicillin-G), drawn with CineMol in various looks and styles:
-
-<table>
-  <tr>
-    <td>Space-filling cartoon</td>
-    <td>Space-filling glossy</td>
-  </tr>
-  <tr>
-    <td><img src="svgs/cartoon_spacefilling.svg" width=200 height=125></td>
-    <td><img src="svgs/glossy_spacefilling.svg" width=200 height=125></td>
-  </tr>
-  <tr>
-    <td>Ball-and-stick cartoon</td>
-    <td>Ball-and-stick glossy</td>
-  </tr>
-  <tr>
-    <td><img src="svgs/cartoon_ballandstick.svg" width=200 height=125></td>
-    <td><img src="svgs/glossy_ballandstick.svg" width=200 height=125></td>
-  </tr>
-  <tr>
-    <td>Tube cartoon</td>
-    <td>Tube glossy</td>
-  </tr>
-  <tr>
-    <td><img src="svgs/cartoon_tube.svg" width=200 height=125></td>
-    <td><img src="svgs/glossy_tube.svg" width=200 height=125></td>
-  </tr>
-  <tr>
-    <td colspan="2">Wireframe</td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="svgs/wireframe.svg" width=400 height=125></td>
-  </tr>
- </table>
-
- You can find the script to generate these figures [here](./examples/draw_all_depictions_for_molecule.py)
-
-## Usage Python
-
-```python
-from cinemol.parsers import parse_sdf 
-from cinemol.chemistry import Style, Look, draw_molecule
-
-# Parse atoms and bonds from an SDF file ...
-with open("path/to/your/molecule.sdf", "r") as f:
-    sdf_str = f.read()
-
-atoms, bonds = parse_sdf(sdf_str)
-
-# ... or create your own atom and bond objects:
-atoms = [
-    Atom(0, "C", (0.0, 0.0, 0.0)), 
-    Atom(1, "N", (1.0, 0.0, 0.0))
-]
-bonds = [
-    Bond(0, 1, order=3)
-]
-
-# Draw molecule to SVG string:
-svg = draw_molecule(atoms=atoms, bonds=bonds, style=Style.Tube, look=Look.Glossy, resolution=100, scale=10.0)
-svg_str = svg.to_svg()
+```shell
+tox
 ```
 
-See `src/cinemol/chemistry.py` for the `Atom` and `Bond` classes, and for more options for `draw_molecule`.
+Additionally, these tests are automatically re-run with each commit in a
+[GitHub Action](https://github.com/MolTools/CineMol/actions?query=workflow%3ATests).
 
-### Fine-grained control
+### 📖 Building the Documentation
 
-See `Scene` in `src/cinemol/model.py` if you want direct access to the drawing scene. The scene can be giving various objects for drawing (e.g., `ModelSphere`, `ModelCylinder` ,`ModelWire`). The `draw_molecule` function is a convenience function on top of `Scene` that creates a scene, adds the molecule to the scene, and draws the scene to an SVG string. 
+The documentation can be built locally using the following:
 
-## Examples
+```shell
+git clone git+https://github.com/MolTools/CineMol.git
+cd CineMol
+tox -e docs
+open docs/build/html/index.html
+``` 
 
-Highlighted amino acids in daptomycin conformer ([src](./examples/draw_substructure_highlights.py)):
+The documentation automatically installs the package as well as the `docs`
+extra specified in the [`setup.cfg`](setup.cfg). `sphinx` plugins
+like `texext` can be added there. Additionally, they need to be added to the
+`extensions` list in [`docs/source/conf.py`](docs/source/conf.py).
 
-<img src="svgs/daptomycin.svg" width=250>
+The documentation can be deployed to [ReadTheDocs](https://readthedocs.io) using 
+[this guide](https://docs.readthedocs.io/en/stable/intro/import-guide.html).
+The [`.readthedocs.yml`](.readthedocs.yml) YAML file contains all the configuration you'll need.
+You can also set up continuous integration on GitHub to check not only that
+Sphinx can build the documentation in an isolated environment (i.e., with ``tox -e docs-test``)
+but also that [ReadTheDocs can build it too](https://docs.readthedocs.io/en/stable/pull-requests.html).
 
-Three aligned conformers of benzylphenol ([src](/examples/draw_superimposed_conformers.py)):
+### 📦 Making a Release
 
-<img src="svgs/conformers.svg" width=250>
+After installing the package in development mode and installing
+`tox` with `pip install tox`, the commands for making a new release are contained within the `finish` environment
+in `tox.ini`. Run the following from the shell:
 
-Wireframe model of lysozome [9LYZ](https://www.rcsb.org/structure/9lyz) with space-filling model of bound ligand trisaccharide NAM-NAG-NAM ([src](examples/draw_protein_with_ligands.py)):
+```shell
+tox -e finish
+```
 
-<img src="svgs/protein_with_ligand.svg" width=250>
+This script does the following:
+
+1. Uses [Bump2Version](https://github.com/c4urself/bump2version) to switch the version number in the `setup.cfg`,
+   `src/cinemol/version.py`, and [`docs/source/conf.py`](docs/source/conf.py) to not have the `-dev` suffix
+2. Packages the code in both a tar archive and a wheel using [`build`](https://github.com/pypa/build)
+3. Uploads to PyPI using [`twine`](https://github.com/pypa/twine). Be sure to have a `.pypirc` file
+   configured to avoid the need for manual input at this step
+4. Push to GitHub. You'll need to make a release going with the commit where the version was bumped.
+5. Bump the version to the next patch. If you made big changes and want to bump the version by minor, you can
+   use `tox -e bumpversion -- minor` after.
+
+</details>

@@ -1,5 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
+title: "CineMol: a programmatically accessible direct-to-SVG 3D small molecule drawer"
 authors:
   - family-names: Meijer
     given-names: David
@@ -10,9 +11,9 @@ authors:
   - family-names: Van der Hooft
     given-names: Justin J. J.
     orcid: https://orcid.org/0000-0002-9340-5511
-title: "CineMol: a programmatically accessible direct-to-SVG 3D small molecule drawer"
-version: 1.0.0
+version: 0.0.1-dev
 identifiers:
   - type: doi
     value: 10.26434/chemrxiv-2024-bvxr2
 date-released: 2024-02-02
+url: "https://github.com/MolTools/CineMol"

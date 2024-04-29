@@ -1,51 +1,15 @@
+# See https://setuptools.readthedocs.io/en/latest/build_meta.html
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"
 
-[project]
-name = "cinemol"
-version = "0.1.0"
-readme = "README.md"
-requires-python = ">=3.10"
-authors = [
-    { name = "David Meijer", email = "david.meijer@wur.nl" },
-    { name = "Marnix Medema", email = "marnix.medema@wur.nl" },
-    { name = "Justin van der Hooft", email = "justin.vanderhooft@wur.nl" }
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311"]
 
-]
-license = { text = "MIT" }
-classifiers = [
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
-    "Natural Language :: English",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-]
-dependencies = []
-
-[project.optional-dependencies]
-# development dependency groups
-test = [
-    "black",
-    "coverage",
-    "pylint",
-    "pytest >= 8.1.1",
-    "pytest-cov",
-]
-
-publishing = ["build", "twine", "wheel"]
-
-[project.urls]
-Repository = "https://github.com/moltools/CineMol"
-
-[project.scripts]
-cinemol = "src.cli.main:main"
-
-[tool.coverage.run]
-branch = true
-source = ["cinemol"]
-
-[tool.setuptools.packages.find]
-where = "src"
-include = ["cinemol", "cli"]
-exclude = ["tests", "tests*", "*tests.*", "*tests"]
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 100
+include_trailing_comma = true
+reverse_relative = true

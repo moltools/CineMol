@@ -1,0 +1,1 @@
+-e git+ssh://git@github.com/moltools/CineMol.git@0b368f33298a65ba444a8cd5b3b721346c1a62a3#egg=cinemol
