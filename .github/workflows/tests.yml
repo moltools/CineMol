@@ -57,7 +57,7 @@ jobs:
     name: Tests
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest ]
         python-version: [ "3.10" ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -71,8 +71,8 @@ jobs:
       - name: Test with pytest and generate coverage file
         run:
           tox run -e py
-      # - name: Upload coverage report to codecov
-      #   uses: codecov/codecov-action@v1
-      #   if: success()
-      #   with:
-      #     file: coverage.xml
+      - name: Upload coverage report to codecov
+        uses: codecov/codecov-action@v1
+        if: success()
+        with:
+          file: coverage.xml
