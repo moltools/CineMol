@@ -4,19 +4,24 @@ Description:    Generate multiple conformers, align three of them and draw.
 Usage:          python draw_superimposed_conformers.py -o model.svg
 """
 import argparse
+import time
 import typing as ty
-import time 
 
-from rdkit import Chem 
+from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from cinemol.style import (
-    Color, 
-    Glossy,
-    PubChemAtomRadius as RADIUS 
+from cinemol.geometry import (
+    Cylinder,
+    CylinderCapType,
+    Line3D,
+    Point3D,
+    Sphere,
+    get_perpendicular_lines,
 )
-from cinemol.geometry import Point3D, Line3D, Sphere, Cylinder, CylinderCapType, get_perpendicular_lines
-from cinemol.model import Scene, ModelCylinder, ModelSphere
+from cinemol.model import ModelCylinder, ModelSphere, Scene
+from cinemol.style import Color, Glossy
+from cinemol.style import PubChemAtomRadius as RADIUS
+
 
 def cli() -> argparse.Namespace:
     """
@@ -25,6 +30,7 @@ def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", type=str, required=True, help="Path to output SVG file.")
     return parser.parse_args()
+
 
 def generate_conformer(mol: Chem.Mol, num_confs: int) -> Chem.Mol:
     """
@@ -36,9 +42,10 @@ def generate_conformer(mol: Chem.Mol, num_confs: int) -> Chem.Mol:
     :rtype: Chem.Mol
     """
     mol = Chem.AddHs(mol)
-    AllChem.EmbedMultipleConfs(mol, numConfs=num_confs, randomSeed=0xf00d)
-    AllChem.MMFFOptimizeMolecule(mol) # MMFF94
+    AllChem.EmbedMultipleConfs(mol, numConfs=num_confs, randomSeed=0xF00D)
+    AllChem.MMFFOptimizeMolecule(mol)  # MMFF94
     return mol
+
 
 def find_substructure(mol: Chem.Mol, smarts: str) -> ty.List[int]:
     """
@@ -53,6 +60,7 @@ def find_substructure(mol: Chem.Mol, smarts: str) -> ty.List[int]:
     matches = mol.GetSubstructMatches(substructure)
     return [atom_index for match in matches for atom_index in match]
 
+
 def main() -> None:
     """
     Driver function.
@@ -61,7 +69,7 @@ def main() -> None:
 
     # Parse molecule.
     mol = Chem.MolFromSmiles(r"C1=CC=C(C=C1)CC2=CC=CC=C2O")
-    
+
     mol = generate_conformer(mol, 50)
     confs = [conf for conf in mol.GetConformers()]
 
@@ -75,9 +83,9 @@ def main() -> None:
 
     def draw_conformer(conf: Chem.Conformer, color: ty.Tuple[int, int, int]) -> None:
         for atom in mol.GetAtoms():
-            if atom.GetSymbol() == "H": 
+            if atom.GetSymbol() == "H":
                 continue
-            
+
             atom_symbol = atom.GetSymbol()
             atom_coordinates = Point3D(*conf.GetAtomPosition(atom.GetIdx()))
             atom_radius = RADIUS().to_angstrom(atom_symbol) / 4.0
@@ -87,7 +95,7 @@ def main() -> None:
             scene.add_node(ModelSphere(sphere, depiction))
 
         for bond in mol.GetBonds():
-            if bond.GetBeginAtom().GetSymbol() == "H" or bond.GetEndAtom().GetSymbol() == "H": 
+            if bond.GetBeginAtom().GetSymbol() == "H" or bond.GetEndAtom().GetSymbol() == "H":
                 continue
 
             start_index = bond.GetBeginAtomIdx()
@@ -105,9 +113,9 @@ def main() -> None:
                 depiction = Glossy(color)
                 scene.add_node(ModelCylinder(cylinder, depiction))
 
-    draw_conformer(confs[15], Color(230,  25,  75))
-    draw_conformer(confs[10], Color( 60, 180,  75))
-    draw_conformer(confs[20], Color(  0, 130, 200))
+    draw_conformer(confs[15], Color(230, 25, 75))
+    draw_conformer(confs[10], Color(60, 180, 75))
+    draw_conformer(confs[20], Color(0, 130, 200))
 
     t0 = time.time()
 
@@ -117,7 +125,7 @@ def main() -> None:
         verbose=True,
         scale=15.0,
         rotation_over_z_axis=-1.5,
-        filter_nodes_for_intersecting=False # We have cyliners intersecting at other places than just start and end.
+        filter_nodes_for_intersecting=False,  # We have cyliners intersecting at other places than just start and end.
     )
 
     svg_str = svg.to_svg()
@@ -134,6 +142,7 @@ def main() -> None:
         f.write(svg_str)
 
     exit(0)
+
 
 if __name__ == "__main__":
     main()

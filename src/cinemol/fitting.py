@@ -12,7 +12,7 @@ from cinemol.geometry import Point2D
 
 
 def argmin(vals: ty.List[float]) -> int:
-    """Returns the index of the minimum value in a list of floats.
+    """Return the index of the minimum value in a list of floats.
 
     :param vals: The list of floats.
     :type vals: list[float]
@@ -23,7 +23,7 @@ def argmin(vals: ty.List[float]) -> int:
 
 
 def argmax(vals: ty.List[float]) -> int:
-    """Returns the index of the maximum value in a list of floats.
+    """Return the index of the maximum value in a list of floats.
 
     :param vals: The list of floats.
     :type vals: list[float]
@@ -34,7 +34,7 @@ def argmax(vals: ty.List[float]) -> int:
 
 
 def arange(n: int) -> ty.List[int]:
-    """Returns a list of integers from 0 to n-1.
+    """Return a list of integers from 0 to n-1.
 
     :param n: The number of integers to return.
     :type n: int
@@ -48,7 +48,7 @@ def process(
     points: ty.List[Point2D],
     indices_of_points_to_consider: ty.List[int],
     index_a: int,
-    index_b: int
+    index_b: int,
 ) -> ty.List[int]:
     """Recursively computes the convex hull of a set of points in 2D space.
 
@@ -68,13 +68,9 @@ def process(
     signed_dist = []
     for i in indices_of_points_to_consider:
         signed_dist.append(
-            points[i].subtract_point(
-                points[index_a]
-            ).cross(
-                points[index_b].subtract_point(
-                    points[index_a]
-                )
-            )
+            points[i]
+            .subtract_point(points[index_a])
+            .cross(points[index_b].subtract_point(points[index_a]))
         )
 
     # Find the points in indices_of_points_to_consider that are on the positive
@@ -82,40 +78,25 @@ def process(
     indices_on_positive_side = [
         i
         for s, i in zip(signed_dist, indices_of_points_to_consider)
-        if (
-            s > 0
-            and i != index_a
-            and i != index_b
-        )
+        if (s > 0 and i != index_a and i != index_b)
     ]
 
     # If there are no points on the positive side of the line, return the line.
     if len(indices_on_positive_side) == 0:
-        return (index_a, index_b)
+        return [index_a, index_b]
 
     # Find the point in indices_of_points_to_consider that is farthest from the
     # line between a and b.
     index_c = max(zip(signed_dist, indices_of_points_to_consider))[1]
 
     # Recursively compute the convex hull of the points on the positive side of the line.
-    return (
-        process(
-            points,
-            indices_on_positive_side,
-            index_a,
-            index_c
-        )[:-1]
-        + process(
-            points,
-            indices_on_positive_side,
-            index_c,
-            index_b
-        )
+    return process(points, indices_on_positive_side, index_a, index_c)[:-1] + process(
+        points, indices_on_positive_side, index_c, index_b
     )
 
 
 def calculate_convex_hull(points: ty.List[Point2D]) -> ty.List[int]:
-    """Calculates the convex hull of a set of points in 2D space.
+    """Calculate the convex hull of a set of points in 2D space.
 
     :param points: The list of points.
     :type points: list[Point2D]

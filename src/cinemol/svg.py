@@ -2,16 +2,17 @@
 
 """This module contains classes for generating SVG documents."""
 
+import typing as ty
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import typing as ty
 
 from cinemol.geometry import Point2D
-from cinemol.style import Fill, Color
+from cinemol.style import Color, Fill
 
 
 class Shape2D(ABC):
     """Abstract base class for 2D shapes."""
+
     @abstractmethod
     def to_svg(self) -> str:
         """
@@ -32,6 +33,7 @@ class Circle2D(Shape2D):
     :type center: Point2D
     :param float radius: The radius of the circle.
     """
+
     reference: str
     center: Point2D
     radius: float
@@ -57,6 +59,7 @@ class Line2D(Shape2D):
     :param end: The end point of the line with shape (2,).
     :type end: Point2D
     """
+
     reference: str
     start: Point2D
     end: Point2D
@@ -70,11 +73,11 @@ class Line2D(Shape2D):
         x1, y1, x2, y2 = self.start.x, self.start.y, self.end.x, self.end.y
         return (
             "<line "
-            f"class=\"{self.reference}\" "
-            f"x1=\"{x1:.3f}\" "
-            f"y1=\"{y1:.3f}\" "
-            f"x2=\"{x2:.3f}\" "
-            f"y2=\"{y2:.3f}\""
+            f'class="{self.reference}" '
+            f'x1="{x1:.3f}" '
+            f'y1="{y1:.3f}" '
+            f'x2="{x2:.3f}" '
+            f'y2="{y2:.3f}"'
             "/>"
         )
 
@@ -89,6 +92,7 @@ class Polygon2D(Shape2D):
     :param points: The vertices of the polygon.
     :type points: ty.List[Point2D]
     """
+
     reference: str
     points: ty.List[Point2D]  # Ordered list of points.
 
@@ -99,7 +103,7 @@ class Polygon2D(Shape2D):
         :rtype: str
         """
         points = " ".join([f"{p.x:.3f},{p.y:.3f}" for p in self.points])
-        return f"<polygon class=\"{self.reference}\" points=\"{points}\"/>"
+        return f'<polygon class="{self.reference}" points="{points}"/>'
 
 
 @dataclass
@@ -115,6 +119,7 @@ class ViewBox:
     :param height: The height of the view box.
     :type height: float
     """
+
     min_x: float
     min_y: float
     width: float
@@ -142,26 +147,12 @@ class ViewBox:
         :return: The SVG representation of the view box.
         :rtype: str
         """
-        return f"viewBox=\"{self.min_x:.3f} {self.min_y:.3f} {self.width:.3f} {self.height:.3f}\""
+        return f'viewBox="{self.min_x:.3f} {self.min_y:.3f} {self.width:.3f} {self.height:.3f}"'
 
 
 class Svg:
-    """An SVG document.
-    :param view_box: The view box of the SVG document.
-    :type view_box: ViewBox
-    :param window: The window of the SVG document.
-    :type window: ty.Optional[ty.Tuple[float, float]]
-    :param background_color: The background color of the SVG document.
-    :type background_color: ty.Optional[Color]
-    :param version: The version of the SVG document.
-    :type version: float
-    :param encoding: The encoding of the SVG document.
-    :type encoding: str
-    :param fills: The fills of the SVG document.
-    :type fills: ty.List[Fill]
-    :param objects: The objects of the SVG document.
-    :type objects: ty.List[Shape2D]
-    """
+    """An SVG document."""
+
     def __init__(
         self,
         view_box: ViewBox,
@@ -170,8 +161,25 @@ class Svg:
         version: float = 1.0,
         encoding: str = "UTF-8",
         fills: ty.Optional[ty.List[Fill]] = None,
-        objects: ty.Optional[ty.List[Shape2D]] = None
+        objects: ty.Optional[ty.List[Shape2D]] = None,
     ) -> None:
+        """Initialize the SVG document.
+
+        :param view_box: The view box of the SVG document.
+        :type view_box: ViewBox
+        :param window: The window of the SVG document.
+        :type window: ty.Optional[ty.Tuple[float, float]]
+        :param background_color: The background color of the SVG document.
+        :type background_color: ty.Optional[Color]
+        :param version: The version of the SVG document.
+        :type version: float
+        :param encoding: The encoding of the SVG document.
+        :type encoding: str
+        :param fills: The fills of the SVG document.
+        :type fills: ty.List[Fill]
+        :param objects: The objects of the SVG document.
+        :type objects: ty.List[Shape2D]
+        """
         self.view_box = view_box
         self.window = window
         self.background_color = background_color
@@ -198,32 +206,35 @@ class Svg:
         if self.background_color is not None:
             background = (
                 "<rect "
-                f"x=\"{x:.3f}\" "
-                f"y=\"{y:.3f}\" "
-                "width=\"100%\" "
-                "height=\"100%\" "
-                f"fill=\"{self.background_color.to_hex()}\""
+                f'x="{x:.3f}" '
+                f'y="{y:.3f}" '
+                'width="100%" '
+                'height="100%" '
+                f'fill="{self.background_color.to_hex()}"'
                 "/>"
             )
         else:
             background = ""
 
         if not self.window:
-            return f"<?xml version=\"{self.version}\" encoding=\"{self.encoding}\"?>\n" +\
-                f"<svg xmlns=\"http://www.w3.org/2000/svg\" {self.view_box.to_svg()}>" + background
+            return (
+                f'<?xml version="{self.version}" encoding="{self.encoding}"?>\n'
+                + f'<svg xmlns="http://www.w3.org/2000/svg" {self.view_box.to_svg()}>'
+                + background
+            )
 
         else:
             width, height = self.window
             return (
                 "<?xml "
-                f"version=\"{self.version}\" "
-                f"encoding=\"{self.encoding}\""
+                f'version="{self.version}" '
+                f'encoding="{self.encoding}"'
                 "?>\n"
                 f"<svg "
-                "xmlns=\"http://www.w3.org/2000/svg\" "
+                'xmlns="http://www.w3.org/2000/svg" '
                 f"{self.view_box.to_svg()} "
-                f"width=\"{width}\" "
-                f"height=\"{height}\""
+                f'width="{width}" '
+                f'height="{height}"'
                 ">"
             ) + background
 
@@ -256,18 +267,18 @@ class Svg:
                 if definition is not None:
                     definitions.append(definition)
 
-        styles = "\n".join(styles)
-        definitions = "\n".join(definitions)
-        objects = "\n".join([object.to_svg() for object in self.objects])
+        styles_str = "\n".join(styles)
+        definitions_str = "\n".join(definitions)
+        objects_str = "\n".join([object.to_svg() for object in self.objects])
 
         return (
             f"{header}\n"
             "<defs>\n"
             "<style>\n"
-            f"{styles}\n"
+            f"{styles_str}\n"
             "</style>\n"
-            f"{definitions}\n"
+            f"{definitions_str}\n"
             "</defs>\n"
-            f"{objects}\n"
+            f"{objects_str}\n"
             f"{footer}"
         )

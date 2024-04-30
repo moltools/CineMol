@@ -2,12 +2,11 @@
 
 """This module contains classes for styling molecular depictions."""
 
+import typing as ty
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import typing as ty
 
 from cinemol.geometry import Point2D
-
 
 # ==============================================================================
 # Color
@@ -15,21 +14,20 @@ from cinemol.geometry import Point2D
 
 
 class Color:
-    """A color in RGB format.
+    """A color in RGB format."""
 
-    :param r: The red component of the color.
-    :type r: int
-    :param g: The green component of the color.
-    :type g: int
-    :param b: The blue component of the color.
-    :type b: int
-    """
     def __init__(self, r: int, g: int, b: int) -> None:
-        if (
-            not isinstance(r, int)
-            or not isinstance(g, int)
-            or not isinstance(b, int)
-        ):
+        """Initialize the color.
+
+        :param r: The red component of the color.
+        :type r: int
+        :param g: The green component of the color.
+        :type g: int
+        :param b: The blue component of the color.
+        :type b: int
+        :raises TypeError: If r, g, or b is not an integer.
+        """
+        if not isinstance(r, int) or not isinstance(g, int) or not isinstance(b, int):
             raise TypeError(
                 f"Expected (r=int, g=int, b=int), got'(r={type(r)}, g={type(g)}, b={type(b)})'"
             )
@@ -74,16 +72,13 @@ class Color:
         :type alpha: float
         :return: Diffused color.
         :rtype: Color
+        :raises TypeError: If alpha is not a float.
         """
         if not isinstance(alpha, float):
             raise TypeError(f"Expected alpha to be float, got '{type(alpha)}'")
 
         alpha = max(0, min(1, alpha))
-        color = Color(
-            int(self.r * alpha),
-            int(self.g * alpha),
-            int(self.b * alpha)
-        )
+        color = Color(int(self.r * alpha), int(self.g * alpha), int(self.b * alpha))
 
         return color
 
@@ -94,9 +89,8 @@ class Color:
 
 
 class AtomColoringScheme(ABC):
-    """
-    Abstract base class for atom coloring schemes.
-    """
+    """Abstract base class for atom coloring schemes."""
+
     @abstractmethod
     def get_color(self, atom_symbol: str) -> Color:
         """
@@ -114,6 +108,7 @@ class CoreyPaulingKoltungAtomColor(AtomColoringScheme):
 
     Source: https://en.wikipedia.org/wiki/CPK_coloring
     """
+
     H = Color(255, 255, 255)  # White
     C = Color(80, 80, 80)  # Dark gray
     N = Color(0, 0, 255)  # Blue
@@ -174,6 +169,7 @@ class CoreyPaulingKoltungAtomColor(AtomColoringScheme):
 
 class AtomRadiusScheme(ABC):
     """Abstract base class for atom radius schemes."""
+
     @abstractmethod
     def to_angstrom(self, atom_symbol: str) -> float:
         """Return the radius of an atom in angstrom.
@@ -190,6 +186,7 @@ class PubChemAtomRadius(AtomRadiusScheme):
 
     Source: https://pubchem.ncbi.nlm.nih.gov/periodic-table/#property=AtomicRadius
     """
+
     H = 120.0
     He = 140.0
     Li = 182.0
@@ -308,6 +305,7 @@ class Cartoon(Depiction):
     :param opacity: The opacity of the fill.
     :type opacity: float
     """
+
     fill_color: Color
     outline_color: Color = Color(0, 0, 0)
     outline_width: float = 0.05
@@ -321,6 +319,7 @@ class Glossy(Depiction):
     :param fill_color: The color of the fill.
     :param outline_color: The color of the stroke.
     """
+
     fill_color: Color
     opacity: float = 1.0
 
@@ -330,45 +329,40 @@ class FillStyle:
 
 
 class Wire(FillStyle):
-    """Wire fill style.
+    """Wire fill style."""
 
-    :param stroke_color: The color of the stroke.
-    :type stroke_color: Color
-    :param stroke_width: The width of the stroke.
-    :type stroke_width: float
-    :param opacity: The opacity of the stroke.
-    :type opacity: float
-    """
-    def __init__(
-        self,
-        stroke_color: Color,
-        stroke_width: float,
-        opacity: float
-    ) -> None:
+    def __init__(self, stroke_color: Color, stroke_width: float, opacity: float) -> None:
+        """Initialize the wire fill style.
+
+        :param stroke_color: The color of the stroke.
+        :type stroke_color: Color
+        :param stroke_width: The width of the stroke.
+        :type stroke_width: float
+        :param opacity: The opacity of the stroke.
+        :type opacity: float
+        """
         self.stroke_color = stroke_color
         self.stroke_width = stroke_width
         self.opacity = opacity
 
 
 class Solid(FillStyle):
-    """Solid fill style.
+    """Solid fill style."""
 
-    :param fill_color: The color of the fill.
-    :type fill_color: Color
-    :param stroke_color: The color of the stroke.
-    :type stroke_color: Color
-    :param stroke_width: The width of the stroke.
-    :type stroke_width: float
-    :param opacity: The opacity of the fill.
-    :type opacity: float
-    """
     def __init__(
-        self,
-        fill_color: Color,
-        stroke_color: Color,
-        stroke_width: float,
-        opacity: float
+        self, fill_color: Color, stroke_color: Color, stroke_width: float, opacity: float
     ) -> None:
+        """Initialize the solid fill style.
+
+        :param fill_color: The color of the fill.
+        :type fill_color: Color
+        :param stroke_color: The color of the stroke.
+        :type stroke_color: Color
+        :param stroke_width: The width of the stroke.
+        :type stroke_width: float
+        :param opacity: The opacity of the fill.
+        :type opacity: float
+        """
         self.fill_color = fill_color
         self.stroke_color = stroke_color
         self.stroke_width = stroke_width
@@ -376,24 +370,20 @@ class Solid(FillStyle):
 
 
 class RadialGradient(FillStyle):
-    """Radial gradient fill style.
+    """Radial gradient fill style."""
 
-    :param fill_color: The color of the radial gradient.
-    :type fill_color: Color
-    :param center: The center of the radial gradient.
-    :type center: Point2D
-    :param radius: The radius of the radial gradient.
-    :type radius: float
-    :param opacity: The opacity of the radial gradient.
-    :type opacity: float
-    """
-    def __init__(
-        self,
-        fill_color: Color,
-        center: Point2D,
-        radius: float,
-        opacity: float
-    ) -> None:
+    def __init__(self, fill_color: Color, center: Point2D, radius: float, opacity: float) -> None:
+        """Initialize the radial gradient fill style.
+
+        :param fill_color: The color of the radial gradient.
+        :type fill_color: Color
+        :param center: The center of the radial gradient.
+        :type center: Point2D
+        :param radius: The radius of the radial gradient.
+        :type radius: float
+        :param opacity: The opacity of the radial gradient.
+        :type opacity: float
+        """
         self.fill_color = fill_color
         self.center = center
         self.radius = radius
@@ -401,24 +391,20 @@ class RadialGradient(FillStyle):
 
 
 class LinearGradient(FillStyle):
-    """Linear gradient fill style.
+    """Linear gradient fill style."""
 
-    :param fill_color: The color of the linear gradient.
-    :type fill_color: Color
-    :param start: The start of the linear gradient.
-    :type start: Point2D
-    :param end: The end of the linear gradient.
-    :type end: Point2D
-    :param opacity: The opacity of the linear gradient.
-    :type opacity: float
-    """
-    def __init__(
-        self,
-        fill_color: Color,
-        start: Point2D,
-        end: Point2D,
-        opacity: float
-    ) -> None:
+    def __init__(self, fill_color: Color, start: Point2D, end: Point2D, opacity: float) -> None:
+        """Initialize the linear gradient fill style.
+
+        :param fill_color: The color of the linear gradient.
+        :type fill_color: Color
+        :param start: The start of the linear gradient.
+        :type start: Point2D
+        :param end: The end of the linear gradient.
+        :type end: Point2D
+        :param opacity: The opacity of the linear gradient.
+        :type opacity: float
+        """
         self.fill_color = fill_color
         self.start = start
         self.end = end
@@ -434,6 +420,7 @@ class Fill:
     :param fill_style: The fill style.
     :type fill_style: FillStyle
     """
+
     reference: str
     fill_style: FillStyle
 
@@ -443,6 +430,7 @@ class Fill:
         :return: The SVG representation of the fill style. The first string is the
             style string, the second string is the definition string.
         :rtype: str, str
+        :raises TypeError: If the fill style is not a FillStyle.
         """
         if isinstance(self.fill_style, Wire):
             stroke_color = self.fill_style.stroke_color.to_hex()
@@ -489,14 +477,14 @@ class Fill:
             style_str = f".{self.reference}{{fill:url(#{self.reference});}}"
             definition_str = (
                 "<radialGradient"
-                f" id=\"{self.reference}\""
-                f" cx=\"{cx:.3f}\" cy=\"{cy:.3f}\""
-                f" r=\"{r:.3f}\" fx=\"{cx:.3f}\" fy=\"{cy:.3f}\""
-                " gradientTransform=\"matrix(1,0,0,1,0,0)\""
-                " gradientUnits=\"userSpaceOnUse\""
-                f" opacity=\"{self.fill_style.opacity}\">"
-                f"<stop offset=\"0.00\" stop-color=\"{stop_color_offset_a}\"/>"
-                f"<stop offset=\"1.00\" stop-color=\"{stop_color_offset_b}\"/>"
+                f' id="{self.reference}"'
+                f' cx="{cx:.3f}" cy="{cy:.3f}"'
+                f' r="{r:.3f}" fx="{cx:.3f}" fy="{cy:.3f}"'
+                ' gradientTransform="matrix(1,0,0,1,0,0)"'
+                ' gradientUnits="userSpaceOnUse"'
+                f' opacity="{self.fill_style.opacity}">'
+                f'<stop offset="0.00" stop-color="{stop_color_offset_a}"/>'
+                f'<stop offset="1.00" stop-color="{stop_color_offset_b}"/>'
                 "</radialGradient>"
             )
 
@@ -515,15 +503,15 @@ class Fill:
             style_str = f".{self.reference}{{fill:url(#{self.reference});}}"
             definition_str = (
                 "<linearGradient"
-                f" id=\"{self.reference}\""
-                f" x1=\"{x1:.3f}\" y1=\"{y1:.3f}\""
-                f" x2=\"{x2:.3f}\" y2=\"{y2:.3f}\""
-                " gradientUnits=\"userSpaceOnUse\""
-                " spreadMethod=\"reflect\""
-                " gradientTransform=\"rotate(90)\""
-                f" opacity=\"{self.fill_style.opacity}\">"
-                f"<stop offset=\"0.00\" stop-color=\"{stop_color_offset_a}\"/>"
-                f"<stop offset=\"1.00\" stop-color=\"{stop_color_offset_b}\"/>"
+                f' id="{self.reference}"'
+                f' x1="{x1:.3f}" y1="{y1:.3f}"'
+                f' x2="{x2:.3f}" y2="{y2:.3f}"'
+                ' gradientUnits="userSpaceOnUse"'
+                ' spreadMethod="reflect"'
+                ' gradientTransform="rotate(90)"'
+                f' opacity="{self.fill_style.opacity}">'
+                f'<stop offset="0.00" stop-color="{stop_color_offset_a}"/>'
+                f'<stop offset="1.00" stop-color="{stop_color_offset_b}"/>'
                 "</linearGradient>"
             )
 

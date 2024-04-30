@@ -26,8 +26,8 @@ def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.L
     atom_count = int(counts_line[0:3])
     bond_count = int(counts_line[3:6])
 
-    atom_lines = lines[4:4 + atom_count]
-    bond_lines = lines[4 + atom_count:4 + atom_count + bond_count]
+    atom_lines = lines[4 : 4 + atom_count]
+    bond_lines = lines[4 + atom_count : 4 + atom_count + bond_count]
 
     atom_index = 0
 
@@ -55,11 +55,9 @@ def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.L
     if not include_hs:
         atoms = [atom for atom in atoms if atom.symbol != "H"]
         bonds = [
-            bond for bond in bonds
-            if (
-                atom_map[bond.start_index].symbol != "H"
-                and atom_map[bond.end_index].symbol != "H"
-            )
+            bond
+            for bond in bonds
+            if (atom_map[bond.start_index].symbol != "H" and atom_map[bond.end_index].symbol != "H")
         ]
 
     return atoms, bonds

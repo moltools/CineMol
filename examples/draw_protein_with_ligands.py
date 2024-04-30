@@ -4,18 +4,17 @@ Description:    Draw a protein as wireframe, with ligands as space-filling.
 Usage:          python draw_protein_with_ligands.py -o model.svg
 """
 import argparse
-import time 
-
-from cinemol.style import (
-    Color, 
-    Glossy,
-    CoreyPaulingKoltungAtomColor as CPK, 
-    PubChemAtomRadius as RADIUS 
-)
-from cinemol.geometry import Point3D, Line3D, Sphere
-from cinemol.model import Scene, ModelWire, ModelSphere
+import time
 
 import Bio.PDB as PDB
+
+from cinemol.geometry import Line3D, Point3D, Sphere
+from cinemol.model import ModelSphere, ModelWire, Scene
+from cinemol.style import Color
+from cinemol.style import CoreyPaulingKoltungAtomColor as CPK
+from cinemol.style import Glossy
+from cinemol.style import PubChemAtomRadius as RADIUS
+
 
 def cli() -> argparse.Namespace:
     """
@@ -25,6 +24,7 @@ def cli() -> argparse.Namespace:
     parser.add_argument("-i", type=str, help="Path to input '9lyz.pdb' PDB file. ")
     parser.add_argument("-o", type=str, help="Path to output SVG file.")
     return parser.parse_args()
+
 
 def main() -> None:
     """
@@ -39,10 +39,9 @@ def main() -> None:
 
     # Parse protein from file and draw it as wireframe.
     # Parse ligand from file and draw it as space-filling.
-    edges = []
     for model in protein_structure:
         for chain in model:
-            previous_coordinates = None 
+            previous_coordinates = None
             for residue in chain:
 
                 # Protein wire.
@@ -52,7 +51,7 @@ def main() -> None:
                     if previous_coordinates is None:
                         previous_coordinates = coordinates
                         continue
-                    
+
                     line = Line3D(previous_coordinates, coordinates)
                     color = Color(0, 0, 0)
                     scene.add_node(ModelWire(line, color, width=0.5, opacity=0.75))
@@ -76,8 +75,8 @@ def main() -> None:
     # Draw scene.
     svg = scene.draw(
         verbose=True,
-        resolution=100, 
-        include_spheres=True, 
+        resolution=100,
+        include_spheres=True,
         include_wires=True,
         calculate_sphere_sphere_intersections=True,
         scale=5.0,
@@ -100,6 +99,7 @@ def main() -> None:
         f.write(svg_str)
 
     exit()
+
 
 if __name__ == "__main__":
     main()

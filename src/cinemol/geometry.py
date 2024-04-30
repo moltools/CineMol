@@ -2,12 +2,11 @@
 
 """This module contains classes for representing 3D shapes."""
 
+import math
+import typing as ty
 from dataclasses import dataclass
 from enum import Enum, auto
-import math
-import random
-import typing as ty
-
+from random import SystemRandom
 
 # ==============================================================================
 # Basic geometry classes
@@ -15,39 +14,42 @@ import typing as ty
 
 
 class Vector3D:
-    """Represents a vector in 3D space.
+    """Represents a vector in 3D space."""
 
-    :param x: The x-coordinate of the vector.
-    :type x: float
-    :param y: The y-coordinate of the vector.
-    :type y: float
-    :param z: The z-coordinate of the vector.
-    :type z: float
-    """
     def __init__(self, x: float, y: float, z: float) -> None:
+        """Initialize a new vector.
+
+        :param x: The x-coordinate of the vector.
+        :type x: float
+        :param y: The y-coordinate of the vector.
+        :type y: float
+        :param z: The z-coordinate of the vector.
+        :type z: float
+        """
         self.x = x
         self.y = y
         self.z = z
 
     @classmethod
     def create_random(cls) -> "Vector3D":
-        """Creates a random vector.
+        """Create a random vector.
 
         :return: A random vector.
         :rtype: Vector3D
         """
-        return Vector3D(random.random(), random.random(), random.random())
+        cryptogen = SystemRandom()
+        return Vector3D(cryptogen.random(), cryptogen.random(), cryptogen.random())
 
     def length(self) -> float:
-        """Calculates the length of this vector.
+        """Calculate the length of this vector.
 
         :return: The length of this vector.
         :rtype: float
         """
-        return math.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
+        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
     def normalize(self) -> "Vector3D":
-        """Normalizes this vector.
+        """Normalize this vector.
 
         :return: A new vector with the same direction as this vector but with unit length.
         :rtype: Vector3D
@@ -55,7 +57,7 @@ class Vector3D:
         return self.multiply(1 / self.length())
 
     def dot(self, other: "Vector3D") -> float:
-        """Calculates the dot product of this vector with another vector.
+        """Calculate the dot product of this vector with another vector.
 
         :param other: The vector to dot with this vector.
         :type other: Vector3D
@@ -65,7 +67,7 @@ class Vector3D:
         return self.x * other.x + self.y * other.y + self.z * other.z
 
     def cross(self, other: "Vector3D") -> "Vector3D":
-        """Calculates the cross product of this vector with another vector.
+        """Calculate the cross product of this vector with another vector.
 
         :param other: The vector to cross with this vector.
         :type other: Vector3D
@@ -75,7 +77,7 @@ class Vector3D:
         return Vector3D(
             self.y * other.z - self.z * other.y,
             self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x
+            self.x * other.y - self.y * other.x,
         )
 
     def subtract(self, other: "Vector3D") -> "Vector3D":
@@ -100,14 +102,16 @@ class Vector3D:
 
 
 class Point2D:
-    """Represents a point in 2D space.
+    """Represents a point in 2D space."""
 
-    :param x: The x-coordinate of the point.
-    :type x: float
-    :param y: The y-coordinate of the point.
-    :type y: float
-    """
     def __init__(self, x: float, y: float) -> None:
+        """Initialize a new point.
+
+        :param x: The x-coordinate of the point.
+        :type x: float
+        :param y: The y-coordinate of the point.
+        :type y: float
+        """
         self.x = x
         self.y = y
 
@@ -122,7 +126,7 @@ class Point2D:
         return Point2D(self.x - other.x, self.y - other.y)
 
     def cross(self, other: "Point2D") -> float:
-        """Calculates the cross product of this point with another point.
+        """Calculate the cross product of this point with another point.
 
         :param other: The point to cross with this point.
         :type other: Point2D
@@ -133,22 +137,24 @@ class Point2D:
 
 
 class Point3D:
-    """Represents a point in 3D space.
+    """Represents a point in 3D space."""
 
-    :param x: The x-coordinate of the point.
-    :type x: float
-    :param y: The y-coordinate of the point.
-    :type y: float
-    :param z: The z-coordinate of the point.
-    :type z: float
-    """
     def __init__(self, x: float, y: float, z: float) -> None:
+        """Initialize a new point.
+
+        :param x: The x-coordinate of the point.
+        :type x: float
+        :param y: The y-coordinate of the point.
+        :type y: float
+        :param z: The z-coordinate of the point.
+        :type z: float
+        """
         self.x = x
         self.y = y
         self.z = z
 
     def create_vector(self, other: "Point3D") -> Vector3D:
-        """Creates a vector from this point to another point.
+        """Create a vector from this point to another point.
 
         :param other: The other point.
         :type other: Point3D
@@ -158,7 +164,7 @@ class Point3D:
         return Vector3D(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def calculate_distance(self, other: "Point3D") -> float:
-        """Calculates the distance between this point and another point.
+        """Calculate the distance between this point and another point.
 
         :param other: The other point.
         :type other: Point3D
@@ -168,7 +174,7 @@ class Point3D:
         return self.create_vector(other).length()
 
     def midpoint(self, other: "Point3D") -> "Point3D":
-        """Calculates the midpoint between this point and another point.
+        """Calculate the midpoint between this point and another point.
 
         :param other: The other point.
         :type other: Point3D
@@ -178,7 +184,7 @@ class Point3D:
         return Point3D((self.x + other.x) / 2, (self.y + other.y) / 2, (self.z + other.z) / 2)
 
     def translate(self, vector: "Vector3D") -> "Point3D":
-        """Adds a vector to this point.
+        """Add a vector to this point.
 
         :param vector: The vector to add to this point.
         :type vector: Vector3D
@@ -187,13 +193,8 @@ class Point3D:
         """
         return Point3D(self.x + vector.x, self.y + vector.y, self.z + vector.z)
 
-    def rotate(
-        self,
-        x: float = 0.0,
-        y: float = 0.0,
-        z: float = 0.0
-    ) -> "Point3D":
-        """Rotates this point around the origin.
+    def rotate(self, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> "Point3D":
+        """Rotate this point around the origin.
 
         :param x: The clockwise rotation around the x-axis.
         :type x: float
@@ -227,7 +228,7 @@ class Point3D:
 
 
 def sign(x: float) -> int:
-    """Returns the sign of a number.
+    """Return the sign of a number.
 
     :param x: The number.
     :type x: float
@@ -270,6 +271,7 @@ class Line3D:
     :param end: The end point of the line.
     :type end: Point3D
     """
+
     start: Point3D
     end: Point3D
 
@@ -283,6 +285,7 @@ class Plane3D:
     :param normal: The normal vector of the plane.
     :type normal: Vector3D
     """
+
     center: Point3D
     normal: Vector3D
 
@@ -298,6 +301,7 @@ class Circle3D:
     :param normal: The normal vector of the circle.
     :type normal: Vector3D
     """
+
     center: Point3D
     radius: float
     normal: Vector3D
@@ -312,6 +316,7 @@ class Sphere:
     :param radius: The radius of the sphere.
     :type radius: float
     """
+
     center: Point3D
     radius: float
 
@@ -324,6 +329,7 @@ class CylinderCapType(Enum):
     :cvar FLAT: Flat cap.
     :cvar ROUND: Round cap.
     """
+
     NO_CAP = auto()
     FLAT = auto()
     ROUND = auto()
@@ -342,6 +348,7 @@ class Cylinder:
     :param cap_type: The type of the cap.
     :type cap_type: CylinderCapType
     """
+
     start: Point3D
     end: Point3D
     radius: float
@@ -452,11 +459,11 @@ def get_points_on_line_3d(line: Line3D, num_points: int) -> ty.List[Point3D]:
 
     points = []
     for i in range(num_points + 1):
-        i /= num_points
+        interpolation_factor: float = i / num_points
         point = Point3D(
-            s_cx + (e_cx - s_cx) * i,
-            s_cy + (e_cy - s_cy) * i,
-            s_cz + (e_cz - s_cz) * i
+            s_cx + (e_cx - s_cx) * interpolation_factor,
+            s_cy + (e_cy - s_cy) * interpolation_factor,
+            s_cz + (e_cz - s_cz) * interpolation_factor,
         )
         points.append(point)
 
@@ -466,9 +473,11 @@ def get_points_on_line_3d(line: Line3D, num_points: int) -> ty.List[Point3D]:
 def get_points_on_circumference_circle_3d(circle: Circle3D, num_points: int) -> ty.List[Point3D]:
     """Generate points on the circumference of the circle.
 
-    :param res: The resolution of the circle.
-    :type res: int
-    :return: The points on the circumference of the circle, with shape (N, 3).
+    :param circle: The circle.
+    :type circle: Circle3D
+    :param num_points: The number of points to generate.
+    :type num_points: int
+    :return: The points on the circumference of the circle.
     :rtype: ty.List[Point3D]
     """
     angles = [2 * math.pi * i / num_points for i in range(num_points)]
@@ -486,7 +495,7 @@ def get_points_on_circumference_circle_3d(circle: Circle3D, num_points: int) -> 
         point = Point3D(
             cx + r * cos_a * v.x + r * sin_a * w.x,
             cy + r * cos_a * v.y + r * sin_a * w.y,
-            cz + r * cos_a * v.z + r * sin_a * w.z
+            cz + r * cos_a * v.z + r * sin_a * w.z,
         )
         points.append(point)
 
@@ -494,9 +503,7 @@ def get_points_on_circumference_circle_3d(circle: Circle3D, num_points: int) -> 
 
 
 def get_points_on_surface_circle_3d(
-    circle: Circle3D,
-    num_radii: int,
-    num_points: int
+    circle: Circle3D, num_radii: int, num_points: int
 ) -> ty.List[Point3D]:
     """Generate points on the surface of the circle.
 
@@ -520,10 +527,7 @@ def get_points_on_surface_circle_3d(
 
 
 def get_points_on_surface_sphere(
-    sphere: Sphere,
-    num_phi: int,
-    num_theta: int,
-    filter_for_pov: bool = True
+    sphere: Sphere, num_phi: int, num_theta: int, filter_for_pov: bool = True
 ) -> ty.List[Point3D]:
     """Generate points on the surface of a sphere.
 
@@ -568,10 +572,10 @@ def get_points_on_surface_cap(
     cap_type: CylinderCapType,
     center_cap: Point3D,
     radius_cap: float,
-    normal_cap: Point3D,
+    normal_cap: Vector3D,
     center_cylinder: Point3D,
     resolution: int,
-    filter_for_pov: bool = True
+    filter_for_pov: bool = True,
 ) -> ty.List[Point3D]:
     """Generate points on the surface of the cap.
 
@@ -582,7 +586,7 @@ def get_points_on_surface_cap(
     :param radius_cap: The radius of the cap.
     :type radius_cap: float
     :param normal_cap: The normal vector of the cap.
-    :type normal_cap: Point3D
+    :type normal_cap: Vector3D
     :param center_cylinder: The center of the cylinder.
     :type center_cylinder: Point3D
     :param resolution: The resolution of the cap.
@@ -593,6 +597,7 @@ def get_points_on_surface_cap(
     :type filter_for_pov: bool
     :return: The points on the surface of the cap.
     :rtype: ty.List[Point3D]
+    :raises ValueError: If the cap type is unknown.
     """
     if cap_type == CylinderCapType.NO_CAP:
         return []
@@ -606,16 +611,11 @@ def get_points_on_surface_cap(
         plane = Plane3D(center_cap, normal_cap)
 
         points = get_points_on_surface_sphere(
-            sphere,
-            resolution,
-            resolution,
-            filter_for_pov=filter_for_pov
+            sphere, resolution, resolution, filter_for_pov=filter_for_pov
         )
 
         points = [
-            point
-            for point in points
-            if not same_side_of_plane(plane, center_cylinder, point)
+            point for point in points if not same_side_of_plane(plane, center_cylinder, point)
         ]
 
         return points
@@ -624,7 +624,10 @@ def get_points_on_surface_cap(
         raise ValueError(f"Unknown cap type: '{cap_type}'")
 
 
-def get_points_on_surface_cylinder(cylinder: Cylinder, resolution: int,) -> ty.List[Point3D]:
+def get_points_on_surface_cylinder(
+    cylinder: Cylinder,
+    resolution: int,
+) -> ty.List[Point3D]:
     """Generate points on the surface of the cylinder.
 
     :param cylinder: The cylinder.
@@ -646,24 +649,12 @@ def get_points_on_surface_cylinder(cylinder: Cylinder, resolution: int,) -> ty.L
     cap_type = cylinder.cap_type
 
     cap_points = get_points_on_surface_cap(
-        cap_type,
-        cylinder.start,
-        cylinder.radius,
-        normal,
-        cylinder.end,
-        resolution,
-        False
+        cap_type, cylinder.start, cylinder.radius, normal, cylinder.end, resolution, False
     )
     points.extend(cap_points)
 
     cap_points = get_points_on_surface_cap(
-        cap_type,
-        cylinder.end,
-        cylinder.radius,
-        normal,
-        cylinder.start,
-        resolution,
-        False
+        cap_type, cylinder.end, cylinder.radius, normal, cylinder.start, resolution, False
     )
     points.extend(cap_points)
 
@@ -697,6 +688,7 @@ def point_is_inside_cylinder(cylinder: Cylinder, point: Point3D) -> bool:
     :type point: Point3D
     :return: True if the point is inside the cylinder, False otherwise.
     :rtype: bool
+    :raises ValueError: If the cap type is unknown.
     """
     line = Line3D(cylinder.start, cylinder.end)
     dist = distance_to_line(line, point)
@@ -709,9 +701,8 @@ def point_is_inside_cylinder(cylinder: Cylinder, point: Point3D) -> bool:
         normal = cylinder.end.create_vector(cylinder.start).normalize()
         plane1 = Plane3D(cylinder.start, normal)
         plane2 = Plane3D(cylinder.end, normal)
-        is_between_planes = (
-            same_side_of_plane(plane1, point, cylinder.end)
-            and same_side_of_plane(plane2, point, cylinder.start)
+        is_between_planes = same_side_of_plane(plane1, point, cylinder.end) and same_side_of_plane(
+            plane2, point, cylinder.start
         )
         return dist <= cylinder.radius and is_between_planes
 

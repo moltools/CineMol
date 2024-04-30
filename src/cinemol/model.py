@@ -3,35 +3,36 @@
 """This model module contains classes for creating a scene with nodes and edges."""
 
 import typing as ty
+from logging import getLogger
 
 from cinemol.fitting import calculate_convex_hull
 from cinemol.geometry import (
+    Cylinder,
+    Line3D,
     Point2D,
     Point3D,
     Sphere,
-    Cylinder,
-    Line3D,
-    sphere_intersects_with_sphere,
-    sphere_intersects_with_cylinder,
     cylinder_intersects_with_cylinder,
-    get_points_on_surface_sphere,
     get_points_on_surface_cylinder,
+    get_points_on_surface_sphere,
+    point_is_inside_cylinder,
     point_is_inside_sphere,
-    point_is_inside_cylinder
+    sphere_intersects_with_cylinder,
+    sphere_intersects_with_sphere,
 )
 from cinemol.style import (
+    Cartoon,
     Color,
     Depiction,
-    Cartoon,
-    Glossy,
     Fill,
-    Wire,
-    Solid,
+    FillStyle,
+    Glossy,
+    LinearGradient,
     RadialGradient,
-    LinearGradient
+    Solid,
+    Wire,
 )
-from cinemol.svg import ViewBox, Svg, Polygon2D, Line2D
-
+from cinemol.svg import Line2D, Polygon2D, Shape2D, Svg, ViewBox
 
 # ==============================================================================
 # Model nodes
@@ -41,14 +42,17 @@ from cinemol.svg import ViewBox, Svg, Polygon2D, Line2D
 class ModelSphere:
     """Sphere shaped node in a scene.
 
-    :param geometry: The geometry of the node.
-    :type geometry: Sphere
-    :param depiction: The depiction of the node.
-    :type depiction: Depiction
-
     Used as node in a scene.
     """
+
     def __init__(self, geometry: Sphere, depiction: Depiction) -> None:
+        """Create a sphere shaped node in a scene.
+
+        :param geometry: The geometry of the node.
+        :type geometry: Sphere
+        :param depiction: The depiction of the node.
+        :type depiction: Depiction
+        """
         self.geometry = geometry
         self.depiction = depiction
 
@@ -56,14 +60,17 @@ class ModelSphere:
 class ModelCylinder:
     """Cylinder shaped node in a scene.
 
-    :param geometry: The geometry of the edge.
-    :type geometry: Cylinder
-    :param depiction: The depiction of the edge.
-    :type depiction: Depiction
-
     Used as edge between two nodes.
     """
+
     def __init__(self, geometry: Cylinder, depiction: Depiction) -> None:
+        """Create a cylinder shaped node in a scene.
+
+        :param geometry: The geometry of the edge.
+        :type geometry: Cylinder
+        :param depiction: The depiction of the edge.
+        :type depiction: Depiction
+        """
         self.geometry = geometry
         self.depiction = depiction
 
@@ -71,18 +78,21 @@ class ModelCylinder:
 class ModelWire:
     """Wire shaped node in a scene.
 
-    :param geometry: The geometry of the edge.
-    :type geometry: Line3D
-    :param color: The color of the edge.
-    :type color: Color
-    :param width: The width of the edge.
-    :type width: float
-    :param opacity: The opacity of the edge.
-    :type opacity: float
-
     Used as edge between two nodes.
     """
+
     def __init__(self, geometry: Line3D, color: Color, width: float, opacity: float) -> None:
+        """Create a wire shaped node in a scene.
+
+        :param geometry: The geometry of the edge.
+        :type geometry: Line3D
+        :param color: The color of the edge.
+        :type color: Color
+        :param width: The width of the edge.
+        :type width: float
+        :param opacity: The opacity of the edge.
+        :type opacity: float
+        """
         self.geometry = geometry
         self.color = color
         self.width = width
@@ -98,7 +108,7 @@ def get_node_polygon_vertices(
     this: ty.Union[ModelSphere, ModelCylinder, ModelWire],
     pov_z: float,
     others: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]],
-    resolution: int
+    resolution: int,
 ) -> ty.List[Point2D]:
     """Get the vertices of the polygon that represents the visible part of the node.
 
@@ -116,10 +126,7 @@ def get_node_polygon_vertices(
     # Generate points on surface of node geometry.
     if isinstance(this, ModelSphere):
         points = get_points_on_surface_sphere(
-            this.geometry,
-            resolution,
-            resolution,
-            filter_for_pov=True
+            this.geometry, resolution, resolution, filter_for_pov=True
         )
 
     elif isinstance(this, ModelCylinder):
@@ -159,15 +166,260 @@ def get_node_polygon_vertices(
 # ==============================================================================
 
 
-class Scene:
-    """A scene contains a list of nodes.
+def prepare_nodes_for_intersecting(
+    nodes_to_sort: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]],
+    include_spheres: bool,
+    include_cylinders: bool,
+    include_wires: bool,
+    rotation_over_x_axis: float = 0.0,
+    rotation_over_y_axis: float = 0.0,
+    rotation_over_z_axis: float = 0.0,
+    scale: ty.Optional[float] = None,
+) -> ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]:
+    """Filter, rotate, and scale nodes based on what to include in the scene.
 
-    :param nodes: The nodes in the scene.
-    :type nodes: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
+    :param nodes_to_sort: The nodes to filter.
+    :type nodes_to_sort: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
+    :param include_spheres: Whether to include spheres in the scene.
+    :type include_spheres: bool
+    :param include_cylinders: Whether to include cylinders in the scene.
+    :type include_cylinders: bool
+    :param include_wires: Whether to include wires in the scene.
+    :type include_wires: bool
+    :param rotation_over_x_axis: The rotation over the x-axis.
+    :type rotation_over_x_axis: float
+    :param rotation_over_y_axis: The rotation over the y-axis.
+    :type rotation_over_y_axis: float
+    :param rotation_over_z_axis: The rotation over the z-axis.
+    :type rotation_over_z_axis: float
+    :param scale: The scale of the scene.
+    :type scale: ty.Optional[float]
+    :return: The filtered nodes.
+    :rtype: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
     """
+    nodes: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]] = []
+
+    for node in nodes_to_sort:
+        if isinstance(node, ModelSphere) and include_spheres:
+            node.geometry.center = node.geometry.center.rotate(
+                rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis
+            )
+
+            if scale is not None:
+                node.geometry.radius *= scale
+                node.geometry.center = Point3D(
+                    node.geometry.center.x * scale,
+                    node.geometry.center.y * scale,
+                    node.geometry.center.z * scale,
+                )
+
+                if isinstance(node.depiction, Cartoon):
+                    node.depiction.outline_width *= scale
+
+            nodes.append(node)
+
+        elif isinstance(node, ModelCylinder) and include_cylinders:
+            node.geometry.start = node.geometry.start.rotate(
+                rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis
+            )
+            node.geometry.end = node.geometry.end.rotate(
+                rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis
+            )
+
+            if scale is not None:
+                node.geometry.radius *= scale
+                node.geometry.start = Point3D(
+                    node.geometry.start.x * scale,
+                    node.geometry.start.y * scale,
+                    node.geometry.start.z * scale,
+                )
+                node.geometry.end = Point3D(
+                    node.geometry.end.x * scale,
+                    node.geometry.end.y * scale,
+                    node.geometry.end.z * scale,
+                )
+
+                if isinstance(node.depiction, Cartoon):
+                    node.depiction.outline_width *= scale
+
+            nodes.append(node)
+
+        elif isinstance(node, ModelWire) and include_wires:
+            node.geometry.start = node.geometry.start.rotate(
+                rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis
+            )
+            node.geometry.end = node.geometry.end.rotate(
+                rotation_over_x_axis, rotation_over_y_axis, rotation_over_z_axis
+            )
+
+            if scale is not None:
+                node.geometry.start = Point3D(
+                    node.geometry.start.x * scale,
+                    node.geometry.start.y * scale,
+                    node.geometry.start.z * scale,
+                )
+                node.geometry.end = Point3D(
+                    node.geometry.end.x * scale,
+                    node.geometry.end.y * scale,
+                    node.geometry.end.z * scale,
+                )
+
+                node.width *= scale
+
+            nodes.append(node)
+
+    return nodes
+
+
+def create_fill(
+    node: ty.Union[ModelSphere, ModelCylinder, ModelWire], reference: str
+) -> ty.Optional[Fill]:
+    """Create a fill for a node.
+
+    :param node: The node to create a fill for.
+    :type node: ty.Union[ModelSphere, ModelCylinder, ModelWire]
+    :param reference: The reference of the fill.
+    :type reference: str
+    :return: The fill.
+    :rtype: ty.Optional[Fill]
+    :raises AssertionError: If the geometry of the node is not appropriate for the
+        node type.
+    """
+    fill = None
+
+    if isinstance(node, ModelWire):
+        stroke_color = node.color
+        stroke_width = node.width
+        opacity = node.opacity
+        style: FillStyle = Wire(stroke_color, stroke_width, opacity)
+        fill = Fill(reference, style)
+
+    elif isinstance(node.depiction, Cartoon):
+        fill_color = node.depiction.fill_color
+        stroke_color = node.depiction.outline_color
+        stroke_width = node.depiction.outline_width
+        opacity = node.depiction.opacity
+        style = Solid(fill_color, stroke_color, stroke_width, opacity)
+        fill = Fill(reference, style)
+
+    # Glossy style is different for spheres and cylinders.
+    elif (
+        isinstance(node.depiction, Glossy)
+        and isinstance(node, ModelSphere)
+        and isinstance(node.geometry, Sphere)
+    ):
+        if not isinstance(node.geometry, Sphere):
+            raise AssertionError("Node geometry of ModelSphere must be a sphere.")
+
+        x, y = node.geometry.center.x, node.geometry.center.y
+        fill_color = node.depiction.fill_color
+        center = Point2D(x, y)
+        radius = node.geometry.radius
+        opacity = node.depiction.opacity
+        style = RadialGradient(fill_color, center, radius, opacity)
+        fill = Fill(reference, style)
+
+    elif isinstance(node.depiction, Glossy) and isinstance(node, ModelCylinder):
+        if not isinstance(node.geometry, Cylinder):
+            raise AssertionError("Node geometry of ModelCylinder must be a cylinder.")
+
+        start_x, start_y = node.geometry.start.x, node.geometry.start.y
+        end_x, end_y = node.geometry.end.x, node.geometry.end.y
+        fill_color = node.depiction.fill_color
+        start_center = Point2D(start_x, start_y)
+        end_center = Point2D(end_x, end_y)
+        radius = node.geometry.radius
+        opacity = node.depiction.opacity
+        style = LinearGradient(fill_color, start_center, end_center, opacity)
+        fill = Fill(reference, style)
+
+    return fill
+
+
+def calculate_intersecting_nodes(
+    node: ty.Union[ModelSphere, ModelCylinder, ModelWire],
+    other_nodes: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]],
+    calculate_sphere_sphere_intersections: bool,
+    calculate_sphere_cylinder_intersections: bool,
+    calculate_cylinder_sphere_intersections: bool,
+    calculate_cylinder_cylinder_intersections: bool,
+    filter_nodes_for_intersecting: bool,
+) -> ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]:
+    """Calculate which of the previous nodes intersect with the current node.
+
+    :param node: The current node.
+    :type node: ty.Union[ModelSphere, ModelCylinder, ModelWire]
+    :param other_nodes: The previous nodes.
+    :type other_nodes: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
+    :param calculate_sphere_sphere_intersections: Whether to calculate intersections
+        between spheres.
+    :type calculate_sphere_sphere_intersections: bool
+    :param calculate_sphere_cylinder_intersections: Whether to calculate intersections
+        between spheres and cylinders.
+    :type calculate_sphere_cylinder_intersections: bool
+    :param calculate_cylinder_sphere_intersections: Whether to calculate intersections
+        between cylinders and spheres.
+    :type calculate_cylinder_sphere_intersections: bool
+    :param calculate_cylinder_cylinder_intersections: Whether to calculate intersections
+        between cylinders.
+    :type calculate_cylinder_cylinder_intersections: bool
+    :param filter_nodes_for_intersecting: Whether to filter nodes for intersecting nodes.
+    :type filter_nodes_for_intersecting: bool
+    :return: The previous nodes that intersect with the current node.
+    :rtype: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
+    """
+    previous_nodes = []
+
+    # Wireframe is drawn as a line and has no intersections with other nodes.
+    if not isinstance(node, ModelWire):
+        for prev_node in other_nodes:
+
+            if not filter_nodes_for_intersecting:
+                previous_nodes.append(prev_node)
+                continue
+
+            if (
+                isinstance(node, ModelSphere)
+                and isinstance(prev_node, ModelSphere)
+                and calculate_sphere_sphere_intersections
+            ):
+                if sphere_intersects_with_sphere(node.geometry, prev_node.geometry):
+                    previous_nodes.append(prev_node)
+
+            elif (
+                isinstance(node, ModelSphere) and isinstance(prev_node, ModelCylinder)
+            ) and calculate_sphere_cylinder_intersections:
+                if sphere_intersects_with_cylinder(node.geometry, prev_node.geometry):
+                    previous_nodes.append(prev_node)
+
+            elif (
+                isinstance(node, ModelCylinder) and isinstance(prev_node, ModelSphere)
+            ) and calculate_cylinder_sphere_intersections:
+                if sphere_intersects_with_cylinder(prev_node.geometry, node.geometry):
+                    previous_nodes.append(prev_node)
+
+            elif (
+                isinstance(node, ModelCylinder)
+                and isinstance(prev_node, ModelCylinder)
+                and calculate_cylinder_cylinder_intersections
+            ):
+                if cylinder_intersects_with_cylinder(node.geometry, prev_node.geometry):
+                    previous_nodes.append(prev_node)
+
+    return previous_nodes
+
+
+class Scene:
+    """A scene contains a list of nodes."""
+
     def __init__(
         self, nodes: ty.Optional[ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]] = None
     ) -> None:
+        """Create a scene with nodes.
+
+        :param nodes: The nodes in the scene.
+        :type nodes: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
+        """
         if nodes is None:
             nodes = []
 
@@ -186,8 +438,6 @@ class Scene:
 
         :param node: The node to add.
         :type node: ty.Union[ModelSphere, ModelCylinder, ModelWire]
-        :return: None
-        :rtype: None
         """
         self.nodes.append(node)
 
@@ -219,7 +469,6 @@ class Scene:
         width = max_x - min_x
         height = max_y - min_y
         return ViewBox(min_x, min_y, width, height)
-
 
     def draw(
         self,
@@ -285,86 +534,19 @@ class Scene:
         :return: The scene as Svg.
         :rtype: Svg
         """
+        logger = getLogger(__name__)
+
         # Filter geometries.
-        nodes = []
-        for node in self.nodes:
-            if isinstance(node, ModelSphere) and include_spheres:
-                node.geometry.center = node.geometry.center.rotate(
-                    rotation_over_x_axis,
-                    rotation_over_y_axis,
-                    rotation_over_z_axis
-                )
-
-                if scale is not None:
-                    node.geometry.radius *= scale
-                    node.geometry.center = Point3D(
-                        node.geometry.center.x * scale,
-                        node.geometry.center.y * scale,
-                        node.geometry.center.z * scale
-                    )
-
-                    if isinstance(node.depiction, Cartoon):
-                        node.depiction.outline_width *= scale
-
-                nodes.append(node)
-
-            elif isinstance(node, ModelCylinder) and include_cylinders:
-                node.geometry.start = node.geometry.start.rotate(
-                    rotation_over_x_axis,
-                    rotation_over_y_axis,
-                    rotation_over_z_axis
-                )
-                node.geometry.end = node.geometry.end.rotate(
-                    rotation_over_x_axis,
-                    rotation_over_y_axis,
-                    rotation_over_z_axis
-                )
-
-                if scale is not None:
-                    node.geometry.radius *= scale
-                    node.geometry.start = Point3D(
-                        node.geometry.start.x * scale,
-                        node.geometry.start.y * scale,
-                        node.geometry.start.z * scale
-                    )
-                    node.geometry.end = Point3D(
-                        node.geometry.end.x * scale,
-                        node.geometry.end.y * scale,
-                        node.geometry.end.z * scale
-                    )
-
-                    if isinstance(node.depiction, Cartoon):
-                        node.depiction.outline_width *= scale
-
-                nodes.append(node)
-
-            elif isinstance(node, ModelWire) and include_wires:
-                node.geometry.start = node.geometry.start.rotate(
-                    rotation_over_x_axis,
-                    rotation_over_y_axis,
-                    rotation_over_z_axis
-                )
-                node.geometry.end = node.geometry.end.rotate(
-                    rotation_over_x_axis,
-                    rotation_over_y_axis,
-                    rotation_over_z_axis
-                )
-
-                if scale is not None:
-                    node.geometry.start = Point3D(
-                        node.geometry.start.x * scale,
-                        node.geometry.start.y * scale,
-                        node.geometry.start.z * scale
-                    )
-                    node.geometry.end = Point3D(
-                        node.geometry.end.x * scale,
-                        node.geometry.end.y * scale,
-                        node.geometry.end.z * scale
-                    )
-
-                    node.width *= scale
-
-                nodes.append(node)
+        nodes = prepare_nodes_for_intersecting(
+            self.nodes,
+            include_spheres,
+            include_cylinders,
+            include_wires,
+            rotation_over_x_axis,
+            rotation_over_y_axis,
+            rotation_over_z_axis,
+            scale,
+        )
 
         # Get sorting values for nodes. We sort on z-coordinate as we always look at the
         # scene from the z-axis, towards the origin.
@@ -374,22 +556,21 @@ class Scene:
                 sorting_values.append(node.geometry.center.z)
 
             elif isinstance(node, ModelCylinder):
-                start, end = node.geometry.start, node.geometry.end
-                midpoint_z = (start.z + end.z) / 2
+                cylinder_start = node.geometry.start
+                cylinder_end = node.geometry.end
+                midpoint_z = (cylinder_start.z + cylinder_end.z) / 2
                 sorting_values.append(midpoint_z)
 
             elif isinstance(node, ModelWire):
-                start, end = node.geometry.start, node.geometry.end
-                midpoint_z = (start.z + end.z) / 2
+                wire_start = node.geometry.start
+                wire_end = node.geometry.end
+                midpoint_z = (wire_start.z + wire_end.z) / 2
                 sorting_values.append(midpoint_z)
 
         # Sort nodes by sorting values.
         nodes = [
-            node for _, node
-            in sorted(
-                zip(sorting_values, nodes),
-                key=lambda x: x[0], reverse=False
-            )
+            node
+            for _, node in sorted(zip(sorting_values, nodes), key=lambda x: x[0], reverse=False)
         ]
 
         # Keep track of reference points for determining viewbox later on.
@@ -397,7 +578,8 @@ class Scene:
             ref_points = []
 
         # Calculate 2D shape and fill for each node.
-        objects, fills = [], []
+        objects: ty.List[Shape2D] = []
+        fills = []
 
         for i, node in enumerate(nodes):
 
@@ -405,52 +587,22 @@ class Scene:
             reference = f"node-{i}"
 
             # Calculate which of the previously drawn nodes intersect with the current node.
-            previous_nodes = []
-
-            # Wireframe is drawn as a line and has no intersections with previous nodes.
-            if not isinstance(node, ModelWire):
-                for prev_node in nodes[:i]:
-
-                    if not filter_nodes_for_intersecting:
-                        previous_nodes.append(prev_node)
-                        continue
-
-                    if (
-                        isinstance(node, ModelSphere)
-                        and isinstance(prev_node, ModelSphere)
-                        and calculate_sphere_sphere_intersections
-                    ):
-                        if sphere_intersects_with_sphere(node.geometry, prev_node.geometry):
-                            previous_nodes.append(prev_node)
-
-                    elif (
-                        isinstance(node, ModelSphere)
-                        and isinstance(prev_node, ModelCylinder)
-                    ) and calculate_sphere_cylinder_intersections:
-                        if sphere_intersects_with_cylinder(node.geometry, prev_node.geometry):
-                            previous_nodes.append(prev_node)
-
-                    elif (
-                        isinstance(node, ModelCylinder)
-                        and isinstance(prev_node, ModelSphere)
-                    ) and calculate_cylinder_sphere_intersections:
-                        if sphere_intersects_with_cylinder(prev_node.geometry, node.geometry):
-                            previous_nodes.append(prev_node)
-
-                    elif (
-                        isinstance(node, ModelCylinder)
-                        and isinstance(prev_node, ModelCylinder)
-                        and calculate_cylinder_cylinder_intersections
-                    ):
-                        if cylinder_intersects_with_cylinder(node.geometry, prev_node.geometry):
-                            previous_nodes.append(prev_node)
+            previous_nodes = calculate_intersecting_nodes(
+                node,
+                nodes[:i],
+                calculate_sphere_sphere_intersections,
+                calculate_sphere_cylinder_intersections,
+                calculate_cylinder_sphere_intersections,
+                calculate_cylinder_cylinder_intersections,
+                filter_nodes_for_intersecting,
+            )
 
             # Calculate line for wire.
             if isinstance(node, ModelWire):
                 start_x, start_y = node.geometry.start.x, node.geometry.start.y
                 end_x, end_y = node.geometry.end.x, node.geometry.end.y
-                start = Point2D(start_x, start_y)
-                end = Point2D(end_x, end_y)
+                start: Point2D = Point2D(start_x, start_y)
+                end: Point2D = Point2D(end_x, end_y)
                 line = Line2D(reference, start, end)
 
                 if view_box is None:
@@ -470,46 +622,14 @@ class Scene:
                 objects.append(polygon)
 
             # Create style.
-            if isinstance(node, ModelWire):
-                stroke_color = node.color
-                stroke_width = node.width
-                opacity = node.opacity
-                style = Wire(stroke_color, stroke_width, opacity)
-                fills.append(Fill(reference, style))
-
-            elif isinstance(node.depiction, Cartoon):
-                fill_color = node.depiction.fill_color
-                stroke_color = node.depiction.outline_color
-                stroke_width = node.depiction.outline_width
-                opacity = node.depiction.opacity
-                style = Solid(fill_color, stroke_color, stroke_width, opacity)
-                fills.append(Fill(reference, style))
-
-            # Glossy style is different for spheres and cylinders.
-            elif isinstance(node.depiction, Glossy) and isinstance(node, ModelSphere):
-                x, y = node.geometry.center.x, node.geometry.center.y
-                fill_color = node.depiction.fill_color
-                center = Point2D(x, y)
-                radius = node.geometry.radius
-                opacity = node.depiction.opacity
-                style = RadialGradient(fill_color, center, radius, opacity)
-                fills.append(Fill(reference, style))
-
-            elif isinstance(node.depiction, Glossy) and isinstance(node, ModelCylinder):
-                start_x, start_y = node.geometry.start.x, node.geometry.start.y
-                end_x, end_y = node.geometry.end.x, node.geometry.end.y
-                fill_color = node.depiction.fill_color
-                start_center = Point2D(start_x, start_y)
-                end_center = Point2D(end_x, end_y)
-                radius = node.geometry.radius
-                opacity = node.depiction.opacity
-                style = LinearGradient(fill_color, start_center, end_center, opacity)
-                fills.append(Fill(reference, style))
+            fill = create_fill(node, reference)
+            if fill is not None:
+                fills.append(fill)
 
             # Only print if verbose is set to True.
             if verbose:
                 padding = len(str(len(nodes)))
-                print(f"{i}".zfill(padding), end="\r")
+                logger.info(f"{i}".zfill(padding))
 
         # Calculate view box.
         if view_box is None:

@@ -8,25 +8,37 @@ import time
 import typing as ty
 from enum import Enum
 
-from rdkit import Chem 
+from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from cinemol.chemistry import Style, Look, Atom, Bond, draw_molecule
+from cinemol.chemistry import Atom, Bond, Look, Style, draw_molecule
+
 
 class Palette(Enum):
     """
     Palette of colors.
     """
-    Red         = (230,  25,  75); Blue        = (  0, 130, 200)
-    Green       = ( 60, 180,  75); Maroon      = (128,   0,   0)
-    Brown       = (170, 110,  40); Olive       = (128, 128,   0) 
-    Teal        = (  0, 128, 128); Navy        = (  0,   0, 128)
-    Orange      = (245, 130,  48); Yellow      = (255, 225,  25) 
-    Lime        = (210, 245,  60); Cyan        = ( 70, 240, 240)
-    Purple      = (145,  30, 180); Magenta     = (240,  50, 230) 
-    Pink        = (255, 190, 212); Apricot     = (255, 215, 180)
-    Beige       = (255, 250, 200); Mint        = (170, 255, 195) 
-    Lavender    = (220, 190, 255)
+
+    Red = (230, 25, 75)
+    Blue = (0, 130, 200)
+    Green = (60, 180, 75)
+    Maroon = (128, 0, 0)
+    Brown = (170, 110, 40)
+    Olive = (128, 128, 0)
+    Teal = (0, 128, 128)
+    Navy = (0, 0, 128)
+    Orange = (245, 130, 48)
+    Yellow = (255, 225, 25)
+    Lime = (210, 245, 60)
+    Cyan = (70, 240, 240)
+    Purple = (145, 30, 180)
+    Magenta = (240, 50, 230)
+    Pink = (255, 190, 212)
+    Apricot = (255, 215, 180)
+    Beige = (255, 250, 200)
+    Mint = (170, 255, 195)
+    Lavender = (220, 190, 255)
+
 
 def cli() -> argparse.Namespace:
     """
@@ -35,6 +47,7 @@ def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", type=str, help="Path to output SVG file.")
     return parser.parse_args()
+
 
 def generate_conformer(mol: Chem.Mol) -> Chem.Mol:
     """
@@ -45,9 +58,10 @@ def generate_conformer(mol: Chem.Mol) -> Chem.Mol:
     :rtype: Chem.Mol
     """
     mol = Chem.AddHs(mol)
-    AllChem.EmbedMolecule(mol, useRandomCoords=True, randomSeed=0xf00d)
-    AllChem.MMFFOptimizeMolecule(mol) # MMFF94
+    AllChem.EmbedMolecule(mol, useRandomCoords=True, randomSeed=0xF00D)
+    AllChem.MMFFOptimizeMolecule(mol)  # MMFF94
     return mol
+
 
 def find_substructure(mol: Chem.Mol, smarts: str) -> ty.List[int]:
     """
@@ -62,6 +76,7 @@ def find_substructure(mol: Chem.Mol, smarts: str) -> ty.List[int]:
     matches = mol.GetSubstructMatches(substructure)
     return [atom_index for match in matches for atom_index in match]
 
+
 def main() -> None:
     """
     Driver function.
@@ -69,7 +84,12 @@ def main() -> None:
     args = cli()
 
     # Generate a conformer for daptomycin.
-    mol = Chem.MolFromSmiles(r"CCCCCCCCCC(=O)N[C@@H](CC1=CNC2=CC=CC=C21)C(=O)N[C@H](CC(=O)N)C(=O)N[C@@H](CC(=O)O)C(=O)N[C@H]3[C@H](OC(=O)[C@@H](NC(=O)[C@@H](NC(=O)[C@H](NC(=O)CNC(=O)[C@@H](NC(=O)[C@H](NC(=O)[C@@H](NC(=O)[C@@H](NC(=O)CNC3=O)CCCN)CC(=O)O)C)CC(=O)O)CO)[C@H](C)CC(=O)O)CC(=O)C4=CC=CC=C4N)C")
+    mol = Chem.MolFromSmiles(
+        r"CCCCCCCCCC(=O)N[C@@H](CC1=CNC2=CC=CC=C21)C(=O)N[C@H](CC(=O)N)C(=O)N[C"
+        r"@@H](CC(=O)O)C(=O)N[C@H]3[C@H](OC(=O)[C@@H](NC(=O)[C@@H](NC(=O)[C@H]("
+        r"NC(=O)CNC(=O)[C@@H](NC(=O)[C@H](NC(=O)[C@@H](NC(=O)[C@@H](NC(=O)CNC3="
+        r"O)CCCN)CC(=O)O)C)CC(=O)O)CO)[C@H](C)CC(=O)O)CC(=O)C4=CC=CC=C4N)C"
+    )
     mol = generate_conformer(mol)
     pos = mol.GetConformer().GetPositions()
 
@@ -85,7 +105,7 @@ def main() -> None:
         "Thr": r"[CH3][CH]([O])[CH]([N])[C](=[O])",
         "Ser": r"[N][CH]([CH2][OH])[C](=[O])",
         "Ala": r"[CH3][CH]([N])[C](=[O])",
-        "Gly": r"[N][CH2][C](=[O])"
+        "Gly": r"[N][CH2][C](=[O])",
     }
     palette = list(Palette)
     for i, (_, smarts) in enumerate(substructures.items()):
@@ -96,12 +116,14 @@ def main() -> None:
     atoms, bonds = [], []
 
     for atom in mol.GetAtoms():
-        if atom.GetSymbol() == "H": continue
+        if atom.GetSymbol() == "H":
+            continue
         color = atom_colors.get(atom.GetIdx(), (120, 120, 120))
         atoms.append(Atom(atom.GetIdx(), atom.GetSymbol(), pos[atom.GetIdx()], color=color))
 
     for bond in mol.GetBonds():
-        if bond.GetBeginAtom().GetSymbol() == "H" or bond.GetEndAtom().GetSymbol() == "H": continue
+        if bond.GetBeginAtom().GetSymbol() == "H" or bond.GetEndAtom().GetSymbol() == "H":
+            continue
         start_index, end_index = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
         bonds.append(Bond(start_index, end_index, int(bond.GetBondTypeAsDouble())))
 
@@ -109,13 +131,13 @@ def main() -> None:
 
     # Draw molecule.
     svg = draw_molecule(
-        atoms=atoms, 
+        atoms=atoms,
         bonds=bonds,
-        style=Style.Tube, 
-        look=Look.Glossy, 
-        resolution=50, 
-        rotation_over_y_axis=-2.0, 
-        scale=10.0
+        style=Style.Tube,
+        look=Look.Glossy,
+        resolution=50,
+        rotation_over_y_axis=-2.0,
+        scale=10.0,
     )
 
     svg_str = svg.to_svg()
@@ -130,6 +152,7 @@ def main() -> None:
     # Write SVG to file.
     with open(args.o, "w") as f:
         f.write(svg_str)
+
 
 if __name__ == "__main__":
     main()
