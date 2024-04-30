@@ -19,7 +19,7 @@ VERSION = "0.0.1-dev"
 
 def get_git_hash() -> str:
     """Get the :mod:`cinemol` git hash."""
-    with open(os.devnull, "w") as devnull:
+    with open(os.devnull, "w", encoding="utf-8") as devnull:
         try:
             ret = check_output(  # noqa: S603,S607
                 ["git", "rev-parse", "HEAD"],

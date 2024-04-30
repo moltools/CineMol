@@ -1,13 +1,19 @@
-import typing as ty 
+# -*- coding: utf-8 -*-
 
-from cinemol.chemistry import Atom, Bond 
+"""This module contains functions for parsing molecular file formats."""
+
+import typing as ty
+
+from cinemol.chemistry import Atom, Bond
+
 
 def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.List[Bond]]:
-    """
-    Parse first molecule from SDF file format.
+    """Parse first molecule from SDF file format.
 
-    :param string src: SDF file content.
-    :param bool include_hs: Include hydrogens.
+    :param src: SDF file content.
+    :type src: str
+    :param include_hs: Include hydrogens.
+    :type include_hs: bool
     :return: Atoms and bonds.
     :rtype: ty.Tuple[ty.List[Atom], ty.List[Bond]]
     """
@@ -15,7 +21,7 @@ def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.L
 
     lines = src.split("\n")
 
-    counts_line = lines[3] # Counts line of the first molecule in the SDF file.
+    counts_line = lines[3]  # Counts line of the first molecule in the SDF file.
 
     atom_count = int(counts_line[0:3])
     bond_count = int(counts_line[3:6])
@@ -35,24 +41,24 @@ def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.L
         atom_symbol = atom_line[31:34].strip()
 
         atoms.append(Atom(atom_index, atom_symbol, (x, y, z)))
-        
+
     # Parse bond line.
     for bond_line in bond_lines:
 
         start_index = int(bond_line[0:3])
         stop_index = int(bond_line[3:6])
         bond_order = int(bond_line[6:9])
-        
+
         bonds.append(Bond(int(start_index), int(stop_index), int(bond_order)))
 
     atom_map = {atom.index: atom for atom in atoms}
     if not include_hs:
         atoms = [atom for atom in atoms if atom.symbol != "H"]
         bonds = [
-            bond for bond in bonds 
+            bond for bond in bonds
             if (
-                atom_map[bond.start_index].symbol != "H" and 
-                atom_map[bond.end_index].symbol != "H"
+                atom_map[bond.start_index].symbol != "H"
+                and atom_map[bond.end_index].symbol != "H"
             )
         ]
 
