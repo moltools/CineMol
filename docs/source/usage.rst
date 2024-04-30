@@ -9,7 +9,7 @@ Usage
 .. automodule:: cinemol.geometry
     :members:
 
-.. automodule:: cinemol.model 
+.. automodule:: cinemol.model
     :members:
 
 .. automodule:: cinemol.parsers
@@ -17,7 +17,7 @@ Usage
 
 .. automodule:: cinemol.style
     :members:
-    
+
 .. automodule:: cinemol.svg
     :members:
 
