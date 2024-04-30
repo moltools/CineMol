@@ -53,14 +53,12 @@ cinemol --help
 
 ## 🚀 Installation
 
-<!-- Uncomment this section after your first ``tox -e finish``
 The most recent release can be installed from
 [PyPI](https://pypi.org/project/cinemol/) with:
 
 ```shell
 pip install cinemol
 ```
--->
 
 The most recent code and data can be installed directly from GitHub with:
 
