@@ -93,7 +93,6 @@ If you use CineMol in your research, please cite the following pre-print:
 }
 ```
 
-
 ### 🍪 Cookiecutter
 
 This package was created with [@audreyfeldroy](https://github.com/audreyfeldroy)'s
