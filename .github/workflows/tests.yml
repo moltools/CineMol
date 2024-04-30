@@ -11,9 +11,8 @@ jobs:
     name: Lint
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
-        # python-version: [ "3.10", "3.11", "3.12" ]
-        python: [ "3.10" ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        python-version: [ "3.10", "3.11", "3.12" ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -37,9 +36,8 @@ jobs:
     name: Documentation
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
-        # python-version: [ "3.10", "3.11", "3.12" ]
-        python: [ "3.10" ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        python-version: [ "3.10", "3.11", "3.12" ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -61,9 +59,8 @@ jobs:
     name: Tests
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
-        # python-version: [ "3.10", "3.11", "3.12" ]
-        python: [ "3.10" ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        python-version: [ "3.10", "3.11", "3.12" ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -76,8 +73,8 @@ jobs:
       - name: Test with pytest and generate coverage file
         run:
           tox run -e py
-      - name: Upload coverage report to codecov
-        uses: codecov/codecov-action@v1
-        if: success()
-        with:
-          file: coverage.xml
+      # - name: Upload coverage report to codecov
+      #   uses: codecov/codecov-action@v1
+      #   if: success()
+      #   with:
+      #     file: coverage.xml
