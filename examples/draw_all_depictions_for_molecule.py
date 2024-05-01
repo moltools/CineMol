@@ -41,41 +41,20 @@ def main() -> None:
     args = cli()
 
     commands = [
-        "cinemol -i "
-        + args.i
-        + " -o "
-        + os.path.join(args.o, "cartoon_spacefilling.svg")
-        + " -s spacefilling -l cartoon -r 100 -sc 10.0 --hs --vb",
-        "cinemol -i "
-        + args.i
-        + " -o "
-        + os.path.join(args.o, "cartoon_ballandstick.svg")
-        + " -s ballandstick -l cartoon -r 100 -sc 10.0 --hs --vb",
-        "cinemol -i "
-        + args.i
-        + " -o "
-        + os.path.join(args.o, "cartoon_tube.svg")
-        + " -s tube -l cartoon -r 100 -sc 10.0 --hs --vb",
-        "cinemol -i "
-        + args.i
-        + " -o "
-        + os.path.join(args.o, "glossy_spacefilling.svg")
-        + " -s spacefilling -l glossy -r 100 -sc 10.0 --hs --vb",
-        "cinemol -i "
-        + args.i
-        + " -o "
-        + os.path.join(args.o, "glossy_ballandstick.svg")
-        + " -s ballandstick -l glossy -r 100 -sc 10.0 --hs --vb",
-        "cinemol -i "
-        + args.i
-        + " -o "
-        + os.path.join(args.o, "glossy_tube.svg")
-        + " -s tube -l glossy -r 100 -sc 10.0 --hs --vb",
-        "cinemol -i "
-        + args.i
-        + " -o "
-        + os.path.join(args.o, "wireframe.svg")
-        + " -s wireframe -sc 10.0 --hs --vb",
+        "cinemol -s spacefilling -l cartoon -r 100 -sc 10.0 -hs -vb"
+        + f" {args.i} {os.path.join(args.o, 'cartoon_spacefilling.svg')}",
+        "cinemol -s ballandstick -l cartoon -r 100 -sc 10.0 -hs -vb"
+        + f" {args.i} {os.path.join(args.o, 'cartoon_ballandstick.svg')}",
+        "cinemol -s tube -l cartoon -r 100 -sc 10.0 -hs -vb"
+        + f" {args.i} {os.path.join(args.o, 'cartoon_tube.svg')}",
+        "cinemol -s spacefilling -l glossy -r 100 -sc 10.0 -hs -vb"
+        + f" {args.i} {os.path.join(args.o, 'glossy_spacefilling.svg')}",
+        "cinemol -s ballandstick -l glossy -r 100 -sc 10.0 -hs -vb"
+        + f" {args.i} {os.path.join(args.o, 'glossy_ballandstick.svg')}",
+        "cinemol -s tube -l glossy -r 100 -sc 10.0 -hs -vb"
+        + f" {args.i} {os.path.join(args.o, 'glossy_tube.svg')}",
+        "cinemol -s wireframe -sc 10.0 -hs -vb"
+        + f" {args.i} {os.path.join(args.o, 'wireframe.svg')}"
     ]
 
     for command in commands:
