@@ -86,17 +86,7 @@ The code in this package is licensed under the MIT License.
 
 ### 📖 Citation
 
-If you use CineMol in your research, please cite the following pre-print:
-
-```bibtex
-@software{Meijer_CineMol_a_programmatically_2024,
-    author = {Meijer, David and Medema, Marnix H. and Van der Hooft, Justin J. J.},
-    month = feb,
-    title = {{CineMol: a programmatically accessible direct-to-SVG 3D small molecule drawer}},
-    version = {0.0.1-dev},
-    year = {2024}
-}
-```
+If you use CineMol in your research, please [cite](CITATION.cff) our pre-print.
 
 ### 🍪 Cookiecutter
 
