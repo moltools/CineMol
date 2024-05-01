@@ -56,6 +56,8 @@ This command will generate the following SVG image:
 
 CineMol can also be used as a Python package. You can find examples in the [examples](examples) folder.
 
+Find more information in the [documentation](https://cinemol.readthedocs.io/en/latest/).
+
 ## 🚀 Installation
 
 The most recent release can be installed from
