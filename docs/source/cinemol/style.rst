@@ -1,4 +1,4 @@
-Style module
+Style Module
 ============
 .. automodule:: cinemol.style
     :members:

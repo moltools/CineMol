@@ -1,4 +1,4 @@
-Model module
+Model Module
 ============
 .. automodule:: cinemol.model
     :members:

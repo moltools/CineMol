@@ -39,12 +39,7 @@ Table of Contents
 
    installation
    usage
-   cinemol/fitting
-   cinemol/geometry
-   cinemol/model
-   cinemol/parsers
-   cinemol/style
-   cinemol/svg
+   cinemol/index
    cli
 
 Indices and Tables

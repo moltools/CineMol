@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-"""Quickhull algorithm for computing the convex hull of a set of points in 2D space.
+"""Implements the quickhull algorithm for computing the convex hull of a set of points in 2D space.
 
 Used as source: https://stackoverflow.com/questions/74812556/computing-quick-convex-hull-using-numba
+
 Read more about the quickhull algorithm: https://surface.syr.edu/eecs_techreports/65/
 """
 
