@@ -1,25 +1,7 @@
 Usage
 =====
+The easiest way to use CineMol is to use the functions from the `cinemol.api` module. 
+This module provides a high-level API for drawing SVGs of molecular structures.
+
 .. automodule:: cinemol.api
-    :members:
-
-.. automodule:: cinemol.fitting
-    :members:
-
-.. automodule:: cinemol.geometry
-    :members:
-
-.. automodule:: cinemol.model
-    :members:
-
-.. automodule:: cinemol.parsers
-    :members:
-
-.. automodule:: cinemol.style
-    :members:
-
-.. automodule:: cinemol.svg
-    :members:
-
-.. automodule:: cinemol.version
     :members:
