@@ -11,7 +11,7 @@ from enum import Enum
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from cinemol.chemistry import Atom, Bond, Look, Style, draw_molecule
+from cinemol.api import Atom, Bond, Look, Style, draw_molecule
 
 
 class Palette(Enum):

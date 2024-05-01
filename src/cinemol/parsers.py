@@ -4,7 +4,7 @@
 
 import typing as ty
 
-from cinemol.chemistry import Atom, Bond
+from cinemol.api import Atom, Bond
 
 
 def parse_sdf(src: str, include_hs: bool = True) -> ty.Tuple[ty.List[Atom], ty.List[Bond]]:

@@ -1,6 +1,6 @@
 Usage
 =====
-.. automodule:: cinemol.chemistry
+.. automodule:: cinemol.api
     :members:
 
 .. automodule:: cinemol.fitting
