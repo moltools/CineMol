@@ -34,22 +34,27 @@ You can try out CineMol online [here](https://moltools.bioinformatics.nl/cinemol
 
 ## 💪 Getting Started
 
-```bash
-cinemol -i examples/data/penicillin_G.sdf -o examples/svgs/cartoon_spacefilling.svg -s spacefilling -l cartoon -r 100 -sc 10.0 --hs --vb
+The cinemol command line tool is automatically installed. It can
+be used from the shell with the `--help` flag to show all subcommands:
+
+```shell
+python3 -m cinemol --help
 ```
+
+The `cinemol` command line tool can be used to convert 3D molecular structures to SVG images. The following example
+converts a penicillin G conformer to a spacefilling SVG image:
+
+```shell
+python3 -m cinemol examples/data/penicillin_G.sdf examples/svgs/cartoon_spacefilling.svg -s spacefilling -l cartoon -r 100 -sc 10.0 -hs -vb
+```
+
+This command will generate the following SVG image:
 
 <p align="center">
     <img src="examples/svgs/cartoon_spacefilling.svg" width=200 height=125>
 </p>
 
-### Command Line Interface
-
-The cinemol command line tool is automatically installed. It can
-be used from the shell with the `--help` flag to show all subcommands:
-
-```shell
-cinemol --help
-```
+CineMol can also be used as a Python package. You can find examples in the [examples](examples) folder.
 
 ## 🚀 Installation
 
