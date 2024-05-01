@@ -108,6 +108,9 @@ def main(
     verbose: bool,
 ) -> None:
     """Run the CineMol command line interface."""
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
+
     # Map CLI arguments to API.
     mapped_style = {
         "spacefilling": Style.SPACEFILLING,
@@ -146,9 +149,9 @@ def main(
     runtime = (time() - t0) * 1000  # Runtime in milliseconds.
 
     if verbose:
-        logger.info(f"SVG written out to: {output}")
-        logger.info(f"> Time taken to generate SVG: {runtime:.3f} ms")
-        logger.info(f"> Size of SVG: {len(svg_str) / 1000:.3f} kb")
+        logger.info(f" SVG written out to: {output}")
+        logger.info(f" Time taken to generate SVG: {runtime:.3f} ms")
+        logger.info(f" Size of SVG: {len(svg_str) / 1000:.3f} kb")
 
     with open(output, "w", encoding="utf-8") as file_open:
         file_open.write(svg_str)
