@@ -2,6 +2,7 @@
 """
 Description:    Draw a protein as wireframe, with ligands as space-filling.
 Usage:          python draw_protein_with_ligands.py -o model.svg
+Dependencies:   biopython==1.83
 """
 import argparse
 import time
