@@ -1,4 +1,4 @@
-Parsers module
+Parsers Module
 ==============
 .. automodule:: cinemol.parsers
     :members:

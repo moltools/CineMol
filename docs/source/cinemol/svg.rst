@@ -1,4 +1,4 @@
-Svg module
+Svg Module
 ==========
 .. automodule:: cinemol.svg
     :members:
