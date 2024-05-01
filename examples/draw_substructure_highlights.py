@@ -2,6 +2,7 @@
 """
 Description:    Generate and draw a daptomycin conformer and highlight individual amino acids.
 Usage:          python draw_substructure_highlights.py -o model.svg
+Dependencies:   rdkit==2023.9.6
 """
 import argparse
 import time
@@ -11,7 +12,7 @@ from enum import Enum
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from cinemol.chemistry import Atom, Bond, Look, Style, draw_molecule
+from cinemol.api import Atom, Bond, Look, Style, draw_molecule
 
 
 class Palette(Enum):
@@ -133,8 +134,8 @@ def main() -> None:
     svg = draw_molecule(
         atoms=atoms,
         bonds=bonds,
-        style=Style.Tube,
-        look=Look.Glossy,
+        style=Style.TUBE,
+        look=Look.GLOSSY,
         resolution=50,
         rotation_over_y_axis=-2.0,
         scale=10.0,

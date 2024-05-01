@@ -2,6 +2,7 @@
 """
 Description:    Generate multiple conformers, align three of them and draw.
 Usage:          python draw_superimposed_conformers.py -o model.svg
+Dependencies:   rdkit==2023.9.6
 """
 import argparse
 import time
@@ -109,7 +110,7 @@ def main() -> None:
             lines = get_perpendicular_lines(line, temp_bond_radius * (bond_order + 1), bond_order)
 
             for line in lines:
-                cylinder = Cylinder(line.start, line.end, 0.1, CylinderCapType.NoCap)
+                cylinder = Cylinder(line.start, line.end, 0.1, CylinderCapType.NO_CAP)
                 depiction = Glossy(color)
                 scene.add_node(ModelCylinder(cylinder, depiction))
 

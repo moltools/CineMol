@@ -9,7 +9,7 @@ import typing as ty
 
 from rdkit import Chem
 
-from cinemol.chemistry import Atom, Bond, Look, Style, draw_molecule
+from cinemol.api import Atom, Bond, Look, Style, draw_molecule
 
 
 def cli() -> argparse.Namespace:
