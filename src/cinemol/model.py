@@ -581,6 +581,7 @@ class Scene:
         objects: ty.List[Shape2D] = []
         fills = []
 
+        # Loop over nodes and create shapes and fills to populate the SVG.
         for i, node in enumerate(nodes):
 
             # Create reference tag for node to connect shape to style.
@@ -629,7 +630,7 @@ class Scene:
             # Only print if verbose is set to True.
             if verbose:
                 padding = len(str(len(nodes)))
-                logger.info(f"{i}".zfill(padding))
+                logger.info(f" Drawing node {i + 1:>{padding}} of {len(nodes)}")
 
         # Calculate view box.
         if view_box is None:
