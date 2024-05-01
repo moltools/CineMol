@@ -54,7 +54,7 @@ def main() -> None:
         "cinemol -s tube -l glossy -r 100 -sc 10.0 -hs -vb"
         + f" {args.i} {os.path.join(args.o, 'glossy_tube.svg')}",
         "cinemol -s wireframe -sc 10.0 -hs -vb"
-        + f" {args.i} {os.path.join(args.o, 'wireframe.svg')}"
+        + f" {args.i} {os.path.join(args.o, 'wireframe.svg')}",
     ]
 
     for command in commands:

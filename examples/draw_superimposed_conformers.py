@@ -17,7 +17,7 @@ from cinemol.geometry import (
     Line3D,
     Point3D,
     Sphere,
-    get_perpendicular_lines
+    get_perpendicular_lines,
 )
 from cinemol.model import ModelCylinder, ModelSphere, Scene
 from cinemol.style import Color, Glossy
