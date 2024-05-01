@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Description:    Draw space-filling, ball-and-stick, and tube representations of a molecule.
 Usage:          python draw_all_depictions_for_molecule.py -i /path/to/sdf/file -o /path/to/output/dir
