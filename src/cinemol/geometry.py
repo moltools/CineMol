@@ -161,7 +161,7 @@ class Point3D:
         :return: A vector from this point to another point.
         :rtype: Vector3D
         """
-        return Vector3D(self.x - other.x, self.y - other.y, self.z - other.z)
+        return Vector3D(other.x - self.x, other.y - self.y, other.z - self.z)
 
     def calculate_distance(self, other: "Point3D") -> float:
         """Calculate the distance between this point and another point.
@@ -244,11 +244,11 @@ def sign(x: float) -> int:
 
 
 def gram_schmidt(n: Vector3D) -> ty.Tuple[Vector3D, Vector3D]:
-    """Generate two vectors that are orthogonal to the given vector.
+    """Generate two orthogonal vectors for a given vector using the Gram-Schmidt process.
 
     :param n: The vector to generate orthogonal vectors for.
     :type n: Vector3D
-    :return: Two orthogonal vectors to the given vector.
+    :return: Two orthogonal vectors.
     :rtype: ty.Tuple[Vector3D, Vector3D]
     """
     v = Vector3D.create_random()
