@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Trivial version test."""
+"""Contains unit tests for the cinemol.version module."""
 
 import unittest
 
