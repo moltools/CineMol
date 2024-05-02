@@ -5,6 +5,7 @@
 import unittest
 
 from cinemol.fitting import arange, argmax, argmin, calculate_convex_hull, process
+from cinemol.geometry import Point2D
 
 
 class TestArgmin(unittest.TestCase):
@@ -83,3 +84,64 @@ class TestArange(unittest.TestCase):
         with self.assertRaises(TypeError):
             arange(-3.5)
 
+
+class TestProcess(unittest.TestCase):
+    """Test the process function."""
+
+    def test_process_all_points_on_positive_side(self):
+        """Test the process for points on the positive side of the line."""
+        points = [Point2D(0, 0), Point2D(1, 1), Point2D(2, 0), Point2D(1, -1)]
+        indices_of_points = arange(len(points))
+        index_a = 0
+        index_b = 2
+        result = process(points, indices_of_points, index_a, index_b)
+        self.assertEqual(result, [0, 3, 2])
+
+    def test_process_all_points_on_negative_side(self):
+        """Test the process for points on the negative side of the line."""
+        points = [Point2D(0, 0), Point2D(1, 1), Point2D(2, 0), Point2D(1, -1)]
+        indices_of_points = arange(len(points))
+        index_a = 0
+        index_b = 2
+        result = process(points, indices_of_points, index_b, index_a)
+        self.assertEqual(result, [2, 1, 0])
+
+    def test_process_mixed_points(self):
+        """Test the process with mixed points on the positive and negative sides of the line."""
+        points = [Point2D(0, 0), Point2D(1, 1), Point2D(2, 0), Point2D(1, -1)]
+        indices_of_points = arange(len(points))
+        index_a = 0
+        index_b = 2
+        result = process(points, indices_of_points, index_a, index_b)
+        self.assertEqual(result, [0, 3, 2])
+
+    def test_process_with_incorrect_points_input(self):
+        """Test the process with incorrect points input. This should raise an AttributeError."""
+        points = [(0, 0), Point2D(1, 1), Point2D(2, 0), Point2D(1, -1)]
+        indices_of_points = arange(len(points))
+        index_a = 0
+        index_b = 2
+        with self.assertRaises(AttributeError):
+            process(points, indices_of_points, index_b, index_a)
+
+
+class TestCalculateConvexHull(unittest.TestCase):
+    """Test the calculate_convex_hull function."""
+
+    def test_calculate_convex_hull_basic(self):
+        """Test the calculate_convex_hull with a basic input."""
+        points = [Point2D(0, 0), Point2D(1, 1), Point2D(2, 0), Point2D(1, -1)]
+        result = calculate_convex_hull(points)
+        self.assertEqual(result, [0, 3, 2, 1])
+
+    def test_calculate_convex_hull_including_centroid(self):
+        """Test the calculate_convex_hull with the centroid included."""
+        points = [Point2D(0, 0), Point2D(1, 1), Point2D(2, 0), Point2D(1, -1), Point2D(1, 0)]
+        result = calculate_convex_hull(points)
+        self.assertEqual(result, [0, 3, 2, 1])
+
+    def test_calculate_convex_hull_incorrect_points_input(self):
+        """Test the calculate_convex_hull with incorrect points input. This should raise an AttributeError."""
+        points = [(0, 0), Point2D(1, 1), Point2D(2, 0), Point2D(1, -1)]
+        with self.assertRaises(AttributeError):
+            calculate_convex_hull(points)
