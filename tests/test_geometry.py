@@ -13,10 +13,10 @@ from cinemol.geometry import (
     Plane3D,
     Point2D,
     Point3D,
-    Vector3D,
     Sphere,
+    Vector3D,
     gram_schmidt,
-    sign
+    sign,
 )
 
 
