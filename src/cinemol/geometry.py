@@ -416,7 +416,15 @@ def get_perpendicular_lines(line: Line3D, width: float, num_lines: int) -> ty.Li
     :type num_lines: int
     :return: The perpendicular lines.
     :rtype: ty.List[Line3D]
+    :raises ValueError: If the number of lines is less than 1.
+    :raises ValueError: If the width is less than or equal to 0.
     """
+    if num_lines < 1:
+        raise ValueError("Number of lines must be greater than 0.")
+
+    if width <= 0:
+        raise ValueError("Width must be greater than 0.")
+
     if num_lines == 1:
         return [line]
 
@@ -445,7 +453,7 @@ def get_perpendicular_lines(line: Line3D, width: float, num_lines: int) -> ty.Li
 
 
 def get_points_on_line_3d(line: Line3D, num_points: int) -> ty.List[Point3D]:
-    """Generate points along a line.
+    """Generate `num_points` + 1 points along a line.
 
     :param line: The line.
     :type line: Line3D
