@@ -161,7 +161,7 @@ class Point3D:
         :return: A vector from this point to another point.
         :rtype: Vector3D
         """
-        return Vector3D(self.x - other.x, self.y - other.y, self.z - other.z)
+        return Vector3D(other.x - self.x, other.y - self.y, other.z - self.z)
 
     def calculate_distance(self, other: "Point3D") -> float:
         """Calculate the distance between this point and another point.
@@ -244,11 +244,11 @@ def sign(x: float) -> int:
 
 
 def gram_schmidt(n: Vector3D) -> ty.Tuple[Vector3D, Vector3D]:
-    """Generate two vectors that are orthogonal to the given vector.
+    """Generate two orthogonal vectors for a given vector using the Gram-Schmidt process.
 
     :param n: The vector to generate orthogonal vectors for.
     :type n: Vector3D
-    :return: Two orthogonal vectors to the given vector.
+    :return: Two orthogonal vectors.
     :rtype: ty.Tuple[Vector3D, Vector3D]
     """
     v = Vector3D.create_random()
@@ -416,7 +416,15 @@ def get_perpendicular_lines(line: Line3D, width: float, num_lines: int) -> ty.Li
     :type num_lines: int
     :return: The perpendicular lines.
     :rtype: ty.List[Line3D]
+    :raises ValueError: If the number of lines is less than 1.
+    :raises ValueError: If the width is less than or equal to 0.
     """
+    if num_lines < 1:
+        raise ValueError("Number of lines must be greater than 0.")
+
+    if width <= 0:
+        raise ValueError("Width must be greater than 0.")
+
     if num_lines == 1:
         return [line]
 
@@ -445,7 +453,7 @@ def get_perpendicular_lines(line: Line3D, width: float, num_lines: int) -> ty.Li
 
 
 def get_points_on_line_3d(line: Line3D, num_points: int) -> ty.List[Point3D]:
-    """Generate points along a line.
+    """Generate `num_points` + 1 points along a line.
 
     :param line: The line.
     :type line: Line3D
