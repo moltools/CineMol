@@ -350,7 +350,7 @@ class TestDrawMolecule(unittest.TestCase):
         self.assertEqual(len(svg.objects), 11)
         self.assertEqual(len(svg.fills), 11)
 
-    def test_draw_molecule_with_triple_bond_in_ball_and_stick_style(self):
+    def test_draw_molecule_with_multi_colored_triple_bond_in_ball_and_stick_style(self):
         """Draw simple molecule with multi-colored triple bond in ball and stick style."""
         svg = draw_molecule(
             [
@@ -367,7 +367,7 @@ class TestDrawMolecule(unittest.TestCase):
         self.assertEqual(len(svg.objects), 8)
         self.assertEqual(len(svg.fills), 8)
 
-    def test_draw_molecule_with_triple_bond_in_ball_and_stick_style(self):
+    def test_draw_molecule_with_single_colored_triple_bond_in_ball_and_stick_style(self):
         """Draw simple molecule with single-colored triple bond in ball and stick style."""
         svg = draw_molecule(
             [
