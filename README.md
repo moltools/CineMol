@@ -45,7 +45,7 @@ The `cinemol` command line tool can be used to convert 3D molecular structures t
 converts a penicillin G conformer to a spacefilling SVG image:
 
 ```shell
-python3 -m cinemol examples/data/penicillin_G.sdf examples/svgs/cartoon_spacefilling.svg -s spacefilling -l cartoon -r 100 -sc 10.0 -hs -vb
+python3 -m cinemol examples/data/penicillin_G.sdf examples/svgs/cartoon_spacefilling.svg -s spacefilling -l cartoon -r 100 -sc 10.0 -hs
 ```
 
 This command will generate the following SVG image:

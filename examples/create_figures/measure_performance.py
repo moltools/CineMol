@@ -82,7 +82,7 @@ def main() -> None:
         for look in looks:
             for style in styles:
                 t0 = time.time()
-                svg = draw_molecule(atoms=atoms, bonds=bonds, style=style, look=look, resolution=50)
+                svg = draw_molecule(atoms=atoms, bonds=bonds, style=style, look=look, resolution=50, scale=1000.0)
                 svg_str = svg.to_svg()
 
                 runtime_ms = 1000 * (time.time() - t0)
