@@ -26,33 +26,28 @@ class TestCli(unittest.TestCase):
         """Test the main function with default options."""
         runner = CliRunner()
         result = runner.invoke(
-            main, 
+            main,
             [
-                os.path.join(FIXTURES, "test_input_001.sdf"), 
-                os.path.join(FIXTURES, "test_output_001.svg")
-            ]
+                os.path.join(FIXTURES, "test_input_001.sdf"),
+                os.path.join(FIXTURES, "test_output_001.svg"),
+            ],
         )
         self.assertEqual(result.exit_code, 0)
 
     def test_main_throws_error_without_specifying_output_path(self):
         """Test the main function throws error without specifying output path."""
         runner = CliRunner()
-        result = runner.invoke(
-            main, 
-            [
-                os.path.join(FIXTURES, "test_input_001.sdf")
-            ]
-        )
+        result = runner.invoke(main, [os.path.join(FIXTURES, "test_input_001.sdf")])
         self.assertEqual(result.exit_code, 2)
 
     def test_main_throws_error_when_input_path_does_not_exist(self):
         """Test the main function throws error when input path does not exist."""
         runner = CliRunner()
         result = runner.invoke(
-            main, 
+            main,
             [
-                os.path.join(FIXTURES, "non_existent.sdf"), 
-                os.path.join(FIXTURES, "test_output_001.svg")
-            ]
+                os.path.join(FIXTURES, "non_existent.sdf"),
+                os.path.join(FIXTURES, "test_output_001.svg"),
+            ],
         )
         self.assertEqual(result.exit_code, 2)
