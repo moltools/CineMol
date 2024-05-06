@@ -352,7 +352,6 @@ def calculate_intersecting_nodes(
     calculate_cylinder_sphere_intersections: bool,
     calculate_cylinder_cylinder_intersections: bool,
     filter_nodes_for_intersecting: bool,
-    resolution: int,
 ) -> ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]:
     """Calculate which of the previous nodes intersect with the current node.
 
@@ -374,8 +373,6 @@ def calculate_intersecting_nodes(
     :type calculate_cylinder_cylinder_intersections: bool
     :param filter_nodes_for_intersecting: Whether to filter nodes for intersecting nodes.
     :type filter_nodes_for_intersecting: bool
-    :param resolution: The resolution of the scene.
-    :type resolution: int
     :return: The previous nodes that intersect with the current node.
     :rtype: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
     """
@@ -400,13 +397,13 @@ def calculate_intersecting_nodes(
             elif (
                 isinstance(node, ModelSphere) and isinstance(prev_node, ModelCylinder)
             ) and calculate_sphere_cylinder_intersections:
-                if sphere_intersects_with_cylinder(node.geometry, prev_node.geometry, resolution):
+                if sphere_intersects_with_cylinder(node.geometry, prev_node.geometry):
                     previous_nodes.append(prev_node)
 
             elif (
                 isinstance(node, ModelCylinder) and isinstance(prev_node, ModelSphere)
             ) and calculate_cylinder_sphere_intersections:
-                if sphere_intersects_with_cylinder(prev_node.geometry, node.geometry, resolution):
+                if sphere_intersects_with_cylinder(prev_node.geometry, node.geometry):
                     previous_nodes.append(prev_node)
 
             elif (
@@ -414,7 +411,7 @@ def calculate_intersecting_nodes(
                 and isinstance(prev_node, ModelCylinder)
                 and calculate_cylinder_cylinder_intersections
             ):
-                if cylinder_intersects_with_cylinder(node.geometry, prev_node.geometry, resolution):
+                if cylinder_intersects_with_cylinder(node.geometry, prev_node.geometry):
                     previous_nodes.append(prev_node)
 
     return previous_nodes
@@ -608,7 +605,6 @@ class Scene:
                 calculate_cylinder_sphere_intersections,
                 calculate_cylinder_cylinder_intersections,
                 filter_nodes_for_intersecting,
-                resolution,
             )
 
             # Calculate line for wire.
