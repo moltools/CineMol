@@ -265,10 +265,10 @@ def draw_bonds_in_tube_style(
     :type atoms: ty.List[Atom]
     :param bonds: The bonds in the molecule.
     :type bonds: ty.List[Bond]
-    :param tube_bond_tyle: The style of the depiction. Ball-and-stick will draw
+    :param tube_bond_style: The style of the depiction. Ball-and-stick will draw
         bond order as cylinders, while tube will draw any bond order as a single
         cylinder.
-    :type style: Style
+    :type tube_bond_style: Style
     :param look: The look of the depiction.
     :type look: Look
     :param cap_type: The cap type of the cylinders.
