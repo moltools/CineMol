@@ -1,5 +1,6 @@
 """
 Description:    Measure performance of CineMol's algorithm.
+Dependencies:   rdkit==2023.9.0
 Usage:          python3 measure_performance.py -i path/to/sdf/file.sdf -o path/to/out/file.tsv
 """
 
@@ -75,8 +76,8 @@ def main() -> None:
         )
         atoms, bonds = parse_mol(mol)
 
-        styles = [Style.SpaceFilling, Style.BallAndStick, Style.Tube, Style.Wireframe]
-        looks = [Look.Cartoon, Look.Glossy]
+        styles = [Style.SPACEFILLING, Style.BALL_AND_STICK, Style.TUBE, Style.WIREFRAME]
+        looks = [Look.CARTOON, Look.GLOSSY]
 
         for look in looks:
             for style in styles:
