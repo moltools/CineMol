@@ -250,7 +250,7 @@ def draw_bonds_in_tube_style(
     scene: Scene,
     atoms: ty.List[Atom],
     bonds: ty.List[Bond],
-    style: Style,
+    tube_bond_style: Style,
     look: Look,
     cap_type: CylinderCapType,
     stroke_color: Color,
@@ -265,8 +265,10 @@ def draw_bonds_in_tube_style(
     :type atoms: ty.List[Atom]
     :param bonds: The bonds in the molecule.
     :type bonds: ty.List[Bond]
-    :param style: The style of the depiction.
-    :type style: Style
+    :param tube_bond_style: The style of the depiction. Ball-and-stick will draw
+        bond order as cylinders, while tube will draw any bond order as a single
+        cylinder.
+    :type tube_bond_style: Style
     :param look: The look of the depiction.
     :type look: Look
     :param cap_type: The cap type of the cylinders.
@@ -305,7 +307,7 @@ def draw_bonds_in_tube_style(
 
         # Determine number of cylinders to draw for each bond.
         # Bond order is only used for ball-and-stick style.
-        bond_order = bond.order if style == Style.BALL_AND_STICK else 1
+        bond_order = bond.order if tube_bond_style == Style.BALL_AND_STICK else 1
         bond_radius = bond.radius if bond.radius is not None else 0.2
         temp_bond_radius = bond_radius / bond_order
         line = Line3D(start_pos, end_pos)

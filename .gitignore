@@ -903,3 +903,6 @@ scratch/
 
 # Test PyPI
 .pypirc
+
+# Ignore .svg output files in test fixtures
+tests/fixtures/*.svg
