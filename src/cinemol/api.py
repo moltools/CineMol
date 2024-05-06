@@ -386,7 +386,7 @@ def draw_molecule(
     rotation_over_y_axis: float = 0.0,
     rotation_over_z_axis: float = 0.0,
     scale: float = 1.0,
-    focal_length: float = 10.0,
+    focal_length: ty.Optional[float] = None,
     exclude_atoms: ty.Optional[ty.List[str]] = None,
     verbose: bool = False,
 ) -> Svg:
@@ -414,8 +414,9 @@ def draw_molecule(
     :param rotation_over_z_axis: The rotation over the z-axis of the depiction.
     :type rotation_over_z_axis: float
     :param scale: The scale of the depiction.
-    :param focal_length: The focal length of the depiction.
-    :type focal_length: float
+    :param focal_length: The focal length of the depiction. If None, the focal length
+        is calculated based on the dimensions of the scene.
+    :type focal_length: ty.Optional[float]
     :param exclude_atoms: The atoms to exclude from the depiction (list of atom symbols).
     :type exclude_atoms: ty.Optional[ty.List[str]]
     :param verbose: Whether to print verbose output.

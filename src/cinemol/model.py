@@ -106,20 +106,20 @@ class ModelWire:
 
 def get_node_polygon_vertices(
     this: ty.Union[ModelSphere, ModelCylinder, ModelWire],
-    pov_z: float,
     others: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]],
     resolution: int,
+    focal_length: ty.Optional[float] = None
 ) -> ty.List[Point2D]:
     """Get the vertices of the polygon that represents the visible part of the node.
 
     :param this: The node to get the vertices of.
     :type this: ty.Union[ModelSphere, ModelCylinder, ModelWire]
-    :param pov_z: The z-coordinate of the point of view.
-    :type pov_z: float
     :param others: The other nodes in the scene.
     :type others: ty.List[ty.Union[ModelSphere, ModelCylinder, ModelWire]]
     :param resolution: The resolution of the polygon.
     :type resolution: int
+    :param focal_length: The scaling factor of the polygon.
+    :type focal_length: ty.Optional[float]
     :return: The vertices of the polygon.
     :rtype: ty.List[Point2D]
     """
@@ -147,8 +147,16 @@ def get_node_polygon_vertices(
                 break
 
         else:
-            x, y = point.x, point.y
-            visible_points.append(Point2D(x, y))
+            x, y, z = point.x, point.y, point.z
+            
+            if focal_length is not None:
+                factor = focal_length / (z - focal_length)
+                if factor < 0:  # Point is behind the point of view.
+                    continue
+            else:
+                factor = 1.0
+            
+            visible_points.append(Point2D(x * factor, y * factor))
 
     # If no visible points, return empty list.
     if len(visible_points) == 0:
@@ -487,7 +495,7 @@ class Scene:
         calculate_cylinder_cylinder_intersections: bool = True,
         filter_nodes_for_intersecting: bool = True,
         scale: float = 1.0,
-        focal_length: float = 10.0,
+        focal_length: ty.Optional[float] = None,
         verbose: bool = False,
     ) -> Svg:
         """
@@ -527,8 +535,9 @@ class Scene:
         :type filter_nodes_for_intersecting: bool
         :param scale: The scale of the scene.
         :type scale: float
-        :param focal_length: The focal length of the scene.
-        :type focal_length: float
+        :param focal_length: The focal length of the depiction. If None, the focal length
+            is calculated based on the dimensions of the scene.
+        :type focal_length: ty.Optional[float]
         :param verbose: Whether to print progress.
         :type verbose: bool
         :return: The scene as Svg.
@@ -602,6 +611,16 @@ class Scene:
             if isinstance(node, ModelWire):
                 start_x, start_y = node.geometry.start.x, node.geometry.start.y
                 end_x, end_y = node.geometry.end.x, node.geometry.end.y
+
+                if focal_length is not None:
+                    start_z, end_z = node.geometry.start.z, node.geometry.end.z
+                    start_factor = focal_length / (start_z - focal_length)
+                    end_factor = focal_length / (end_z - focal_length)
+                    start_x *= start_factor
+                    start_y *= start_factor
+                    end_x *= end_factor
+                    end_y *= end_factor
+
                 start: Point2D = Point2D(start_x, start_y)
                 end: Point2D = Point2D(end_x, end_y)
                 line = Line2D(reference, start, end)
@@ -613,8 +632,7 @@ class Scene:
 
             # Otherwise, calculate polygon for visible part of node.
             else:
-                pov_z = focal_length
-                points = get_node_polygon_vertices(node, pov_z, previous_nodes, resolution)
+                points = get_node_polygon_vertices(node, previous_nodes, resolution, focal_length)
                 polygon = Polygon2D(reference, points)
 
                 if view_box is None:

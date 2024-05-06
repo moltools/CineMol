@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
     "--focal-length",
     type=float,
     required=False,
-    default=10.0,
+    default=None,
     show_default=True,
     help="Focal length of the camera.",
 )
