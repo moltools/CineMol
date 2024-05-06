@@ -113,10 +113,10 @@ def main(
     rotation_over_y_axis: int,
     rotation_over_z_axis: int,
     include_hydrogens: bool,
-    verbose: bool,
+    verbosity: bool,
 ) -> None:
     """Run the CineMol command line interface."""
-    logging.basicConfig(level=verbose)
+    logging.basicConfig(level=verbosity)
 
     # Map CLI arguments to API.
     mapped_style = {
