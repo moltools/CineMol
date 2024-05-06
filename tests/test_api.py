@@ -305,7 +305,7 @@ class TestDrawMolecule(unittest.TestCase):
             ],
             Style.SPACEFILLING,
             Look.CARTOON,
-            50
+            50,
         )
         self.assertEqual(len(svg.objects), 4)
         self.assertEqual(len(svg.fills), 4)
@@ -326,7 +326,7 @@ class TestDrawMolecule(unittest.TestCase):
             ],
             Style.BALL_AND_STICK,
             Look.CARTOON,
-            50
+            50,
         )
         self.assertEqual(len(svg.objects), 10)
         self.assertEqual(len(svg.fills), 10)
@@ -345,7 +345,7 @@ class TestDrawMolecule(unittest.TestCase):
             ],
             Style.BALL_AND_STICK,
             Look.CARTOON,
-            50
+            50,
         )
         self.assertEqual(len(svg.objects), 11)
         self.assertEqual(len(svg.fills), 11)
@@ -362,7 +362,7 @@ class TestDrawMolecule(unittest.TestCase):
             ],
             Style.BALL_AND_STICK,
             Look.CARTOON,
-            50
+            50,
         )
         self.assertEqual(len(svg.objects), 8)
         self.assertEqual(len(svg.fills), 8)
@@ -379,7 +379,7 @@ class TestDrawMolecule(unittest.TestCase):
             ],
             Style.BALL_AND_STICK,
             Look.CARTOON,
-            50
+            50,
         )
         self.assertEqual(len(svg.objects), 5)
         self.assertEqual(len(svg.fills), 5)
@@ -400,7 +400,7 @@ class TestDrawMolecule(unittest.TestCase):
             ],
             Style.WIREFRAME,
             Look.CARTOON,
-            50
+            50,
         )
         self.assertEqual(len(svg.objects), 6)
         self.assertEqual(len(svg.fills), 6)
@@ -421,7 +421,7 @@ class TestDrawMolecule(unittest.TestCase):
             ],
             Style.TUBE,
             Look.CARTOON,
-            50
+            50,
         )
         self.assertEqual(len(svg.objects), 6)
         self.assertEqual(len(svg.fills), 6)
