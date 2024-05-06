@@ -54,6 +54,8 @@ class Vector3D:
         :return: A new vector with the same direction as this vector but with unit length.
         :rtype: Vector3D
         """
+        if self.length() == 0:  # Prevent division by zero.
+            return Vector3D(0, 0, 0)
         return self.multiply(1 / self.length())
 
     def dot(self, other: "Vector3D") -> float:
