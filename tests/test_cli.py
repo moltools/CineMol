@@ -2,10 +2,11 @@
 
 """Contains unit tests for the cinemol.cli module."""
 
-import unittest
 import os
-from click.testing import CliRunner
+import unittest
 from pathlib import Path
+
+from click.testing import CliRunner
 
 from cinemol.cli import main
 
