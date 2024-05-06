@@ -82,7 +82,6 @@ def main() -> None:
         scale=5.0,
         rotation_over_y_axis=-2.0,
         rotation_over_z_axis=0.5,
-        focal_length=100.0,
     )
 
     svg_str = svg.to_svg()
