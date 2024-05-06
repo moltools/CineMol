@@ -607,14 +607,14 @@ class TestSphereIntersectsWithCylinder(unittest.TestCase):
         """Test if sphere_intersects_with_cylinder function returns True for intersecting sphere and cylinder."""
         sphere = Sphere(Point3D(0, 0, 0), 1)
         cylinder = Cylinder(Point3D(0, 0, 0), Point3D(0, 0, 1), 1, CylinderCapType.NO_CAP)
-        result = sphere_intersects_with_cylinder(sphere, cylinder)
+        result = sphere_intersects_with_cylinder(sphere, cylinder, 50)
         self.assertTrue(result)
 
     def test_sphere_intersects_with_cylinder_does_not_intersect(self):
         """Test if sphere_intersects_with_cylinder function returns False for non-intersecting sphere and cylinder."""
         sphere = Sphere(Point3D(0, 0, 0), 1)
         cylinder = Cylinder(Point3D(0, 0, 3), Point3D(0, 0, 4), 1, CylinderCapType.NO_CAP)
-        result = sphere_intersects_with_cylinder(sphere, cylinder)
+        result = sphere_intersects_with_cylinder(sphere, cylinder, 50)
         self.assertFalse(result)
 
 
@@ -625,12 +625,12 @@ class TestCylinderIntersectsWithCylinder(unittest.TestCase):
         """Test if cylinder_intersects_with_cylinder function returns True for intersecting cylinders."""
         cylinder1 = Cylinder(Point3D(0, 0, 0), Point3D(0, 0, 1), 1, CylinderCapType.NO_CAP)
         cylinder2 = Cylinder(Point3D(1, 0, 0), Point3D(1, 0, 1), 1, CylinderCapType.NO_CAP)
-        result = cylinder_intersects_with_cylinder(cylinder1, cylinder2)
+        result = cylinder_intersects_with_cylinder(cylinder1, cylinder2, 50)
         self.assertTrue(result)
 
     def test_cylinder_intersects_with_cylinder_does_not_intersect(self):
         """Test if cylinder_intersects_with_cylinder function returns False for non-intersecting cylinders."""
         cylinder1 = Cylinder(Point3D(0, 0, 0), Point3D(0, 0, 1), 1, CylinderCapType.NO_CAP)
         cylinder2 = Cylinder(Point3D(3, 0, 0), Point3D(3, 0, 1), 1, CylinderCapType.NO_CAP)
-        result = cylinder_intersects_with_cylinder(cylinder1, cylinder2)
+        result = cylinder_intersects_with_cylinder(cylinder1, cylinder2, 50)
         self.assertFalse(result)

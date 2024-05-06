@@ -740,40 +740,41 @@ def sphere_intersects_with_sphere(sphere1: Sphere, sphere2: Sphere) -> bool:
     return c1.calculate_distance(c2) <= r1 + r2
 
 
-def sphere_intersects_with_cylinder(sphere: Sphere, cylinder: Cylinder) -> bool:
+def sphere_intersects_with_cylinder(sphere: Sphere, cylinder: Cylinder, resolution: int) -> bool:
     """Check if a sphere intersects with a cylinder.
 
     :param sphere: The sphere.
     :type sphere: Sphere
     :param cylinder: The cylinder.
     :type cylinder: Cylinder
+    :param resolution: The resolution of the scene.
+    :type resolution: int
     :return: True if the sphere intersects with the cylinder, False otherwise.
     :rtype: bool
     """
+    line = Line3D(cylinder.start, cylinder.end)
+    points = get_points_on_line_3d(line, resolution)
     d = sphere.radius + cylinder.radius
-    return (
-        sphere.center.calculate_distance(cylinder.start) <= d
-        or sphere.center.calculate_distance(cylinder.end) <= d
-    )
+    return any(sphere.center.calculate_distance(point) <= d for point in points)
 
 
-def cylinder_intersects_with_cylinder(cylinder1: Cylinder, cylinder2: Cylinder) -> bool:
+def cylinder_intersects_with_cylinder(
+    cylinder1: Cylinder, cylinder2: Cylinder, resolution: int
+) -> bool:
     """Check if two cylinders intersect.
 
     :param cylinder1: The first cylinder.
     :type cylinder1: Cylinder
     :param cylinder2: The second cylinder.
     :type cylinder2: Cylinder
+    :param resolution: The resolution of the scene.
+    :type resolution: int
     :return: True if the cylinders intersect, False otherwise.
     :rtype: bool
     """
-    # TODO: currently a hack to check if start/end is same, but not really checking
-    #       if they intersect at any other position along the cylinder's direction.
-
+    line1 = Line3D(cylinder1.start, cylinder1.end)
+    points1 = get_points_on_line_3d(line1, resolution)
+    line2 = Line3D(cylinder2.start, cylinder2.end)
+    points2 = get_points_on_line_3d(line2, resolution)
     d = cylinder1.radius + cylinder2.radius
-    return (
-        cylinder1.start.calculate_distance(cylinder2.start) <= d
-        or cylinder1.start.calculate_distance(cylinder2.end) <= d
-        or cylinder1.end.calculate_distance(cylinder2.start) <= d
-        or cylinder1.end.calculate_distance(cylinder2.end) <= d
-    )
+    return any(point1.calculate_distance(point2) <= d for point1 in points1 for point2 in points2)
