@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./logo.png" height="150">
+  <img src="https://github.com/moltools/CineMol/blob/main/logo.png" height="150">
 </p>
 
 <h1 align="center">
@@ -45,13 +45,13 @@ The `cinemol` command line tool can be used to convert 3D molecular structures t
 converts a penicillin G conformer to a spacefilling SVG image:
 
 ```shell
-python3 -m cinemol examples/data/penicillin_G.sdf examples/svgs/cartoon_spacefilling.svg -s spacefilling -l cartoon -r 100 -sc 10.0 -hs -vb
+python3 -m cinemol examples/data/penicillin_G.sdf examples/svgs/cartoon_spacefilling.svg -s spacefilling -l cartoon -r 100 -sc 10.0 -hs
 ```
 
 This command will generate the following SVG image:
 
 <p align="center">
-    <img src="examples/svgs/cartoon_spacefilling.svg" width=200 height=125>
+    <img src="https://github.com/moltools/CineMol/blob/main/examples/svgs/cartoon_spacefilling.svg" width=200 height=125>
 </p>
 
 CineMol can also be used as a Python package. You can find examples in the [examples](examples) folder.

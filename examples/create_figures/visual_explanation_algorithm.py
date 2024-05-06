@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Description:    Draw step-wise explanation of the algorithm.
+Dependencies:   matplotlib==3.8.4; numpy==1.26.4
 Usage:          python3 visual_explanation_algorithm.py -o /path/to/output/dir [-d resolution] [--t]
 """
 import argparse
@@ -241,14 +242,14 @@ def get_points_on_surface_cap(
     :return: The points on the surface of the cap.
     :rtype: ty.List[Point3D]
     """
-    if cap_type == CylinderCapType.NoCap:
+    if cap_type == CylinderCapType.NO_CAP:
         return []
 
-    elif cap_type == CylinderCapType.Flat:
+    elif cap_type == CylinderCapType.FLAT:
         circle = Circle3D(center_cap, radius_cap, normal_cap)
         return get_points_on_circumference_circle_3d(circle, resolution)
 
-    elif cap_type == CylinderCapType.Round:
+    elif cap_type == CylinderCapType.ROUND:
         sphere = Sphere(center_cap, radius_cap)
         plane = Plane3D(center_cap, normal_cap)
         points = get_points_on_surface_sphere(sphere, resolution, resolution, filter_for_pov=False)
@@ -311,10 +312,10 @@ def main() -> None:
     ax = get_axes_3d()
 
     cylinder1 = Cylinder(
-        Point3D(0.0, -1.5, 0.3), Point3D(1.0, 0.0, 1.0), 0.2, CylinderCapType.Round
+        Point3D(0.0, -1.5, 0.3), Point3D(1.0, 0.0, 1.0), 0.2, CylinderCapType.ROUND
     )
     cylinder2 = Cylinder(
-        Point3D(-0.1, -1.5, 0.3), Point3D(-1.0, 0.0, 1.5), 0.15, CylinderCapType.Round
+        Point3D(-0.1, -1.5, 0.3), Point3D(-1.0, 0.0, 1.5), 0.15, CylinderCapType.ROUND
     )
     sphere1 = Sphere(Point3D(1.0, 0.0, 1.0), 0.5)
     sphere2 = Sphere(Point3D(1.4, -0.2, 0.8), 0.3)

@@ -1,15 +1,36 @@
 """
 Description:    Measure performance of CineMol's algorithm.
+Dependencies:   rdkit==2023.9.0
 Usage:          python3 measure_performance.py -i path/to/sdf/file.sdf -o path/to/out/file.tsv
 """
 
 import argparse
+import multiprocessing as mp
 import time
 import typing as ty
 
 from rdkit import Chem
+from tqdm import tqdm
 
 from cinemol.api import Atom, Bond, Look, Style, draw_molecule
+
+
+class Job:
+    """Record of a job to draw a molecule with different depictions and styles."""
+
+    def __init__(self, i: int, mol: Chem.Mol, style: Style, look: Look):
+        """
+        Initialize a job.
+
+        :param int i: Index of the molecule.
+        :param Chem.Mol mol: Molecule to draw.
+        :param Style style: Style of the depiction.
+        :param Look look: Look of the depiction.
+        """
+        self.i = i
+        self.mol = mol
+        self.style = style
+        self.look = look
 
 
 def cli() -> argparse.Namespace:
@@ -22,6 +43,7 @@ def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", type=str, required=True, help="Path to input SDF file.")
     parser.add_argument("-o", type=str, required=True, help="Path to output TSV file.")
+    parser.add_argument("-n", type=int, default=1, help="Number of threads to use.")
     return parser.parse_args()
 
 
@@ -51,6 +73,39 @@ def parse_mol(mol: Chem.Mol) -> ty.Tuple[ty.List[Atom], ty.List[Bond]]:
     return atoms, bonds
 
 
+def run_job(job: Job) -> ty.Tuple[int, int, int, float, float]:
+    """
+    Run a job to draw a molecule with different depictions and styles.
+
+    :param job: Job to run.
+    :type job: Job
+    :return: Tuple of index, number of heavy atoms, number of bonds, runtime in milliseconds, and file size in kilobytes.
+    :rtype: ty.Tuple[int, int, int, float, float]
+    """
+    i, mol, style, look = job.i, job.mol, job.style, job.look
+
+    num_heavy_atoms = len([atom for atom in mol.GetAtoms() if atom.GetSymbol() != "H"])
+    num_bonds = len(
+        [
+            bond
+            for bond in mol.GetBonds()
+            if bond.GetBeginAtom().GetSymbol() != "H" and bond.GetEndAtom().GetSymbol() != "H"
+        ]
+    )
+    atoms, bonds = parse_mol(mol)
+
+    t0 = time.time()
+    svg = draw_molecule(
+        atoms=atoms, bonds=bonds, style=style, look=look, resolution=50, scale=1000.0
+    )
+    svg_str = svg.to_svg()
+
+    runtime_ms = 1000 * (time.time() - t0)
+    file_size_kb = len(svg_str) / 1000
+
+    return i, num_heavy_atoms, num_bonds, runtime_ms, file_size_kb
+
+
 def main() -> None:
     """
     Driver function.
@@ -63,37 +118,31 @@ def main() -> None:
     # Parse mols from SDF file with RDKit.
     mols = [mol for mol in Chem.SDMolSupplier(args.i)]
 
-    # Parse mols, draw with different depictions and styles, and report runtime and file size.
-    for i, mol in enumerate(mols):
-        num_heavy_atoms = len([atom for atom in mol.GetAtoms() if atom.GetSymbol() != "H"])
-        num_bonds = len(
-            [
-                bond
-                for bond in mol.GetBonds()
-                if bond.GetBeginAtom().GetSymbol() != "H" and bond.GetEndAtom().GetSymbol() != "H"
-            ]
-        )
-        atoms, bonds = parse_mol(mol)
+    # Jobs.
+    jobs = []
 
-        styles = [Style.SpaceFilling, Style.BallAndStick, Style.Tube, Style.Wireframe]
-        looks = [Look.Cartoon, Look.Glossy]
+    # Determine number of threads to use.
+    num_threads = min(args.n, mp.cpu_count())
+
+    # Create jobs.
+    for i, mol in enumerate(mols):
+        styles = [Style.SPACEFILLING, Style.BALL_AND_STICK, Style.TUBE, Style.WIREFRAME]
+        looks = [Look.CARTOON, Look.GLOSSY]
 
         for look in looks:
             for style in styles:
-                t0 = time.time()
-                svg = draw_molecule(atoms=atoms, bonds=bonds, style=style, look=look, resolution=50)
-                svg_str = svg.to_svg()
+                jobs.append(Job(i, mol, style, look))
 
-                runtime_ms = 1000 * (time.time() - t0)
-                file_size_kb = len(svg_str) / 1000
+    # Run jobs multi-threaded.
+    with mp.Pool(processes=num_threads) as pool:
+        for i, result in tqdm(enumerate(pool.imap_unordered(run_job, jobs))):
 
-                out_file.write(
-                    f"{i}\t{num_heavy_atoms}\t{num_bonds}\t{style.name}\t{look.name}\t{runtime_ms}\t{file_size_kb}\n"
-                )
-                out_file.flush()
+            i, num_heavy_atoms, num_bonds, runtime_ms, file_size_kb = result
 
-        padding = len(str(len(mols)))
-        print(f"{i}".zfill(padding), end="\r")
+            out_file.write(
+                f"{i}\t{num_heavy_atoms}\t{num_bonds}\t{style.name}\t{look.name}\t{runtime_ms}\t{file_size_kb}\n"
+            )
+            out_file.flush()
 
     out_file.close()
 

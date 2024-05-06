@@ -138,7 +138,7 @@ def main() -> None:
         look=Look.GLOSSY,
         resolution=50,
         rotation_over_y_axis=-2.0,
-        scale=10.0,
+        scale=1000.0,
     )
 
     svg_str = svg.to_svg()

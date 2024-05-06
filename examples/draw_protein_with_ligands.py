@@ -75,15 +75,13 @@ def main() -> None:
 
     # Draw scene.
     svg = scene.draw(
-        verbose=True,
         resolution=100,
         include_spheres=True,
         include_wires=True,
         calculate_sphere_sphere_intersections=True,
-        scale=5.0,
+        scale=1000.0,
         rotation_over_y_axis=-2.0,
         rotation_over_z_axis=0.5,
-        focal_length=100.0,
     )
 
     svg_str = svg.to_svg()

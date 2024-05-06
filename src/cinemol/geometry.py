@@ -767,9 +767,6 @@ def cylinder_intersects_with_cylinder(cylinder1: Cylinder, cylinder2: Cylinder) 
     :return: True if the cylinders intersect, False otherwise.
     :rtype: bool
     """
-    # TODO: currently a hack to check if start/end is same, but not really checking
-    #       if they intersect at any other position along the cylinder's direction.
-
     d = cylinder1.radius + cylinder2.radius
     return (
         cylinder1.start.calculate_distance(cylinder2.start) <= d
