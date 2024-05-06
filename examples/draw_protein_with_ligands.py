@@ -75,7 +75,6 @@ def main() -> None:
 
     # Draw scene.
     svg = scene.draw(
-        verbose=True,
         resolution=100,
         include_spheres=True,
         include_wires=True,

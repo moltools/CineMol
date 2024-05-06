@@ -91,8 +91,16 @@ logger = logging.getLogger(__name__)
     show_default=True,
     help="Rotation over z-axis.",
 )
+@click.option(
+    "-v",
+    "--verbosity",
+    type=str,
+    required=False,
+    default="INFO",
+    show_default=True,
+    help="Verbosity level (DEBUG, INFO, WARNING, ERROR, CRITICAL).",
+)
 @click.option("-hs", "--include-hydrogens", is_flag=True, help="Include hydrogen atoms.")
-@click.option("-vb", "--verbose", is_flag=True, help="Verbose mode.")
 def main(
     input: str,
     output: str,
@@ -108,8 +116,7 @@ def main(
     verbose: bool,
 ) -> None:
     """Run the CineMol command line interface."""
-    if verbose:
-        logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=verbose)
 
     # Map CLI arguments to API.
     mapped_style = {
@@ -142,16 +149,14 @@ def main(
         scale=scale,
         focal_length=focal_length,
         exclude_atoms=None if include_hydrogens else ["H"],
-        verbose=verbose,
     )
     svg_str = svg.to_svg()
 
     runtime = (time() - t0) * 1000  # Runtime in milliseconds.
 
-    if verbose:
-        logger.info(f" SVG written out to: {output}")
-        logger.info(f" Time taken to generate SVG: {runtime:.3f} ms")
-        logger.info(f" Size of SVG: {len(svg_str) / 1000:.3f} kb")
+    logger.info(f" SVG written out to: {output}")
+    logger.info(f" Time taken to generate SVG: {runtime:.3f} ms")
+    logger.info(f" Size of SVG: {len(svg_str) / 1000:.3f} kb")
 
     with open(output, "w", encoding="utf-8") as file_open:
         file_open.write(svg_str)

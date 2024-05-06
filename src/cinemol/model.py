@@ -496,7 +496,6 @@ class Scene:
         filter_nodes_for_intersecting: bool = True,
         scale: float = 1.0,
         focal_length: ty.Optional[float] = None,
-        verbose: bool = False,
     ) -> Svg:
         """
         Draw the scene.
@@ -538,8 +537,6 @@ class Scene:
         :param focal_length: The focal length of the depiction. If None, the focal length
             is calculated based on the dimensions of the scene.
         :type focal_length: ty.Optional[float]
-        :param verbose: Whether to print progress.
-        :type verbose: bool
         :return: The scene as Svg.
         :rtype: Svg
         """
@@ -645,10 +642,8 @@ class Scene:
             if fill is not None:
                 fills.append(fill)
 
-            # Only print if verbose is set to True.
-            if verbose:
-                padding = len(str(len(nodes)))
-                logger.info(f" Drawing node {i + 1:>{padding}} of {len(nodes)}")
+            padding = len(str(len(nodes)))
+            logger.info(f" Drawing node {i + 1:>{padding}} of {len(nodes)}")
 
         # Calculate view box.
         if view_box is None:

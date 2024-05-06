@@ -388,7 +388,6 @@ def draw_molecule(
     scale: float = 1.0,
     focal_length: ty.Optional[float] = None,
     exclude_atoms: ty.Optional[ty.List[str]] = None,
-    verbose: bool = False,
 ) -> Svg:
     """
     Draw a molecule using the given atoms and bonds.
@@ -419,8 +418,6 @@ def draw_molecule(
     :type focal_length: ty.Optional[float]
     :param exclude_atoms: The atoms to exclude from the depiction (list of atom symbols).
     :type exclude_atoms: ty.Optional[ty.List[str]]
-    :param verbose: Whether to print verbose output.
-    :type verbose: bool
     :return: The SVG of the depiction.
     :rtype: Svg
     :raises ValueError: If an unknown style or look is given.
@@ -503,7 +500,6 @@ def draw_molecule(
         filter_nodes_for_intersecting=True,
         scale=scale,
         focal_length=focal_length,
-        verbose=verbose,
     )
 
     return svg
