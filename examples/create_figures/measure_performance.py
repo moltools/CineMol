@@ -1,6 +1,6 @@
 """
 Description:    Measure performance of CineMol's algorithm.
-Dependencies:   rdkit==2023.9.0
+Dependencies:   rdkit==2023.9.0; tqdm==4.66.4
 Usage:          python3 measure_performance.py -i path/to/sdf/file.sdf -o path/to/out/file.tsv
 """
 
