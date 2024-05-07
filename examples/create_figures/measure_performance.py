@@ -103,7 +103,7 @@ def run_job(job: Job) -> ty.Tuple[int, int, int, float, float]:
     runtime_ms = 1000 * (time.time() - t0)
     file_size_kb = len(svg_str) / 1000
 
-    return i, num_heavy_atoms, num_bonds, runtime_ms, file_size_kb
+    return i, num_heavy_atoms, num_bonds, runtime_ms, file_size_kb, style, look
 
 
 def main() -> None:
@@ -137,7 +137,7 @@ def main() -> None:
     with mp.Pool(processes=num_threads) as pool:
         for i, result in tqdm(enumerate(pool.imap_unordered(run_job, jobs))):
 
-            i, num_heavy_atoms, num_bonds, runtime_ms, file_size_kb = result
+            i, num_heavy_atoms, num_bonds, runtime_ms, file_size_kb, style, look = result
 
             out_file.write(
                 f"{i}\t{num_heavy_atoms}\t{num_bonds}\t{style.name}\t{look.name}\t{runtime_ms}\t{file_size_kb}\n"
