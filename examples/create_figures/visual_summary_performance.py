@@ -1,5 +1,6 @@
 """
 Description:    Visual summary of the performance results. 
+Dependencies:   matplotlib==3.8.2
 Usage:          python3 visual_summary_performancy.py -i path/to/performance/results.tsv -o path/to/out/dir
 """
 
@@ -113,16 +114,16 @@ def main() -> None:
             alpha=0.1,
         )
 
-    plot_runtime("SpaceFilling", "Cartoon", "Space-filling", "red", "-")
-    plot_runtime("BallAndStick", "Cartoon", "Ball-and-stick", "blue", "-")
-    plot_runtime("Tube", "Cartoon", "Tube", "green", "-")
-    plot_runtime("Wireframe", "Cartoon", "Wireframe", "orange", "-")
+    plot_runtime("SPACEFILLING", "CARTOON", "Space-filling", "red", "-")
+    plot_runtime("BALL_AND_STICK", "CARTOON", "Ball-and-stick", "blue", "-")
+    plot_runtime("TUBE", "CARTOON", "Tube", "green", "-")
+    plot_runtime("WIREFRAME", "CARTOON", "Wireframe", "orange", "-")
 
     # Plot average runtime per number of heavy atoms for different styles for glossy look.
-    plot_runtime("SpaceFilling", "Glossy", "Space-filling", "red", ":")
-    plot_runtime("BallAndStick", "Glossy", "Ball-and-stick", "blue", ":")
-    plot_runtime("Tube", "Glossy", "Tube", "green", ":")
-    plot_runtime("Wireframe", "Glossy", "Wireframe", "orange", ":")
+    plot_runtime("SPACEFILLING", "GLOSSY", "Space-filling", "red", ":")
+    plot_runtime("BALL_AND_STICK", "GLOSSY", "Ball-and-stick", "blue", ":")
+    plot_runtime("TUBE", "GLOSSY", "Tube", "green", ":")
+    plot_runtime("WIREFRAME", "GLOSSY", "Wireframe", "orange", ":")
 
     plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
     plt.xticks(fontsize=fontsize)
@@ -143,7 +144,7 @@ def main() -> None:
     legend.get_frame().set_alpha(0.25)
 
     plt.savefig(
-        f"{args.o}/speed_glossy_per_atom.png", dpi=300, bbox_inches="tight", transparent=True
+        f"{args.o}/speed_per_molecule.png", dpi=300, bbox_inches="tight", transparent=True
     )
     plt.clf()
 
@@ -183,16 +184,16 @@ def main() -> None:
             alpha=0.1,
         )
 
-    plot_runtime("SpaceFilling", "Cartoon", "Space-filling", "red", "-")
-    plot_runtime("BallAndStick", "Cartoon", "Ball-and-stick", "blue", "-")
-    plot_runtime("Tube", "Cartoon", "Tube", "green", "-")
-    plot_runtime("Wireframe", "Cartoon", "Wireframe", "orange", "-")
+    plot_runtime("SPACEFILLING", "CARTOON", "Space-filling", "red", "-")
+    plot_runtime("BALL_AND_STICK", "CARTOON", "Ball-and-stick", "blue", "-")
+    plot_runtime("TUBE", "CARTOON", "Tube", "green", "-")
+    plot_runtime("WIREFRAME", "CARTOON", "Wireframe", "orange", "-")
 
     # Plot average file size per number of heavy atoms for different styles for glossy look.
-    plot_runtime("SpaceFilling", "Glossy", "Space-filling", "red", ":")
-    plot_runtime("BallAndStick", "Glossy", "Ball-and-stick", "blue", ":")
-    plot_runtime("Tube", "Glossy", "Tube", "green", ":")
-    plot_runtime("Wireframe", "Glossy", "Wireframe", "orange", ":")
+    plot_runtime("SPACEFILLING", "GLOSSY", "Space-filling", "red", ":")
+    plot_runtime("BALL_AND_STICK", "GLOSSY", "Ball-and-stick", "blue", ":")
+    plot_runtime("TUBE", "GLOSSY", "Tube", "green", ":")
+    plot_runtime("WIREFRAME", "GLOSSY", "Wireframe", "orange", ":")
 
     plt.grid(axis="y", linestyle="--", color="black", alpha=0.3)
     plt.xticks(fontsize=fontsize)
@@ -213,7 +214,7 @@ def main() -> None:
     legend.get_frame().set_alpha(0.25)
 
     plt.savefig(
-        f"{args.o}/file_size_glossy_per_atom.png", dpi=300, bbox_inches="tight", transparent=True
+        f"{args.o}/file_size_per_molecule.png", dpi=300, bbox_inches="tight", transparent=True
     )
     plt.clf()
 
