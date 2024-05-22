@@ -143,9 +143,7 @@ def main() -> None:
     legend = plt.legend(loc="upper left", fontsize=14, handles=legend_handles)
     legend.get_frame().set_alpha(0.25)
 
-    plt.savefig(
-        f"{args.o}/speed_per_molecule.png", dpi=300, bbox_inches="tight", transparent=True
-    )
+    plt.savefig(f"{args.o}/speed_per_molecule.png", dpi=300, bbox_inches="tight", transparent=True)
     plt.clf()
 
     # Plot average file size per number of heavy atoms for different styles for cartoon look.
