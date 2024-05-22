@@ -11,7 +11,7 @@ authors:
   - family-names: Van der Hooft
     given-names: Justin J. J.
     orcid: https://orcid.org/0000-0002-9340-5511
-version: 0.0.2-dev
+version: 1.0.0
 identifiers:
   - type: doi
     value: 10.26434/chemrxiv-2024-bvxr2
