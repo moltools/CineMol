@@ -25,8 +25,10 @@
         <img src='https://img.shields.io/badge/code%20style-black-000000.svg' alt='Code style: black' /></a>
     <a href="https://github.com/MolTools/CineMol/blob/main/.github/CODE_OF_CONDUCT.md">
         <img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Contributor Covenant"/></a>
-     <a href="https://doi.org/10.5281/zenodo.11123660">
-        <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.11123660.svg" alt="DOI"></a>
+     <!-- <a href="https://doi.org/10.5281/zenodo.11123660">
+        <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.11123660.svg" alt="DOI"></a> -->
+    <a href="https://doi.org/10.5281/zenodo.11242217">
+        <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.11242217.svg" alt="DOI"></a>
 </p>
 
 CineMol is a direct-to-SVG small molecule drawer. Read more about CineMol in our [pre-print](https://chemrxiv.org/engage/chemrxiv/article-details/65bbb3c966c1381729bd6e27). 
