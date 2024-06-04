@@ -4,7 +4,7 @@
 
 import typing as ty
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from cinemol.geometry import Point2D
 
@@ -307,7 +307,7 @@ class Cartoon(Depiction):
     """
 
     fill_color: Color
-    outline_color: Color = Color(0, 0, 0)
+    outline_color: Color = field(default_factory=lambda: Color(0, 0, 0))
     outline_width: float = 0.05
     opacity: float = 1.0
 
