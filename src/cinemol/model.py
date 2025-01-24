@@ -34,6 +34,29 @@ from cinemol.style import (
 )
 from cinemol.svg import Line2D, Polygon2D, Shape2D, Svg, ViewBox
 
+
+def apply_focal_length(point: Point3D, focal_length: float) -> Point2D:
+    """Apply focal length to a 3D point.
+
+    :param point: The 3D point to apply focal length to.
+    :type point: Point3D
+    :param focal_length: The focal length to apply.
+    :type focal_length: float
+    :return: The 2D point with focal length applied.
+    :rtype: Point2D
+    """
+    x, y, z = point.x, point.y, point.z
+
+    if (focal_length - z) > 0:
+        x_proj = (focal_length * x) / (focal_length - z)
+        y_proj = (focal_length * y) / (focal_length - z)
+    else:
+        # Handle the case when z = -focal_length to avoid division by zero
+        x_proj, y_proj = x, y
+
+    return Point2D(x_proj, y_proj)
+
+
 # ==============================================================================
 # Model nodes
 # ==============================================================================
@@ -150,13 +173,13 @@ def get_node_polygon_vertices(
             x, y, z = point.x, point.y, point.z
 
             if focal_length is not None:
-                factor = focal_length / (z - focal_length)
-                if factor < 0:  # Point is behind the point of view.
-                    continue
+                point = apply_focal_length(Point3D(x, y, z), focal_length)
             else:
-                factor = 1.0
+                point = Point2D(x, y)
 
-            visible_points.append(Point2D(x * factor, y * factor))
+            visible_points.append(point)
+                
+
 
     # If no visible points, return empty list.
     if len(visible_points) == 0:
@@ -606,20 +629,13 @@ class Scene:
 
             # Calculate line for wire.
             if isinstance(node, ModelWire):
-                start_x, start_y = node.geometry.start.x, node.geometry.start.y
-                end_x, end_y = node.geometry.end.x, node.geometry.end.y
-
                 if focal_length is not None:
-                    start_z, end_z = node.geometry.start.z, node.geometry.end.z
-                    start_factor = focal_length / (start_z - focal_length)
-                    end_factor = focal_length / (end_z - focal_length)
-                    start_x *= start_factor
-                    start_y *= start_factor
-                    end_x *= end_factor
-                    end_y *= end_factor
+                    start = apply_focal_length(node.geometry.start, focal_length)
+                    end = apply_focal_length(node.geometry.end, focal_length)
+                else:
+                    start = Point2D(node.geometry.start.x, node.geometry.start.y)
+                    end = Point2D(node.geometry.end.x, node.geometry.end.y)
 
-                start: Point2D = Point2D(start_x, start_y)
-                end: Point2D = Point2D(end_x, end_y)
                 line = Line2D(reference, start, end)
 
                 if view_box is None:
