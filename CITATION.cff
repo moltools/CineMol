@@ -9,7 +9,7 @@ authors:
   - family-names: "van der Hooft"
     given-names: "Justin JJ"
 date-released: 2024-05-23
-version: 2.0.0-dev
+version: 1.0.2
 identifiers:
   - type: doi
     value: 10.1186/s13321-024-00851-y

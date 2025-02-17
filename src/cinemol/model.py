@@ -160,7 +160,7 @@ def get_node_polygon_vertices(
         return []
 
     # Check if point is visible (i.e, not inside any other node geometry).
-    visible_points = []
+    visible_points: ty.List[Point2D] = []
     for point in points:
         for node in others:
             if isinstance(node, ModelSphere) and point_is_inside_sphere(node.geometry, point):
@@ -173,13 +173,11 @@ def get_node_polygon_vertices(
             x, y, z = point.x, point.y, point.z
 
             if focal_length is not None:
-                point = apply_focal_length(Point3D(x, y, z), focal_length)
+                am_point: Point2D = apply_focal_length(Point3D(x, y, z), focal_length)
             else:
-                point = Point2D(x, y)
+                am_point = Point2D(x, y)
 
-            visible_points.append(point)
-                
-
+            visible_points.append(am_point)
 
     # If no visible points, return empty list.
     if len(visible_points) == 0:
@@ -187,7 +185,7 @@ def get_node_polygon_vertices(
 
     # Calculate convex hull of visible points.
     inds = calculate_convex_hull(visible_points)
-    verts = [visible_points[ind] for ind in inds]
+    verts: ty.List[Point2D] = [visible_points[ind] for ind in inds]
 
     return verts
 
